@@ -1,0 +1,902 @@
+[
+  {
+    "name": "N:ws_demo_16k.wav",
+    "cls": "natural",
+    "channel": "wideband",
+    "ratio": 0.9955636323700343,
+    "maxScore": 0.9998209301736881,
+    "risk": "CRITICAL",
+    "feats": {
+      "hfFlatness": 0.7865877311800873,
+      "hfEnergyRatio": 0.11074890597245422,
+      "hnr": 0.4963386641247426,
+      "fluxCV": 0.3479403645352385,
+      "jitter": 0.03236136377665549,
+      "zcrCV": 0.505728632970936
+    },
+    "rtf": 0.008316299704635415,
+    "voicedWindows": 21
+  },
+  {
+    "name": "N-phone:ws_demo_16k.wav",
+    "cls": "natural",
+    "channel": "narrowband",
+    "ratio": 0.9116441350798444,
+    "maxScore": 0.9991217467892695,
+    "risk": "CRITICAL",
+    "feats": {
+      "hfFlatness": 0.8471800005448724,
+      "hfEnergyRatio": 0.10171564846022899,
+      "hnr": 0.5472322022409716,
+      "fluxCV": 0.49000645411731325,
+      "jitter": 0.044990975324112295,
+      "zcrCV": 0.29332780691462
+    },
+    "rtf": 0.00521265398139404,
+    "voicedWindows": 20
+  },
+  {
+    "name": "N:ws_mono_16k.wav",
+    "cls": "natural",
+    "channel": "wideband",
+    "ratio": 0.8139234153175471,
+    "maxScore": 0.9470207876878041,
+    "risk": "CRITICAL",
+    "feats": {
+      "hfFlatness": 0.7474239889780439,
+      "hfEnergyRatio": 0.04020934982428583,
+      "hnr": 0.4804596346239727,
+      "fluxCV": 0.5214660293445116,
+      "jitter": 0.07780481876865501,
+      "zcrCV": 0.41412731223963
+    },
+    "rtf": 0.005417809814563544,
+    "voicedWindows": 21
+  },
+  {
+    "name": "N-phone:ws_mono_16k.wav",
+    "cls": "natural",
+    "channel": "narrowband",
+    "ratio": 0.8584731384240456,
+    "maxScore": 0.999086251445172,
+    "risk": "CRITICAL",
+    "feats": {
+      "hfFlatness": 0.8478672632260621,
+      "hfEnergyRatio": 0.10107385510147512,
+      "hnr": 0.5554921804323525,
+      "fluxCV": 0.5257732883106915,
+      "jitter": 0.10601342653003998,
+      "zcrCV": 0.2850520423954622
+    },
+    "rtf": 0.005433796336499318,
+    "voicedWindows": 21
+  },
+  {
+    "name": "N:viper_16k.wav",
+    "cls": "natural",
+    "channel": "wideband",
+    "ratio": 0.9999307168111944,
+    "maxScore": 0.9999984214697665,
+    "risk": "CRITICAL",
+    "feats": {
+      "hfFlatness": 0.6643291832058199,
+      "hfEnergyRatio": 0.2826772940871672,
+      "hnr": 0.479723896060646,
+      "fluxCV": 0.16907998090718585,
+      "jitter": 0.07411985946698632,
+      "zcrCV": 0.29439531412568065
+    },
+    "rtf": 0.005698465488547077,
+    "voicedWindows": 40
+  },
+  {
+    "name": "N-phone:viper_16k.wav",
+    "cls": "natural",
+    "channel": "narrowband",
+    "ratio": 0.9999790933912066,
+    "maxScore": 0.9999989666158682,
+    "risk": "CRITICAL",
+    "feats": {
+      "hfFlatness": 0.8495722274572804,
+      "hfEnergyRatio": 0.05684905113395704,
+      "hnr": 0.5002426961412488,
+      "fluxCV": 0.21566027006923155,
+      "jitter": 0.03604776421979248,
+      "zcrCV": 0.13836837029059956
+    },
+    "rtf": 0.005748598831652273,
+    "voicedWindows": 40
+  },
+  {
+    "name": "N:ws_librivox_16k.wav",
+    "cls": "natural",
+    "channel": "wideband",
+    "ratio": 0.004449522908261106,
+    "maxScore": 0.2772739135486736,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.5179262984647651,
+      "hfEnergyRatio": 0.19247150731142001,
+      "hnr": 0.7079464176589354,
+      "fluxCV": 0.9007549185827657,
+      "jitter": 0.04293707655529871,
+      "zcrCV": 1.2617347045126905
+    },
+    "rtf": 0.004424159779566455,
+    "voicedWindows": 259
+  },
+  {
+    "name": "N-phone:ws_librivox_16k.wav",
+    "cls": "natural",
+    "channel": "narrowband",
+    "ratio": 0.020274991713792965,
+    "maxScore": 0.29964173570416436,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8476895182852325,
+      "hfEnergyRatio": 0.1324718194002308,
+      "hnr": 0.6823216426470022,
+      "fluxCV": 0.8081750698711139,
+      "jitter": 0.06419940327706766,
+      "zcrCV": 0.6327838973353848
+    },
+    "rtf": 0.004343057578025402,
+    "voicedWindows": 258
+  },
+  {
+    "name": "N:ws_audio_16k.wav",
+    "cls": "natural",
+    "channel": "wideband",
+    "ratio": 0.6754327500175741,
+    "maxScore": 0.9981250112003425,
+    "risk": "HIGH",
+    "feats": {
+      "hfFlatness": 0.627597778362669,
+      "hfEnergyRatio": 0.09400082224123006,
+      "hnr": 0.4506570207261439,
+      "fluxCV": 0.4611229144449396,
+      "jitter": 0.0856136787604945,
+      "zcrCV": 0.5810733281693385
+    },
+    "rtf": 0.005871622688524289,
+    "voicedWindows": 26
+  },
+  {
+    "name": "N-phone:ws_audio_16k.wav",
+    "cls": "natural",
+    "channel": "narrowband",
+    "ratio": 0.8344507561628498,
+    "maxScore": 0.9994755489413731,
+    "risk": "CRITICAL",
+    "feats": {
+      "hfFlatness": 0.8460958377488379,
+      "hfEnergyRatio": 0.1299187539762752,
+      "hnr": 0.5398434191653185,
+      "fluxCV": 0.676822166825815,
+      "jitter": 0.055587148935499577,
+      "zcrCV": 0.30153102526214093
+    },
+    "rtf": 0.005927265785066817,
+    "voicedWindows": 26
+  },
+  {
+    "name": "T:tts_luodo_0.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.0007508542404838569,
+    "maxScore": 0.0028910790621405045,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.6530721611891956,
+      "hfEnergyRatio": 0.18285587832585967,
+      "hnr": 0.7685971122713318,
+      "fluxCV": 1.071398863898422,
+      "jitter": 0.04167655157596116,
+      "zcrCV": 0.8955016056359502
+    },
+    "rtf": 0.004333643172043036,
+    "voicedWindows": 18
+  },
+  {
+    "name": "T-phone:tts_luodo_0.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.0018826676374322315,
+    "maxScore": 0.007267920653614313,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8501466661614954,
+      "hfEnergyRatio": 0.09438092416303663,
+      "hnr": 0.7425868811960252,
+      "fluxCV": 0.9406229915700498,
+      "jitter": 0.04001494406404185,
+      "zcrCV": 0.5667436477581371
+    },
+    "rtf": 0.00469303709677421,
+    "voicedWindows": 18
+  },
+  {
+    "name": "T:tts_chuichui_1.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.0003983073596605229,
+    "maxScore": 0.0012356670145295275,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.7448083135027184,
+      "hfEnergyRatio": 0.1811293167943677,
+      "hnr": 0.7216398635528803,
+      "fluxCV": 1.3315506181023333,
+      "jitter": 0.057558921381430914,
+      "zcrCV": 1.0504865007981268
+    },
+    "rtf": 0.004513527183406131,
+    "voicedWindows": 9
+  },
+  {
+    "name": "T-phone:tts_chuichui_1.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.010660794058148453,
+    "maxScore": 0.022923938626748373,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8515603274839848,
+      "hfEnergyRatio": 0.09249704980983194,
+      "hnr": 0.6850622876045177,
+      "fluxCV": 0.8648838783494435,
+      "jitter": 0.06651339675806751,
+      "zcrCV": 0.6561711626298936
+    },
+    "rtf": 0.004681214301310089,
+    "voicedWindows": 9
+  },
+  {
+    "name": "T:tts_luodo_2.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.00016640529211145558,
+    "maxScore": 0.0003484586435528233,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.646997726717746,
+      "hfEnergyRatio": 0.24257122301665787,
+      "hnr": 0.7664867267217177,
+      "fluxCV": 0.9544497756067314,
+      "jitter": 0.037301691869922785,
+      "zcrCV": 0.9029208514168988
+    },
+    "rtf": 0.0054616597014925375,
+    "voicedWindows": 13
+  },
+  {
+    "name": "T-phone:tts_luodo_2.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.00213613941540758,
+    "maxScore": 0.0048284220787084,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8493337395409901,
+      "hfEnergyRatio": 0.11239570780300102,
+      "hnr": 0.7306656039362824,
+      "fluxCV": 0.799406807214615,
+      "jitter": 0.033283845073303474,
+      "zcrCV": 0.6222992663398009
+    },
+    "rtf": 0.004825980223880589,
+    "voicedWindows": 13
+  },
+  {
+    "name": "T:tts_douji_0.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.00807130905890132,
+    "maxScore": 0.02250880199585812,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.6913147097828373,
+      "hfEnergyRatio": 0.2044992001555221,
+      "hnr": 0.7205918607048706,
+      "fluxCV": 0.7119965008239102,
+      "jitter": 0.05233018008307684,
+      "zcrCV": 0.8238443122224175
+    },
+    "rtf": 0.004404568322580681,
+    "voicedWindows": 15
+  },
+  {
+    "name": "T-phone:tts_douji_0.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.07263269648250578,
+    "maxScore": 0.2441498543821172,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.848685201856693,
+      "hfEnergyRatio": 0.09020940713939002,
+      "hnr": 0.7017574774325387,
+      "fluxCV": 0.7735719592430589,
+      "jitter": 0.05351993720414713,
+      "zcrCV": 0.5482891332291836
+    },
+    "rtf": 0.004654704838709633,
+    "voicedWindows": 15
+  },
+  {
+    "name": "T:tts_tongtong_0.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.0002852446514687163,
+    "maxScore": 0.0009668944047246448,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.6392703922696568,
+      "hfEnergyRatio": 0.2124458495846027,
+      "hnr": 0.7522868126020685,
+      "fluxCV": 0.9177397235952107,
+      "jitter": 0.04152629950845031,
+      "zcrCV": 0.9691726345373982
+    },
+    "rtf": 0.0038287760838150234,
+    "voicedWindows": 13
+  },
+  {
+    "name": "T-phone:tts_tongtong_0.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.008615623810647347,
+    "maxScore": 0.017427186051460673,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8470450211035351,
+      "hfEnergyRatio": 0.10522365138346322,
+      "hnr": 0.7222898459228572,
+      "fluxCV": 0.8350440892864476,
+      "jitter": 0.04581587120110146,
+      "zcrCV": 0.5351870396009497
+    },
+    "rtf": 0.003957112066473989,
+    "voicedWindows": 13
+  },
+  {
+    "name": "T:tts_xiaochen_1.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.12489040381423853,
+    "maxScore": 0.38208503368525504,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.7004754366579179,
+      "hfEnergyRatio": 0.23792794656938202,
+      "hnr": 0.538230749401237,
+      "fluxCV": 0.8162370261724404,
+      "jitter": 0.07631207321453085,
+      "zcrCV": 1.117375270924243
+    },
+    "rtf": 0.004264036972704692,
+    "voicedWindows": 8
+  },
+  {
+    "name": "T-phone:tts_xiaochen_1.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.256431398283996,
+    "maxScore": 0.396931657431961,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8481129881680662,
+      "hfEnergyRatio": 0.10737693299316718,
+      "hnr": 0.550748708229687,
+      "fluxCV": 0.7235837879016286,
+      "jitter": 0.0677506336898537,
+      "zcrCV": 0.5642798464992522
+    },
+    "rtf": 0.00460604491315131,
+    "voicedWindows": 8
+  },
+  {
+    "name": "T:tts_jam_0.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.05239751171881428,
+    "maxScore": 0.1636698205736845,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.5890955403316537,
+      "hfEnergyRatio": 0.24273433367918013,
+      "hnr": 0.68445753570815,
+      "fluxCV": 0.6234028492663188,
+      "jitter": 0.06871778823330982,
+      "zcrCV": 0.8988268111599361
+    },
+    "rtf": 0.004378920907738114,
+    "voicedWindows": 13
+  },
+  {
+    "name": "T-phone:tts_jam_0.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.40477985856107584,
+    "maxScore": 0.9888757615357997,
+    "risk": "MEDIUM",
+    "feats": {
+      "hfFlatness": 0.8483969456812819,
+      "hfEnergyRatio": 0.12353711958012743,
+      "hnr": 0.6618073113904847,
+      "fluxCV": 0.552897884863658,
+      "jitter": 0.0775600447757286,
+      "zcrCV": 0.5092339025228366
+    },
+    "rtf": 0.004424036309523788,
+    "voicedWindows": 13
+  },
+  {
+    "name": "T:tts_kazi_0.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.02007393139516635,
+    "maxScore": 0.06939293299194499,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.5785646082518988,
+      "hfEnergyRatio": 0.17480615419152554,
+      "hnr": 0.6978085759146379,
+      "fluxCV": 0.6638559235649749,
+      "jitter": 0.056625126836549654,
+      "zcrCV": 0.8750680111866008
+    },
+    "rtf": 0.004113591578249329,
+    "voicedWindows": 15
+  },
+  {
+    "name": "T-phone:tts_kazi_0.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.08381766740769458,
+    "maxScore": 0.3301367881874127,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8483950796556243,
+      "hfEnergyRatio": 0.120282091365495,
+      "hnr": 0.6742370314161165,
+      "fluxCV": 0.7537821430233965,
+      "jitter": 0.07257720938230205,
+      "zcrCV": 0.5694406321181859
+    },
+    "rtf": 0.004288871220159132,
+    "voicedWindows": 15
+  },
+  {
+    "name": "T:tts_tongtong_1.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.0005041940119285054,
+    "maxScore": 0.002529152182420601,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.6778202582118905,
+      "hfEnergyRatio": 0.2157839927575585,
+      "hnr": 0.7223977165447428,
+      "fluxCV": 0.8565364909522543,
+      "jitter": 0.056613412625190394,
+      "zcrCV": 0.9065076010899871
+    },
+    "rtf": 0.004235592929292883,
+    "voicedWindows": 7
+  },
+  {
+    "name": "T-phone:tts_tongtong_1.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.006295522632800502,
+    "maxScore": 0.013027014604146857,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8505809796485713,
+      "hfEnergyRatio": 0.09026195919899985,
+      "hnr": 0.699464082213695,
+      "fluxCV": 0.7002498372853289,
+      "jitter": 0.05435600585748695,
+      "zcrCV": 0.5808627903735815
+    },
+    "rtf": 0.004474802525252507,
+    "voicedWindows": 7
+  },
+  {
+    "name": "T:tts_jam_1.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.10781380257618504,
+    "maxScore": 0.22757071263675568,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.5785319809931722,
+      "hfEnergyRatio": 0.288843404210455,
+      "hnr": 0.6700324029993086,
+      "fluxCV": 0.5680338285088232,
+      "jitter": 0.06618935579109891,
+      "zcrCV": 0.8369008679955158
+    },
+    "rtf": 0.004027150000000037,
+    "voicedWindows": 10
+  },
+  {
+    "name": "T-phone:tts_jam_1.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.7232620049637477,
+    "maxScore": 0.876635346530703,
+    "risk": "HIGH",
+    "feats": {
+      "hfFlatness": 0.8479700825762923,
+      "hfEnergyRatio": 0.1509046643265789,
+      "hnr": 0.650521598832186,
+      "fluxCV": 0.506810205895675,
+      "jitter": 0.07947649630701635,
+      "zcrCV": 0.523023988249454
+    },
+    "rtf": 0.0040464424418605064,
+    "voicedWindows": 10
+  },
+  {
+    "name": "T:tts_douji_2.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.0155733994677387,
+    "maxScore": 0.042885098480125526,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.7017690516866746,
+      "hfEnergyRatio": 0.28111688364013476,
+      "hnr": 0.7347518655382175,
+      "fluxCV": 0.8586675869317386,
+      "jitter": 0.050802682369689475,
+      "zcrCV": 0.8742301289601573
+    },
+    "rtf": 0.004314363888888902,
+    "voicedWindows": 10
+  },
+  {
+    "name": "T-phone:tts_douji_2.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.009551492785548224,
+    "maxScore": 0.021177040120782507,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8492914182233026,
+      "hfEnergyRatio": 0.10956098650379138,
+      "hnr": 0.7183473000839882,
+      "fluxCV": 0.7571667743624277,
+      "jitter": 0.052882244404449975,
+      "zcrCV": 0.6118494263637301
+    },
+    "rtf": 0.004711354501915712,
+    "voicedWindows": 10
+  },
+  {
+    "name": "T:tts_jam_2.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.07582550218150229,
+    "maxScore": 0.17339311817116923,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.6233836613817451,
+      "hfEnergyRatio": 0.3066019211220783,
+      "hnr": 0.6986031538686475,
+      "fluxCV": 0.7125815231013256,
+      "jitter": 0.0533960682769955,
+      "zcrCV": 0.9330042401968262
+    },
+    "rtf": 0.004677898210735531,
+    "voicedWindows": 10
+  },
+  {
+    "name": "T-phone:tts_jam_2.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.26530994329547763,
+    "maxScore": 0.5164684565222182,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8473045894228817,
+      "hfEnergyRatio": 0.14152829829900884,
+      "hnr": 0.6808526152243652,
+      "fluxCV": 0.5854462705586835,
+      "jitter": 0.05442560847037137,
+      "zcrCV": 0.5798618283567138
+    },
+    "rtf": 0.004485349900596431,
+    "voicedWindows": 10
+  },
+  {
+    "name": "T:tts_douji_1.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.026801059311957587,
+    "maxScore": 0.06240599519756709,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.6883867973499814,
+      "hfEnergyRatio": 0.24053142096117833,
+      "hnr": 0.7346265782596536,
+      "fluxCV": 0.6525636202834273,
+      "jitter": 0.060950802132670026,
+      "zcrCV": 0.8319672876588031
+    },
+    "rtf": 0.004211705243445711,
+    "voicedWindows": 10
+  },
+  {
+    "name": "T-phone:tts_douji_1.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.033332563108425105,
+    "maxScore": 0.046566110215957135,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8486576288559075,
+      "hfEnergyRatio": 0.10710387282636673,
+      "hnr": 0.7203522433665237,
+      "fluxCV": 0.6533988227791585,
+      "jitter": 0.06126729287904,
+      "zcrCV": 0.5679550543466079
+    },
+    "rtf": 0.004255302247191068,
+    "voicedWindows": 10
+  },
+  {
+    "name": "T:tts_chuichui_0.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.00010912832425080626,
+    "maxScore": 0.00047809034019902295,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.7468413532428454,
+      "hfEnergyRatio": 0.16165297859919942,
+      "hnr": 0.7340783817912803,
+      "fluxCV": 1.3162857577643345,
+      "jitter": 0.05404261606828747,
+      "zcrCV": 1.1507166099441224
+    },
+    "rtf": 0.004103265415335463,
+    "voicedWindows": 12
+  },
+  {
+    "name": "T-phone:tts_chuichui_0.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.0005443930225295585,
+    "maxScore": 0.0013838160771865995,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8508394203140698,
+      "hfEnergyRatio": 0.09498872239429973,
+      "hnr": 0.672541981320923,
+      "fluxCV": 1.0124403962798827,
+      "jitter": 0.07514882696784486,
+      "zcrCV": 0.5804294986157902
+    },
+    "rtf": 0.004322228434504807,
+    "voicedWindows": 12
+  },
+  {
+    "name": "T:tts_chuichui_2.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.000005485610531076007,
+    "maxScore": 0.0000283957211865642,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.7479936061026603,
+      "hfEnergyRatio": 0.23702497662071806,
+      "hnr": 0.7502805451077466,
+      "fluxCV": 1.3529407186897673,
+      "jitter": 0.03766081804061331,
+      "zcrCV": 1.2084782176025848
+    },
+    "rtf": 0.004848932800982889,
+    "voicedWindows": 8
+  },
+  {
+    "name": "T-phone:tts_chuichui_2.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.0009489381572097714,
+    "maxScore": 0.0024095254973281054,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8510074809065188,
+      "hfEnergyRatio": 0.0945532260315487,
+      "hnr": 0.7220607268857586,
+      "fluxCV": 1.014547318528495,
+      "jitter": 0.05772959308998785,
+      "zcrCV": 0.65720392195294
+    },
+    "rtf": 0.0047983362407862514,
+    "voicedWindows": 8
+  },
+  {
+    "name": "T:tts_kazi_1.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.012399912634988866,
+    "maxScore": 0.02262653740858908,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.5776500662439166,
+      "hfEnergyRatio": 0.19519072413017152,
+      "hnr": 0.6783838569956333,
+      "fluxCV": 0.5937490352890306,
+      "jitter": 0.05978981610517884,
+      "zcrCV": 0.8851309483209349
+    },
+    "rtf": 0.0038244883895130906,
+    "voicedWindows": 10
+  },
+  {
+    "name": "T-phone:tts_kazi_1.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.30940559491671116,
+    "maxScore": 0.4344980644965475,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8480003076538031,
+      "hfEnergyRatio": 0.1381363314427271,
+      "hnr": 0.6569800764656872,
+      "fluxCV": 0.5903479112892186,
+      "jitter": 0.08690507416471013,
+      "zcrCV": 0.5659112442713434
+    },
+    "rtf": 0.004047926872659133,
+    "voicedWindows": 10
+  },
+  {
+    "name": "T:tts_tongtong_2.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.0012290754691579079,
+    "maxScore": 0.0028945830277219767,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.684804209947947,
+      "hfEnergyRatio": 0.2356955891669395,
+      "hnr": 0.7620258039170715,
+      "fluxCV": 0.9508809160594266,
+      "jitter": 0.03637648272536414,
+      "zcrCV": 1.1109138568732737
+    },
+    "rtf": 0.004209911161731224,
+    "voicedWindows": 8
+  },
+  {
+    "name": "T-phone:tts_tongtong_2.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.001494849202502078,
+    "maxScore": 0.0037746985940762686,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8492991546619344,
+      "hfEnergyRatio": 0.12124651678119293,
+      "hnr": 0.7291087511167718,
+      "fluxCV": 0.8218171148481227,
+      "jitter": 0.05514657880948255,
+      "zcrCV": 0.6428558861348056
+    },
+    "rtf": 0.004250113553530718,
+    "voicedWindows": 8
+  },
+  {
+    "name": "T:tts_luodo_1.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.0019327194997098586,
+    "maxScore": 0.008365960524150264,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.6525716740673636,
+      "hfEnergyRatio": 0.21115451526731072,
+      "hnr": 0.7671378132122845,
+      "fluxCV": 0.9466872251982962,
+      "jitter": 0.03924225279943243,
+      "zcrCV": 0.893280045789742
+    },
+    "rtf": 0.004407517521367559,
+    "voicedWindows": 14
+  },
+  {
+    "name": "T-phone:tts_luodo_1.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.0032787107818265915,
+    "maxScore": 0.009095939659867176,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8491185632603673,
+      "hfEnergyRatio": 0.1129176627433653,
+      "hnr": 0.7384567244898813,
+      "fluxCV": 0.8287649586099564,
+      "jitter": 0.03665285955194059,
+      "zcrCV": 0.5794912258768362
+    },
+    "rtf": 0.004958858262108266,
+    "voicedWindows": 14
+  },
+  {
+    "name": "T:tts_kazi_2.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.027773040613480578,
+    "maxScore": 0.09479290600796457,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.5864487387804916,
+      "hfEnergyRatio": 0.25773005346192757,
+      "hnr": 0.7485053008227484,
+      "fluxCV": 0.6547054507225637,
+      "jitter": 0.03473949097036514,
+      "zcrCV": 0.932033297292596
+    },
+    "rtf": 0.0034438108556149867,
+    "voicedWindows": 18
+  },
+  {
+    "name": "T-phone:tts_kazi_2.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.022434458409684114,
+    "maxScore": 0.0692401803418983,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.847517924738767,
+      "hfEnergyRatio": 0.12621663678019981,
+      "hnr": 0.7204553500187925,
+      "fluxCV": 0.7013537929120682,
+      "jitter": 0.03955097413414791,
+      "zcrCV": 0.6143032670642881
+    },
+    "rtf": 0.0034540772727272525,
+    "voicedWindows": 18
+  },
+  {
+    "name": "T:tts_xiaochen_2.wav",
+    "cls": "tts",
+    "channel": "wideband",
+    "ratio": 0.00030932194125770187,
+    "maxScore": 0.0004488523960174668,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.7029691720656219,
+      "hfEnergyRatio": 0.2626317077956824,
+      "hnr": 0.5579450821771847,
+      "fluxCV": 1.3075658446205976,
+      "jitter": 0.04809703059008008,
+      "zcrCV": 1.1822776696945843
+    },
+    "rtf": 0.004322611822125846,
+    "voicedWindows": 9
+  },
+  {
+    "name": "T-phone:tts_xiaochen_2.wav",
+    "cls": "tts",
+    "channel": "narrowband",
+    "ratio": 0.024528174711029957,
+    "maxScore": 0.05122327370464326,
+    "risk": "LOW",
+    "feats": {
+      "hfFlatness": 0.8480736369298609,
+      "hfEnergyRatio": 0.12334963770788344,
+      "hnr": 0.5812862062574032,
+      "fluxCV": 0.9270695429461421,
+      "jitter": 0.04431243144494113,
+      "zcrCV": 0.5574913399877407
+    },
+    "rtf": 0.004508785683297219,
+    "voicedWindows": 9
+  }
+]

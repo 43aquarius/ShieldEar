@@ -1,0 +1,236 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-stack-sans);
+  --font-mono: var(--font-stack-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --font-stack-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Helvetica Neue", sans-serif;
+  --font-stack-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code",
+    Menlo, Consolas, "Liberation Mono", monospace;
+  /* 亮色（声盾·日间模式） */
+  --background: oklch(0.985 0.005 160);
+  --foreground: oklch(0.18 0.02 160);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 160);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 160);
+  --primary: oklch(0.51 0.13 163);
+  --primary-foreground: oklch(0.985 0.005 160);
+  --secondary: oklch(0.955 0.012 160);
+  --secondary-foreground: oklch(0.26 0.03 163);
+  --muted: oklch(0.955 0.012 160);
+  --muted-foreground: oklch(0.5 0.02 160);
+  --accent: oklch(0.93 0.04 163);
+  --accent-foreground: oklch(0.26 0.05 163);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.9 0.015 160);
+  --input: oklch(0.9 0.015 160);
+  --ring: oklch(0.51 0.13 163);
+  --chart-1: oklch(0.55 0.15 163);
+  --chart-2: oklch(0.7 0.15 85);
+  --chart-3: oklch(0.62 0.21 25);
+  --chart-4: oklch(0.65 0.12 230);
+  --chart-5: oklch(0.75 0.14 145);
+  --sidebar: oklch(0.985 0.005 160);
+  --sidebar-foreground: oklch(0.18 0.02 160);
+  --sidebar-primary: oklch(0.51 0.13 163);
+  --sidebar-primary-foreground: oklch(0.985 0.005 160);
+  --sidebar-accent: oklch(0.955 0.012 160);
+  --sidebar-accent-foreground: oklch(0.26 0.03 163);
+  --sidebar-border: oklch(0.9 0.015 160);
+  --sidebar-ring: oklch(0.51 0.13 163);
+}
+
+.dark {
+  /* 声盾·安全运营暗色主题：墨绿-黑背景 + 荧翠强调 */
+  --background: oklch(0.145 0.012 165);
+  --foreground: oklch(0.93 0.01 160);
+  --card: oklch(0.195 0.015 165);
+  --card-foreground: oklch(0.93 0.01 160);
+  --popover: oklch(0.195 0.015 165);
+  --popover-foreground: oklch(0.93 0.01 160);
+  --primary: oklch(0.77 0.16 163);
+  --primary-foreground: oklch(0.16 0.03 165);
+  --secondary: oklch(0.26 0.02 165);
+  --secondary-foreground: oklch(0.93 0.01 160);
+  --muted: oklch(0.24 0.018 165);
+  --muted-foreground: oklch(0.68 0.015 160);
+  --accent: oklch(0.28 0.04 163);
+  --accent-foreground: oklch(0.87 0.06 163);
+  --destructive: oklch(0.66 0.2 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.77 0.16 163);
+  --chart-1: oklch(0.77 0.16 163);
+  --chart-2: oklch(0.8 0.16 85);
+  --chart-3: oklch(0.66 0.21 25);
+  --chart-4: oklch(0.7 0.12 230);
+  --chart-5: oklch(0.8 0.14 145);
+  --sidebar: oklch(0.195 0.015 165);
+  --sidebar-foreground: oklch(0.93 0.01 160);
+  --sidebar-primary: oklch(0.77 0.16 163);
+  --sidebar-primary-foreground: oklch(0.16 0.03 165);
+  --sidebar-accent: oklch(0.26 0.02 165);
+  --sidebar-accent-foreground: oklch(0.93 0.01 160);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.77 0.16 163);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-stack-sans);
+  }
+}
+
+/* ============ 声盾自定义样式 ============ */
+
+.font-mono-data {
+  font-family: var(--font-stack-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 网格背景（安全运营风格） */
+.grid-bg {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 3%) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 3%) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* 雷达扫描动画 */
+@keyframes radar-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.radar-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 25%;
+  background: linear-gradient(90deg, transparent, oklch(0.77 0.16 163 / 18%), transparent);
+  animation: radar-sweep 3.2s linear infinite;
+}
+
+/* 告警脉冲 */
+@keyframes alert-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.66 0.21 25 / 45%); }
+  50% { box-shadow: 0 0 0 10px oklch(0.66 0.21 25 / 0%); }
+}
+.alert-pulse {
+  animation: alert-pulse 1.6s ease-out infinite;
+}
+
+/* 心跳圆点 */
+@keyframes live-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+.live-dot {
+  animation: live-dot 1.4s ease-in-out infinite;
+}
+
+/* 细滚动条 */
+.slim-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.slim-scroll::-webkit-scrollbar-thumb {
+  background: oklch(0.45 0.03 165);
+  border-radius: 3px;
+}
+.slim-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ============ 核验报告打印样式 ============ */
+#print-root {
+  display: none;
+}
+@media print {
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  #app-shell-root {
+    display: none !important;
+  }
+  #print-root {
+    display: block !important;
+    width: 100% !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 14mm 12mm !important;
+    font-family: var(--font-stack-sans) !important;
+  }
+  #print-root .print-nobreak {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  #print-root table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  #print-root th,
+  #print-root td {
+    border: 1px solid #999 !important;
+    padding: 3px 8px;
+    font-size: 10.5px;
+    text-align: left;
+    vertical-align: top;
+  }
+  #print-root th {
+    background: #f2f2f2 !important;
+    font-weight: 600;
+    color: #000 !important;
+  }
+  #print-root td {
+    color: #111 !important;
+  }
+}

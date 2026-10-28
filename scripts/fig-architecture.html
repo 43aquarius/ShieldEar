@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --text: #111827; --text-sub: #6B7280; --border: #E5E7EB;
+    --connector: #94A3B8;
+  }
+  body {
+    font-family: 'PingFang SC', 'Noto Sans SC', 'SimHei', system-ui, sans-serif;
+    background: #FFFFFF; color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  #root { width: 1360px; margin: 0 auto; padding: 44px 48px 40px; background: #FFFFFF; }
+
+  .flow-title { font-size: 24px; font-weight: 700; text-align: center; color: #172540; }
+  .flow-subtitle { font-size: 13.5px; color: var(--text-sub); text-align: center; margin-top: 8px; margin-bottom: 34px; }
+
+  /* 阶段（层级）卡片 — 同色系蓝灰渐进（Scheme B） */
+  .phase-group { border-radius: 12px; padding: 18px 22px 16px; margin: 0; background: #F8FAFC; }
+  .phase-title {
+    font-size: 16.5px; font-weight: 700; padding: 9px 16px; border-radius: 8px;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  .phase-title .en { font-size: 11px; font-weight: 500; color: #64748B; letter-spacing: 0.4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 13px; padding-left: 6px; }
+  .chip {
+    background: #FFFFFF; border: 1.5px solid #C9D4E0; border-radius: 8px;
+    padding: 9px 14px; font-size: 13.5px; color: #283C52; line-height: 1.45;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.05); max-width: 300px;
+  }
+  .chip b { font-weight: 600; color: #1E3048; }
+  .chip .d { display: block; font-size: 11.5px; color: #6B7280; margin-top: 3px; }
+
+  .p1 .phase-title { background: #F1F5F9; color: #334155; border-left: 4px solid #94A3B8; }
+  .p2 .phase-title { background: #E8EDF3; color: #2D4156; border-left: 4px solid #6B809A; }
+  .p3 .phase-title { background: #E2E8F0; color: #283C52; border-left: 4px solid #5B7590; }
+  .p4 .phase-title { background: #DAE1EB; color: #23364D; border-left: 4px solid #4B6A87; }
+  .p5 .phase-title { background: #D2DAE5; color: #1E3048; border-left: 4px solid #3B5F7D; }
+
+  .arrow { text-align: center; color: var(--connector); font-size: 22px; line-height: 1; margin: 10px 0; }
+
+  /* 侧边注释：同构引擎 */
+  .side-note {
+    margin-top: 26px; display: flex; gap: 14px; justify-content: center;
+  }
+  .deploy {
+    flex: 1; max-width: 640px; background: #F8FAFC; border: 1.5px dashed #B9C6D4;
+    border-radius: 12px; padding: 16px 20px;
+  }
+  .deploy .dp-title { font-size: 14px; font-weight: 700; color: #23364D; margin-bottom: 10px; }
+  .deploy .dp-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .deploy .dp-item {
+    background: #FFFFFF; border: 1px solid #C9D4E0; border-radius: 6px;
+    font-size: 12.5px; color: #374151; padding: 7px 11px;
+  }
+  .deploy .dp-item.acc { border-color: #4B6A87; background: #EDF2F7; color: #23364D; font-weight: 600; }
+  .dp-link { align-self: center; color: #4B6A87; font-size: 18px; font-weight: 700; padding: 0 2px; }
+
+  .legend {
+    margin-top: 24px; padding: 12px 20px; background: #F9FAFB; border-radius: 8px;
+    border: 1px solid var(--border); font-size: 12px; color: #6B7280; text-align: center;
+  }
+  .legend b { color: #374151; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="flow-title">声盾 ShieldEar：五层总体架构</div>
+  <div class="flow-subtitle">数据流自上而下：采集 → 检测引擎 → 判决融合 → 业务 → 展示（浏览器端与服务端运行同构 TypeScript 引擎）</div>
+
+  <div class="phase-group p1">
+    <div class="phase-title">采集层<span class="en">ACQUISITION</span></div>
+    <div class="chips">
+      <div class="chip"><b>浏览器麦克风流</b><span class="d">AudioWorklet 实时采集，16kHz 单声道 PCM</span></div>
+      <div class="chip"><b>文件导入</b><span class="d">WAV 解码 / 拖拽上传，服务端统一重采样</span></div>
+      <div class="chip"><b>现场合成挑战</b><span class="d">内置 TTS 合成通道，生成对照样本</span></div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="phase-group p2">
+    <div class="phase-title">检测引擎层<span class="en">ENGINE（同构 TS，零第三方依赖）</span></div>
+    <div class="chips">
+      <div class="chip"><b>滑动窗口管线</b><span class="d">2s 窗口 / 1s 步进（50% 重叠），流式逐窗分析</span></div>
+      <div class="chip"><b>八维声学特征</b><span class="d">hnr / zcrCV / fluxCV / hfPeriodicity 等声码器指纹</span></div>
+      <div class="chip"><b>逻辑回归评分</b><span class="d">z 标准化 + 类加权 L2 校准权重</span></div>
+      <div class="chip"><b>窄带信道自适应</b><span class="d">300–3400Hz 电话信道参数切换</span></div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="phase-group p3">
+    <div class="phase-title">判决融合层<span class="en">FUSION &amp; DECISION</span></div>
+    <div class="chips">
+      <div class="chip"><b>逐窗判决</b><span class="d">中值滤波 + EMA 平滑，输出逐窗合成概率</span></div>
+      <div class="chip"><b>整段判决</b><span class="d">能量加权聚合有声窗，输出整段置信度</span></div>
+      <div class="chip"><b>四级风险分级</b><span class="d">LOW / MEDIUM / HIGH / CRITICAL 阈值 0.35/0.55/0.75</span></div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="phase-group p4">
+    <div class="phase-title">业务层<span class="en">SERVICE</span></div>
+    <div class="chips">
+      <div class="chip"><b>风险分级提示</b><span class="d">判决话术 + 处置建议（回拨核实、96110 举报）</span></div>
+      <div class="chip"><b>证据留存</b><span class="d">SHA-256 哈希 + 时间戳，WAV 证据落盘</span></div>
+      <div class="chip"><b>服务端复核</b><span class="d">API 路由复算，双端一致性校验</span></div>
+      <div class="chip"><b>核验报告</b><span class="d">可打印八章节取证报告</span></div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="phase-group p5">
+    <div class="phase-title">展示层<span class="en">PRESENTATION（单页应用，零跳转演示）</span></div>
+    <div class="chips">
+      <div class="chip"><b>实时鉴听</b><span class="d">波形画布 + 逐窗置信度曲线 + 告警脉冲</span></div>
+      <div class="chip"><b>文件检测</b><span class="d">拖拽即测，特征剖面可解释展示</span></div>
+      <div class="chip"><b>案例库</b><span class="d">历史检测案件与证据链查询</span></div>
+      <div class="chip"><b>结果面板</b><span class="d">判决卡 + 时间轴 + 证据哈希链</span></div>
+    </div>
+  </div>
+
+  <div class="side-note">
+    <div class="deploy">
+      <div class="dp-title">浏览器端（实时鉴听）</div>
+      <div class="dp-row">
+        <div class="dp-item acc">AudioWorklet 采集</div>
+        <div class="dp-item acc">同构引擎（初判）</div>
+        <div class="dp-item">逐窗曲线渲染</div>
+        <div class="dp-item">本地告警脉冲/提示音</div>
+      </div>
+    </div>
+    <div class="dp-link">⇄</div>
+    <div class="deploy">
+      <div class="dp-title">服务端（Next.js API）</div>
+      <div class="dp-row">
+        <div class="dp-item acc">同构引擎（复核）</div>
+        <div class="dp-item">Prisma / SQLite 存证库</div>
+        <div class="dp-item">evidence/ 证据落盘</div>
+        <div class="dp-item">案例与报告 API</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend"><b>说明：</b>检测引擎层为纯 TypeScript 实现（FFT、自相关基音分析、特征与评分），在浏览器与服务端运行完全相同的代码，保证「客户端初判 + 服务端复核」的判决一致性与取证可复现性。</div>
+</div>
+</body>
+</html>

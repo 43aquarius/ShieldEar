@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 声盾 — 检测案例（含证据链）数据模型
+// 每条案例对应一次完整鉴伪检测：原始哈希、逐窗判决、特征剖面、引擎版本
+
+model DetectionCase {
+  id              String   @id @default(cuid())
+  // 案件编号：SS-YYYYMMDD-XXXX
+  caseNo          String   @unique
+  // LIVE=实时鉴听 / UPLOAD=文件检测 / TTS=现场合成挑战
+  sourceType      String
+  sourceLabel     String
+  fileName        String?
+  fileSize        Int?
+  sourceHash      String?  // 原始上传文件 SHA-256（UPLOAD/TTS 场景）
+  durationSec     Float
+  sampleRate      Int      @default(16000)
+  // 证据音频（16kHz 单声道 WAV）SHA-256
+  audioHash       String
+  overallRisk     String   // LOW / MEDIUM / HIGH / CRITICAL
+  syntheticRatio  Float
+  meanScore       Float
+  maxScore        Float
+  windowCount     Int
+  voicedWindowCount Int
+  totalWindows    Int
+  // 逐窗判决明细（含特征向量）
+  windows         Json
+  // 特征剖面（可解释性汇总）
+  featureProfile  Json
+  segments        Json
+  channel         String   @default("wideband")
+  engineVersion   String
+  rtf             Float    @default(0)
+  analyzeMs       Int      @default(0)
+  serverVerified  Boolean  @default(true)
+  notes           String?
+  createdAt       DateTime @default(now())
+}

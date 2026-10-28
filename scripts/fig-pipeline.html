@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --text: #111827; --text-sub: #6B7280; --border: #E5E7EB; --connector: #94A3B8;
+  }
+  body {
+    font-family: 'PingFang SC', 'Noto Sans SC', 'SimHei', system-ui, sans-serif;
+    background: #FFFFFF; color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  #root { width: 1120px; margin: 0 auto; padding: 44px 48px 40px; background: #FFFFFF; }
+
+  .flow-title { font-size: 24px; font-weight: 700; text-align: center; color: #172540; }
+  .flow-subtitle { font-size: 13.5px; color: var(--text-sub); text-align: center; margin-top: 8px; margin-bottom: 32px; }
+
+  .phase-group { background: #F8FAFC; border-radius: 12px; padding: 18px 22px 16px; }
+  .phase-title { font-size: 16.5px; font-weight: 700; padding: 9px 16px; border-radius: 8px; margin-bottom: 14px; }
+  .phase-title .en { font-size: 11px; font-weight: 500; color: #64748B; margin-left: 12px; letter-spacing: 0.4px; }
+
+  .phase-steps { display: flex; flex-direction: column; gap: 8px; padding-left: 10px; }
+  .phase-step {
+    font-size: 14px; color: var(--text); padding: 10px 14px; background: white;
+    border-radius: 6px; border: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 4px;
+  }
+  .phase-step .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 24px; height: 24px; border-radius: 50%; font-size: 12px; font-weight: 600;
+    margin-right: 10px; align-self: center;
+  }
+  .phase-step b { font-weight: 600; }
+  .phase-step .note { color: #6B7280; font-size: 12.5px; margin-left: 8px; }
+
+  .p1 .phase-title { background: #F1F5F9; color: #334155; border-left: 4px solid #94A3B8; }
+  .p1 .step-num { background: #F1F5F9; color: #475569; }
+  .p2 .phase-title { background: #E8EDF3; color: #2D4156; border-left: 4px solid #6B809A; }
+  .p2 .step-num { background: #E2E8F0; color: #1E3A5F; }
+  .p3 .phase-title { background: #E2E8F0; color: #283C52; border-left: 4px solid #5B7590; }
+  .p3 .step-num { background: #D0D9E4; color: #1E3050; }
+  .p4 .phase-title { background: #DAE1EB; color: #23364D; border-left: 4px solid #4B6A87; }
+  .p4 .step-num { background: #C7D2E0; color: #23364D; }
+
+  .arrow { text-align: center; color: var(--connector); font-size: 22px; line-height: 1; margin: 10px 0; }
+
+  .branch { display: flex; gap: 14px; margin-top: 0; }
+  .branch .phase-group { flex: 1; }
+  .branch-label { text-align: center; font-size: 12px; color: #475569; margin: 6px 0 10px; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="flow-title">声盾核心软件流程：流式滑动窗口检测管线</div>
+  <div class="flow-subtitle">从音频接入到风险处置的完整处理链路（2s 窗口 / 1s 步进，逐窗时延 &lt; 10ms，判决时延 ≤ 1s）</div>
+
+  <div class="phase-group p1">
+    <div class="phase-title">一、信号接入与预处理<span class="en">INPUT</span></div>
+    <div class="phase-steps">
+      <div class="phase-step"><span class="step-num">1</span><b>音频接入</b><span class="note">实时麦克风流（AudioWorklet）或文件导入（WAV/MP3 解码）</span></div>
+      <div class="phase-step"><span class="step-num">2</span><b>统一重采样</b><span class="note">抗混叠重采样至 16kHz，多声道混合为单声道</span></div>
+      <div class="phase-step"><span class="step-num">3</span><b>帧化加窗</b><span class="note">25ms 帧 / 15ms 帧移，Hann 窗，512 点 FFT</span></div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="phase-group p2">
+    <div class="phase-title">二、滑窗特征提取<span class="en">WINDOWING &amp; FEATURES</span></div>
+    <div class="phase-steps">
+      <div class="phase-step"><span class="step-num">4</span><b>滑动窗口切分</b><span class="note">2s 窗口、1s 步进（50% 重叠），边通话边出结果</span></div>
+      <div class="phase-step"><span class="step-num">5</span><b>静音窗排除</b><span class="note">帧 RMS 能量判定，有效语音比例 &lt; 22% 的窗口不参与判决</span></div>
+      <div class="phase-step"><span class="step-num">6</span><b>八维声学特征提取</b><span class="note">hnr / hnrCV / fluxCV / jitter / zcrCV / hfFlatness / hfEnergyRatio / hfPeriodicity</span></div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="phase-group p3">
+    <div class="phase-title">三、评分与判决融合<span class="en">SCORING &amp; FUSION</span></div>
+    <div class="phase-steps">
+      <div class="phase-step"><span class="step-num">7</span><b>逐窗逻辑回归评分</b><span class="note">特征 z 标准化 → 校准权重线性组合 → sigmoid 映射为合成概率</span></div>
+      <div class="phase-step"><span class="step-num">8</span><b>序列平滑</b><span class="note">中值滤波去脉冲 + EMA 平滑，抑制单窗抖动</span></div>
+      <div class="phase-step"><span class="step-num">9</span><b>整段能量加权判决</b><span class="note">按窗口能量加权聚合有声窗 → syntheticRatio 整段置信度</span></div>
+      <div class="phase-step"><span class="step-num">10</span><b>四级风险分级</b><span class="note">LOW / MEDIUM（放行） · HIGH / CRITICAL（检出告警）</span></div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="phase-group p4">
+    <div class="phase-title">四、风险处置与存证<span class="en">ACTION &amp; EVIDENCE</span></div>
+    <div class="phase-steps">
+      <div class="phase-step"><span class="step-num">11</span><b>实时告警</b><span class="note">HIGH/CRITICAL 触发告警脉冲与提示音，展示处置建议（回拨核实 / 96110）</span></div>
+      <div class="phase-step"><span class="step-num">12</span><b>证据固定</b><span class="note">音频 SHA-256 哈希 + 检测时间戳，WAV 证据与窗口特征剖面落盘</span></div>
+      <div class="phase-step"><span class="step-num">13</span><b>服务端复核与报告</b><span class="note">同构引擎复算校验一致性，生成可打印核验报告供反诈取证</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
