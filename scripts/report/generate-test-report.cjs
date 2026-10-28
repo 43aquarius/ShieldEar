@@ -1,7 +1,7 @@
 /**
  * 声盾系统测试报告 — 主装配脚本
  * 三节结构：封面（无页码）/ 前置（摘要+目录，罗马页码）/ 正文（阿拉伯页码从1起）
- * 数据来源：calibration/testsuite_results.json（210 条真实判决）
+ * 数据来源：calibration/testsuite_results.json（258 条真实判决）
  */
 const {
   Document, Packer, Paragraph, TextRun, Header, Footer,
@@ -16,23 +16,23 @@ const part1 = require("./test-content-part1.cjs");
 const part2 = require("./test-content-part2.cjs");
 const part3 = require("./test-content-part3.cjs");
 
-const OUT = "/home/z/my-project/download/\u58f0\u76fe-\u7cfb\u7edf\u6d4b\u8bd5\u62a5\u544a.docx";
+const OUT = "/home/z/my-project/download/声盾-系统测试报告.docx";
 
 // ============ 封面配置（与技术报告同一视觉体系：声盾安全绿） ============
 const coverConfig = {
-  title: "\u58f0\u76fe\u7cfb\u7edf\u6d4b\u8bd5\u62a5\u544a",
-  subtitle: "\u9762\u5411AI\u8bed\u97f3\u8bc8\u9a97\u7684\u5b9e\u65f6\u9274\u4f2a\u53cd\u8bc8\u5e73\u53f0 \u00b7 \u5168\u56fd\u5927\u5b66\u751f\u4fe1\u606f\u5b89\u5168\u7ade\u8d5b\u4f5c\u54c1\u8d5b",
+  title: "声盾系统测试报告",
+  subtitle: "面向AI语音诈骗的实时鉴伪反诈平台 · 全国大学生信息安全竞赛作品赛",
   englishLabel: "SHIELDEAR SYSTEM TEST REPORT",
   metaLines: [
     "被测版本：ShieldEar v1.3.0-calibrated",
     "参赛队伍：你们说的对",
     "参赛单位：大连理工大学",
-    "团队成员：谭畅 等 2 人",
+    "团队成员：43aquarius、谭畅（共 2 人）",
     "开源仓库：github.com/43aquarius/ShieldEar",
     "测试日期：2026 年 10 月",
   ],
-  footerLeft: "ShieldEar \u00b7 Voice Anti-Fraud Platform",
-  footerRight: "TEST-SUITE V1.0 \u00b7 2026.10",
+  footerLeft: "ShieldEar · Voice Anti-Fraud Platform",
+  footerRight: "TEST-SUITE V1.1 · 2026.10",
   palette: {
     bg: "0A1410",
     titleColor: "E8F5EE",
@@ -50,7 +50,7 @@ function bodyHeader() {
       alignment: AlignmentType.CENTER,
       border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: PAL.innerBorder, space: 4 } },
       children: [new TextRun({
-        text: "\u58f0\u76fe\uff1a\u9762\u5411AI\u8bed\u97f3\u8bc8\u9a97\u7684\u5b9e\u65f6\u9274\u4f2a\u53cd\u8bc8\u5e73\u53f0 \u00b7 \u7cfb\u7edf\u6d4b\u8bd5\u62a5\u544a",
+        text: "声盾：面向AI语音诈骗的实时鉴伪反诈平台 · 系统测试报告",
         size: 18, color: "808080",
         font: { ascii: "Times New Roman", eastAsia: "SimSun" },
       })],
@@ -74,7 +74,7 @@ const frontMatter = [
     alignment: AlignmentType.CENTER,
     spacing: { before: 480, after: 360 },
     children: [new TextRun({
-      text: "\u76ee  \u5f55", bold: true, size: 32,
+      text: "目  录", bold: true, size: 32,
       font: { eastAsia: "SimHei", ascii: "Times New Roman" },
     })],
   }),
@@ -85,7 +85,7 @@ const frontMatter = [
   new Paragraph({
     spacing: { before: 200 },
     children: [new TextRun({
-      text: "\u6ce8\uff1a\u672c\u76ee\u5f55\u7531\u57df\u4ee3\u7801\u751f\u6210\u3002\u7f16\u8f91\u6587\u6863\u540e\uff0c\u8bf7\u5728\u76ee\u5f55\u4e0a\u70b9\u51fb\u53f3\u952e\u5e76\u9009\u62e9\u300c\u66f4\u65b0\u57df\u300d\u4ee5\u5237\u65b0\u9875\u7801\u3002",
+      text: "注：本目录由域代码生成。编辑文档后，请在目录上点击右键并选择「更新域」以刷新页码。",
       italics: true, size: 18, color: "888888",
       font: { ascii: "Times New Roman", eastAsia: "SimSun" },
     })],
@@ -111,9 +111,9 @@ const pgSize = { width: 11906, height: 16838 };
 const pgMargin = { top: 1440, bottom: 1440, left: 1701, right: 1417 };
 
 const doc = new Document({
-  creator: "\u58f0\u76fe ShieldEar \u56e2\u961f",
-  title: "\u58f0\u76fe\u7cfb\u7edf\u6d4b\u8bd5\u62a5\u544a",
-  description: "\u5168\u56fd\u5927\u5b66\u751f\u4fe1\u606f\u5b89\u5168\u7ade\u8d5b\u4f5c\u54c1\u8d5b \u00b7 \u7cfb\u7edf\u6d4b\u8bd5\u62a5\u544a",
+  creator: "声盾 ShieldEar 团队",
+  title: "声盾系统测试报告",
+  description: "全国大学生信息安全竞赛作品赛 · 系统测试报告",
   styles: {
     default: {
       document: {

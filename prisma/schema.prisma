@@ -1,7 +1,7 @@
 generator client {
   provider = "prisma-client-js"
-  // 打包可执行程序需在 Windows 评审机上运行：同时生成 native 与 windows 引擎
-  binaryTargets = ["native", "windows"]
+  // 可执行程序包需在 Windows / Linux / macOS 评审机上直接运行：一次生成三平台查询引擎
+  binaryTargets = ["native", "windows", "darwin-arm64"]
 }
 
 datasource db {
