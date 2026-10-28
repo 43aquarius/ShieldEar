@@ -1,57 +1,60 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1280, initial-scale=1">
-<title>声盾 · 结尾</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>13｜结尾</title>
 <link rel="stylesheet" href="global.css">
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-  html, body { width: 1280px; height: 720px; overflow: hidden; }
+  html,body{margin:0;padding:0;width:1280px;height:720px;overflow:hidden}
 </style>
 </head>
 <body>
-<div class="slide">
+<div class="slide dark">
+
+  <!-- 幽灵大数字：仅深底页，金色 9%，刻意出血（登记白名单） -->
+  <div class="ghost" style="right:-30px; bottom:-58px; font-size:340px; font-weight:600;">13</div>
+
+  <!-- 右上点阵装饰层 -->
+  <div class="dotgrid-dark" style="position:absolute; right:0; top:0; width:430px; height:170px; opacity:.7;"></div>
 
   <!-- 主体：非对称，重心偏左下 -->
-  <div class="absolute left-20 top-[186px]">
-    <p style="font-size:14px; color:var(--muted); letter-spacing:.5em;">SHIELDEAR</p>
-    <p class="serif" style="margin-top:30px; font-size:52px; font-weight:900; line-height:1.5;">
-      下一次接到「熟人」来电，<br>希望几秒钟后，你手里<br>能有一个<span class="accent">可以相信的答案</span>。
+  <div style="position:absolute; left:72px; top:168px; width:760px;">
+    <p class="mono" style="font-size:var(--fs-micro); color:var(--accent); letter-spacing:.17em;">SHIELDEAR</p>
+    <p class="kai" style="margin-top:26px; font-size:44px; font-weight:700; line-height:1.6; color:#F2EFE7;">
+      下一次接到「熟人」来电，<br>希望几秒钟后，你手里<br>能有一个<span style="color:var(--accent);">可以相信的答案</span>。
     </p>
   </div>
 
   <!-- 右上：真实证据锚点（案件号，非装饰） -->
-  <div class="absolute right-20 top-[150px] text-right">
-    <p class="num" style="font-size:11px; color:var(--muted); letter-spacing:.18em;">案例库 · 随时可查</p>
-    <p class="num" style="margin-top:8px; font-size:19px; font-weight:500; color:var(--secondary);">SS-20261028-0003</p>
-    <p style="margin-top:8px; font-size:12px; color:var(--muted); line-height:1.7;">现场合成 · 当场检出 · 双哈希入库<br>答辩中生成的每一件证据都可复核</p>
+  <div style="position:absolute; right:72px; top:150px; text-align:right;">
+    <p class="mono" style="font-size:var(--fs-micro); color:rgba(239,235,221,.55); letter-spacing:.17em;">案例库 · 随时可查</p>
+    <p class="num" style="margin-top:10px; font-size:var(--fs-h3); font-weight:500; color:rgba(239,235,221,.85);">SS-20261028-0003</p>
+    <p style="margin-top:9px; font-size:var(--fs-micro); color:rgba(239,235,221,.55); line-height:1.7;">现场合成 · 当场检出 · 双哈希入库<br>答辩中生成的每一件证据都可复核</p>
   </div>
 
-  <!-- 右下：一行事实性小字（替代三个胶囊按钮） -->
-  <div class="absolute right-20 bottom-[150px] text-right">
-    <p style="font-size:13.5px; color:var(--secondary); line-height:2.1;">
-      现场演示就绪 · 评审可任意出题<br>
-      证据链与案件库可当场复核<br>
-      引擎与测试代码随作品提交
-    </p>
+  <!-- 右下：三条 takeaway（hairline 纵列） -->
+  <div style="position:absolute; right:72px; bottom:132px; width:400px; text-align:right;">
+    <div class="hairline" style="padding:10px 0;">
+      <p style="font-size:var(--fs-small); color:rgba(239,235,221,.85); line-height:1.6;">现场演示就绪 · 评审可任意出题</p>
+    </div>
+    <div class="hairline" style="padding:10px 0;">
+      <p style="font-size:var(--fs-small); color:rgba(239,235,221,.85); line-height:1.6;">证据链与案件库可当场复核</p>
+    </div>
+    <div class="hairline" style="padding:10px 0;">
+      <p style="font-size:var(--fs-small); color:rgba(239,235,221,.85); line-height:1.6;">引擎与测试代码随作品提交</p>
+    </div>
   </div>
 
   <!-- 底部压舱 -->
-  <div class="absolute left-20 right-20 bottom-12">
-    <div class="hairline" style="padding-top:18px; display:flex; justify-content:space-between; align-items:baseline;">
-      <p style="font-size:14.5px; color:var(--primary);">谢谢聆听，恳请各位评委批评指正</p>
-      <p style="font-size:13px; color:var(--muted);">【团队名称】 · 大连理工大学 · <span class="num">2026.10</span></p>
+  <div style="position:absolute; left:72px; right:72px; bottom:44px;">
+    <div class="hairline" style="padding-top:17px; display:flex; justify-content:space-between; align-items:baseline;">
+      <p class="serif" style="font-size:var(--fs-h3); font-weight:700; color:#F2EFE7;">谢谢聆听，恳请各位评委批评指正</p>
+      <p style="font-size:var(--fs-small); color:rgba(239,235,221,.6);">【团队名称】 · 大连理工大学 · <span class="num">2026.10</span></p>
     </div>
   </div>
 </div>
 
-<aside data-notes class="hidden" style="display:none;">
-  <ul>
-    <li>结尾语放慢：下一次接到熟人来电，希望几秒钟后你能有一个可以相信的答案。</li>
-    <li>口头补一句：演示环节现在就可以开始，欢迎出题。</li>
-    <li>致谢简短，把时间留给演示与问答。</li>
-  </ul>
-</aside>
+<aside data-notes class="hidden" style="display:none;">收个尾。做这个作品的过程中我们反复想的，其实就是一句话：下一次接到「熟人」来电，希望几秒钟后，你手里能有一个可以相信的答案。右上角这个案件号 SS-20261028-0003，是今天答辩现场生成并检出的真实案例，双哈希入库，随时可查——待会儿演示环节生成的每一件证据都同样可复核。引擎和测试代码会随作品一起提交。我们的汇报到这里，谢谢各位评委，恳请批评指正——演示环节现在就可以开始，欢迎出题。</aside>
 </body>
 </html>

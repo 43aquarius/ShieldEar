@@ -1,91 +1,92 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1280, initial-scale=1">
-<title>声盾 · 差异化</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>10｜与同方向获奖作品对比</title>
 <link rel="stylesheet" href="global.css">
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-  html, body { width: 1280px; height: 720px; overflow: hidden; }
-  td, th { padding:17px 18px; font-size:14.5px; line-height:1.6; }
-  .row-hair { border-top:1px solid var(--line-soft); }
-  .col-us { border-left:3px solid var(--accent); background:rgba(52,211,153,.045); }
+  html,body{margin:0;padding:0;width:1280px;height:720px;overflow:hidden}
 </style>
 </head>
 <body>
-<div class="slide" style="padding:56px 80px 48px;">
+<div class="slide ch4">
 
-  <div class="flex items-baseline justify-between">
-    <p style="font-size:13px; color:var(--muted); letter-spacing:.28em;">与同方向获奖作品对比</p>
-    <p class="num" style="font-size:12px; color:var(--muted);">10</p>
+  <nav class="nav">
+    <div class="nav-cell"><span class="nav-no">01</span>问题与定位</div>
+    <div class="nav-cell"><span class="nav-no">02</span>系统与引擎</div>
+    <div class="nav-cell"><span class="nav-no">03</span>评测与创新</div>
+    <div class="nav-cell on"><span class="nav-no">04</span>演示与对比</div>
+    <div class="nav-cell"><span class="nav-no">05</span>前景与计划</div>
+  </nav>
+  <div class="nav-progress"><i style="width:76.9%"></i></div>
+
+  <!-- 题头 -->
+  <div style="padding:28px 64px 0;">
+    <div class="cd-h">
+      <h1 class="cn">同一道题，我们选择先解决「通话中的那几秒」</h1>
+      <span class="en">COMPARISON</span>
+    </div>
+    <p style="margin-top:10px; font-size:var(--fs-body); color:var(--ink); line-height:1.74; max-width:1020px;">
+      谛听、白泽都是值得尊敬的作品——差异不在高下，在切入点：它们做「事后的文件」，声盾做「进行中的通话」。
+    </p>
   </div>
 
-  <h1 class="serif" style="margin-top:20px; font-size:33px; font-weight:900; line-height:1.4;">同一道题，我们选择先解决<span class="accent">「通话中的那几秒」</span></h1>
-  <p style="margin-top:12px; font-size:14.5px; color:var(--secondary); line-height:1.75; max-width:900px;">
-    谛听、白泽都是值得尊敬的作品 —— 差异不在高下，在切入点：它们做「事后的文件」，声盾做「进行中的通话」。
-  </p>
-
-  <!-- 对比表：呼吸感行高，声盾列仅用左缘线+微底色 -->
-  <div class="absolute left-20 right-20 top-[248px] bottom-[86px]">
-    <table style="width:100%; border-collapse:collapse;">
+  <!-- 对比表：藏青表头 · 斑马纹 · 声盾列金色高亮 -->
+  <div style="position:absolute; left:64px; right:64px; top:238px; bottom:96px;">
+    <table class="tbl" style="height:calc(100% - 0px);">
       <thead>
         <tr>
-          <th style="text-align:left; font-size:12px; color:var(--muted); font-weight:500; letter-spacing:.1em; padding:0 18px 10px;">对照维度</th>
-          <th style="text-align:left; font-size:13.5px; color:var(--secondary); font-weight:700; padding:0 18px 10px;">谛听 <span class="num" style="font-size:11px; color:var(--muted); font-weight:400;">2023 · 国三</span></th>
-          <th style="text-align:left; font-size:13.5px; color:var(--secondary); font-weight:700; padding:0 18px 10px;">白泽 <span class="num" style="font-size:11px; color:var(--muted); font-weight:400;">2022 · 国二</span></th>
-          <th class="col-us" style="text-align:left; font-size:13.5px; color:var(--primary); font-weight:700; padding:0 18px 10px;">声盾 <span class="num" style="font-size:11px; color:var(--accent); font-weight:400;">本作品</span></th>
+          <th style="width:14%; padding:12px 20px; font-size:var(--fs-small);">对照维度</th>
+          <th style="width:29%; padding:12px 20px; font-size:var(--fs-small);">谛听 <span class="num" style="font-size:var(--fs-micro); font-weight:400; opacity:.75;">2023 · 国三</span></th>
+          <th style="width:26%; padding:12px 20px; font-size:var(--fs-small);">白泽 <span class="num" style="font-size:var(--fs-micro); font-weight:400; opacity:.75;">2022 · 国二</span></th>
+          <th class="hl-gold" style="width:31%; padding:12px 20px; font-size:var(--fs-small); border-left:3px solid var(--accent);">声盾 <span class="num" style="font-size:var(--fs-micro); font-weight:400; color:var(--accent);">本作品</span></th>
         </tr>
       </thead>
       <tbody>
-        <tr class="row-hair">
-          <td style="color:var(--muted);">检测对象</td>
-          <td style="color:var(--secondary);">离线音频文件</td>
-          <td style="color:var(--secondary);">深度伪造视频</td>
-          <td class="col-us" style="color:var(--primary); font-weight:500;">实时通话语音流</td>
+        <tr>
+          <td style="padding:13px 20px; color:var(--muted); font-size:var(--fs-small);">检测对象</td>
+          <td style="padding:13px 20px; color:var(--ink); font-size:var(--fs-small);">离线音频文件</td>
+          <td style="padding:13px 20px; color:var(--ink); font-size:var(--fs-small);">深度伪造视频</td>
+          <td class="hl-gold" style="padding:13px 20px; color:var(--primary); font-size:var(--fs-small); font-weight:700; border-left:3px solid var(--accent);">实时通话语音流</td>
         </tr>
-        <tr class="row-hair">
-          <td style="color:var(--muted);">技术核心</td>
-          <td style="color:var(--secondary);">RawGAT-ST + AASIST + SE-Res2Net 三网络集成</td>
-          <td style="color:var(--secondary);">联邦学习训练范式</td>
-          <td class="col-us" style="color:var(--primary); font-weight:500;">可解释轻量引擎 + 流式滑窗 + 双端复核</td>
+        <tr>
+          <td style="padding:13px 20px; color:var(--muted); font-size:var(--fs-small);">技术核心</td>
+          <td style="padding:13px 20px; color:var(--ink); font-size:var(--fs-small);">RawGAT-ST + AASIST + SE-Res2Net 三网络集成</td>
+          <td style="padding:13px 20px; color:var(--ink); font-size:var(--fs-small);">联邦学习训练范式</td>
+          <td class="hl-gold" style="padding:13px 20px; color:var(--primary); font-size:var(--fs-small); font-weight:700; border-left:3px solid var(--accent);">可解释轻量引擎 + 流式滑窗 + 双端复核</td>
         </tr>
-        <tr class="row-hair">
-          <td style="color:var(--muted);">业务形态</td>
-          <td style="color:var(--secondary);">事后检测，无业务闭环</td>
-          <td style="color:var(--secondary);">训练隐私保护视角</td>
-          <td class="col-us" style="color:var(--primary); font-weight:500;">检测 → 告警 → 存证 → 报告闭环</td>
+        <tr>
+          <td style="padding:13px 20px; color:var(--muted); font-size:var(--fs-small);">业务形态</td>
+          <td style="padding:13px 20px; color:var(--ink); font-size:var(--fs-small);">事后检测，无业务闭环</td>
+          <td style="padding:13px 20px; color:var(--ink); font-size:var(--fs-small);">训练隐私保护视角</td>
+          <td class="hl-gold" style="padding:13px 20px; color:var(--primary); font-size:var(--fs-small); font-weight:700; border-left:3px solid var(--accent);">检测 → 告警 → 存证 → 报告闭环</td>
         </tr>
-        <tr class="row-hair">
-          <td style="color:var(--muted);">指标口径</td>
-          <td style="color:var(--secondary);">EER <span class="num">0.063%</span>（ASVspoof2019 LA）</td>
-          <td style="color:var(--secondary);">论文级指标</td>
-          <td class="col-us" style="color:var(--primary); font-weight:500;">RTF 实测 + 校准集检出率 + EER 路线</td>
+        <tr>
+          <td style="padding:13px 20px; color:var(--muted); font-size:var(--fs-small);">指标口径</td>
+          <td style="padding:13px 20px; color:var(--ink); font-size:var(--fs-small);">EER <span class="num">0.063%</span>（ASVspoof 2019 LA）</td>
+          <td style="padding:13px 20px; color:var(--ink); font-size:var(--fs-small);">论文级指标</td>
+          <td class="hl-gold" style="padding:13px 20px; color:var(--primary); font-size:var(--fs-small); font-weight:700; border-left:3px solid var(--accent);">RTF 实测 + 校准集检出率 + EER 路线</td>
         </tr>
-        <tr class="row-hair">
-          <td style="color:var(--muted);">部署要求</td>
-          <td style="color:var(--secondary);">服务器 GPU</td>
-          <td style="color:var(--secondary);">多方训练环境</td>
-          <td class="col-us" style="color:var(--primary); font-weight:500;">普通 CPU，浏览器即可</td>
+        <tr>
+          <td style="padding:13px 20px; color:var(--muted); font-size:var(--fs-small);">部署要求</td>
+          <td style="padding:13px 20px; color:var(--ink); font-size:var(--fs-small);">服务器 GPU</td>
+          <td style="padding:13px 20px; color:var(--ink); font-size:var(--fs-small);">多方训练环境</td>
+          <td class="hl-gold" style="padding:13px 20px; color:var(--primary); font-size:var(--fs-small); font-weight:700; border-left:3px solid var(--accent);">普通 CPU，浏览器即可</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <div class="absolute left-20 right-20 bottom-12">
+  <!-- 底部压舱：站在肩膀上注脚 -->
+  <div style="position:absolute; left:64px; right:64px; bottom:40px;">
     <div class="hairline" style="padding-top:14px; display:flex; justify-content:space-between; align-items:baseline;">
-      <p style="font-size:12.5px; color:var(--muted);">深度引擎（AASIST / RawGAT-ST）已列入 12 周计划——站在这些作品的肩膀上，而非替代它们</p>
-      <p class="num" style="font-size:12px; color:var(--muted);">详见路线页</p>
+      <p style="font-size:var(--fs-small); color:var(--ink);">深度引擎（AASIST / RawGAT-ST）已列入十二周计划——站在这些作品的肩膀上，而非替代它们</p>
+      <p class="mono" style="font-size:var(--fs-micro); color:var(--faint);">详见路线页</p>
     </div>
   </div>
 </div>
 
-<aside data-notes class="hidden" style="display:none;">
-  <ul>
-    <li>先致敬两件作品，再讲差异在切入点：事后的文件 vs 进行中的通话。</li>
-    <li>表格竖着读两列即可：检测对象、部署要求是最有感的两行。</li>
-    <li>不贬低对方：深度引擎已在 12 周计划里，是「站在肩膀上」。</li>
-  </ul>
-</aside>
+<aside data-notes class="hidden" style="display:none;">这一页先致敬：谛听和白泽都是值得尊敬的作品，差异不在高下，在切入点——它们做的是事后的文件，声盾做的是进行中的通话。表格竖着读最有感的是两行：检测对象，从离线文件到实时语音流；部署要求，从服务器 GPU 到普通 CPU、浏览器即可。我们不是要替代它们——谛听用的 AASIST 和 RawGAT-ST 已经列入我们的十二周计划，那是站在这些作品的肩膀上，把窄带和有声书这两个已知边界补上。</aside>
 </body>
 </html>

@@ -1,76 +1,139 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 :root {
-  /* ===== 声盾暗色（与平台同源，但用得更克制） ===== */
-  --bg: #0A1410;
-  --bg-soft: #0E1913;
-  --surface: #111E17;
-  --line: rgba(52, 211, 153, 0.20);
-  --line-soft: rgba(52, 211, 153, 0.10);
-  --primary: #EAF6EF;
-  --secondary: #A8CCB8;
-  --muted: #73917F;
-  --accent: #34D399;
-  --accent-deep: #0E9F6E;
-  --warn: #FBBF24;
-  --danger: #F87171;
+  /* ===== 调色板：学术莫兰迪（低饱和 · 高明度） ===== */
+  --primary: #1B3A5C;        /* 藏青：标题、表头、导航高亮 */
+  --primary-deep: #12283F;   /* 封面 / 结尾深底 */
+  --accent: #C9A227;         /* 金铜：进度线、关键数字、高亮行 */
+  --accent-deep: #A8861B;
+  --gold-ink: #8A6D24;       /* 深金小字（正文级金色，对比达标） */
+  --bg: #FFFFFF;
+  --paper: #F7F5F0;          /* 暖纸白：全局基调 */
+  --ink: #22303F;            /* 正文 */
+  --muted: #5D6D7E;          /* 次要说明 */
+  --faint: #8FA0B0;          /* 微字（仅注脚） */
+  --ok: #2E7D5B;             /* 成立 */
+  --no: #B14A3A;             /* 分歧、警示——只点关键 */
 
-  /* ===== 字体 ===== */
-  --font-heading: 'Noto Serif SC', serif;
-  --font-body: 'Noto Sans SC', sans-serif;
-  --font-cn: 'Noto Sans SC', sans-serif;
-  --font-num: 'JetBrains Mono', monospace;
+  /* 分章莫兰迪：每章 paper / line 两档同换 */
+  --ch1-paper: #F0F2F5; --ch1-line: #C9D2DE;
+  --ch2-paper: #F6F2E8; --ch2-line: #DDD3BE;
+  --ch3-paper: #EFF3EF; --ch3-line: #C8D5C8;
+  --ch4-paper: #FBF3E9; --ch4-line: #E2D2BA;
+  --ch5-paper: #F7F5F0; --ch5-line: #D8D2C4;
+  --line: #D8D2C4;           /* 暖纸白分隔线 */
+  --paper-line: #2E4A6B;     /* 深底细线 */
 
-  --fs-display: 88px;
-  --fs-h1: 38px;
-  --fs-h2: 26px;
-  --fs-h3: 20px;
-  --fs-body: 16px;
-  --fs-small: 13.5px;
-  --fs-micro: 11.5px;
+  /* ===== 六族字体 · 双层栈（第二层为 Windows/Office/WPS 安全字体名） ===== */
+  --font-heading: 'Noto Serif SC', 'SimSun', serif;          /* 宋体 900 标题 */
+  --font-body: 'Noto Sans SC', 'Microsoft YaHei', sans-serif; /* 黑体正文 */
+  --font-kai: 'LXGW WenKai', 'KaiTi', serif;                  /* 楷体设问、引文、图注 */
+  --font-num: 'Inter', 'Carlito', 'Noto Sans SC', sans-serif; /* 数字 */
+  --font-display: 'Playfair Display', 'Tinos', 'Noto Serif SC', serif; /* 英文展示 */
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;     /* 代码、英文小签 */
+
+  /* ===== 字号阶梯（正文 17.5px 底线 ≈13pt，投影达标） ===== */
+  --fs-display: 50px;
+  --fs-h1: 34px;
+  --fs-h2: 23px;
+  --fs-h3: 19px;
+  --fs-body: 17.5px;
+  --fs-small: 15px;
+  --fs-micro: 12.5px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body { background: var(--bg); }
+html, body { width: 1280px; height: 720px; overflow: hidden; background: var(--paper); }
 
 .slide {
-  width: 1280px;
-  height: 720px;
-  overflow: hidden;
-  position: relative;
-  background: var(--bg);
-  color: var(--primary);
-  font-family: var(--font-body);
+  width: 1280px; height: 720px; overflow: hidden; position: relative;
+  background: var(--paper); color: var(--ink);
+  font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.62;
 }
+.slide.dark { background: var(--primary-deep); color: #EFEBDD; }
 
-/* 衬线标题（编辑排版气质） */
-.serif { font-family: var(--font-heading); }
+/* 分章纸底 */
+.ch1 { background: var(--ch1-paper); }
+.ch2 { background: var(--ch2-paper); }
+.ch3 { background: var(--ch3-paper); }
+.ch4 { background: var(--ch4-paper); }
+.ch5 { background: var(--ch5-paper); }
 
-/* 弱面卡片：只做轻微分层，不做发光 */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--line-soft);
-  border-radius: 10px;
+/* ===== 导航：五格满宽 + 金色帧进度线（内容页专用） ===== */
+.nav { display: flex; height: 40px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.55); }
+.ch1 .nav { border-bottom-color: var(--ch1-line); }
+.ch2 .nav { border-bottom-color: var(--ch2-line); }
+.ch3 .nav { border-bottom-color: var(--ch3-line); }
+.ch4 .nav { border-bottom-color: var(--ch4-line); }
+.ch5 .nav { border-bottom-color: var(--ch5-line); }
+.nav-cell {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 9px;
+  font-family: var(--font-body); font-size: 13.5px; color: var(--muted);
+  border-right: 1px solid var(--line); white-space: nowrap;
 }
+.nav-cell:last-child { border-right: none; }
+.nav-cell .nav-no { font-family: var(--font-num); font-size: 11.5px; color: var(--faint); }
+.nav-cell.on { background: var(--primary); color: #FFFFFF; }
+.nav-cell.on .nav-no { color: var(--accent); }
+.nav-progress { height: 3px; }
+.nav-progress i { display: block; height: 100%; background: var(--accent); }
 
-/* 强调：只用于真实数据与关键结论 */
-.accent { color: var(--accent); }
-.warn { color: var(--warn); }
-.danger { color: var(--danger); }
+/* ===== 双语题头：宋体中文 + mono 英文小签 ===== */
+.cd-h { display: flex; align-items: baseline; gap: 16px; }
+.cd-h .cn { font-family: var(--font-heading); font-weight: 900; font-size: var(--fs-h1); line-height: 1.32; color: var(--primary); }
+.cd-h .en { font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: .17em; color: var(--gold-ink); }
+.dark .cd-h .cn { color: #F2EFE7; }
+.dark .cd-h .en { color: var(--accent); }
+
+/* ===== 表面：书籍栏式（radius 0 · 无阴影 · 仅顶栏 3px 细线） ===== */
+.card { background: #FFFFFF; border: 1px solid var(--line); border-top: 3px solid var(--primary); border-radius: 0; }
+.card-g  { border-top-color: var(--accent); }
+.card-r  { border-top-color: var(--no); }
+.card-ok { border-top-color: var(--ok); }
+.dark .card { background: rgba(244,240,228,.05); border-color: rgba(234,246,239,.16); border-top-color: var(--accent); }
+
+/* ===== 装饰件（编辑式语言，替代渐变与图标） ===== */
+.tickrule {
+  height: 7px;
+  background-image: repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px 24px);
+  background-size: 100% 3px; background-repeat: no-repeat; background-position: bottom;
+}
+.dotgrid { background-image: radial-gradient(rgba(201,162,39,.30) 1px, transparent 1.2px); background-size: 22px 22px; }
+.dotgrid-ink { background-image: radial-gradient(rgba(27,58,92,.16) 1px, transparent 1.2px); background-size: 22px 22px; }
+.dotgrid-dark { background-image: radial-gradient(rgba(234,246,239,.14) 1px, transparent 1.2px); background-size: 24px 24px; }
+/* 幽灵大数字：仅深底扉页 / 封面 / 结尾，刻意出血需登记白名单 */
+.ghost { position: absolute; font-family: var(--font-display); color: var(--accent); opacity: .09; line-height: .8; pointer-events: none; }
+
+/* ===== 图注（楷体 + 金色图版号）与数据行 ===== */
+.figcap { font-family: var(--font-kai); font-size: var(--fs-micro); color: var(--muted); line-height: 1.6; }
+.figcap .figno { font-family: var(--font-num); font-weight: 600; color: var(--gold-ink); }
+.datarow { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* ===== 表格：藏青表头白字 · 斑马纹 · 金色高亮行 ===== */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th { background: var(--primary); color: #FFFFFF; text-align: left; font-weight: 700; }
+.tbl tbody tr:nth-child(even) { background: rgba(27,58,92,.045); }
+.tbl .hl-gold { background: rgba(201,162,39,.10); }
+
+/* ===== 公式块：白底 + 左侧 4px 金边 ===== */
+.equation { background: #FFFFFF; border: 1px solid var(--line); border-left: 4px solid var(--accent); padding: 14px 20px; font-family: var(--font-num); }
+
+/* ===== 通用 ===== */
+.hairline { border-top: 1px solid var(--line); }
+.ch1 .hairline { border-top-color: var(--ch1-line); }
+.ch2 .hairline { border-top-color: var(--ch2-line); }
+.ch3 .hairline { border-top-color: var(--ch3-line); }
+.ch4 .hairline { border-top-color: var(--ch4-line); }
+.ch5 .hairline { border-top-color: var(--ch5-line); }
+.dark .hairline { border-top-color: var(--paper-line); }
+.kai { font-family: var(--font-kai); }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
-
-/* 结论竖线（左侧细线，替代底色块） */
-.rule-l { border-left: 3px solid var(--accent); }
-
-/* 截图容器：细边、无发光 */
-.shot {
-  border: 1px solid var(--line-soft);
-  border-radius: 8px;
-  overflow: hidden;
-  background: #0D1712;
-}
-.shot img { display: block; width: 100%; }
-
-/* 分隔细线 */
-.hairline { border-top: 1px solid var(--line-soft); }
+.mono { font-family: var(--font-mono); }
+.serif { font-family: var(--font-heading); }
+.acc { color: var(--gold-ink); }
+.acc-b { color: var(--accent); }
+.ok-t { color: var(--ok); }
+.no-t { color: var(--no); }
+.shot { border: 1px solid var(--line); background: #FFFFFF; overflow: hidden; }
+.shot img { display: block; }
