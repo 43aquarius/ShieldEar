@@ -49,7 +49,7 @@
 
 ### 方式一：可执行程序包（免安装，推荐评审使用）
 
-从本仓库 **Releases** 页面下载 `声盾-ShieldEar-可执行程序包.zip`（约 226MB）并解压：
+从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.0-portable.zip`（约 226MB）并解压：
 
 - **Windows**：双击 `启动声盾-Windows.bat`——包内含便携 Node.js 运行时、espeak-ng 离线合成组件与 ffmpeg 转码工具，无需任何预装环境；
 - **Linux（x86_64）/ macOS（Apple Silicon）**：终端执行 `bash 启动声盾-Linux-Mac.sh`（同样内置便携运行时；其他架构回退系统 Node.js ≥ 20）；
