@@ -4,9 +4,9 @@ node_modules/
 out/
 dist/
 
-# 运行时数据（不入库，本地生成）
-db/
-evidence/
+# 运行时数据（不入库，本地生成；根锚定——不得误伤 src/app/api/evidence 路由）
+/db/
+/evidence/
 *.db
 *.db-journal
 
@@ -22,7 +22,7 @@ server.log
 
 # 测试数据临时目录
 calibration/tmp/
-download/
+/download/
 
 # 系统文件
 .DS_Store
