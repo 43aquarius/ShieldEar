@@ -24,9 +24,10 @@ const coverConfig = {
   englishLabel: "SHIELDEAR TECHNICAL REPORT",
   metaLines: [
     "参赛类别：应用安全（内容安全）",
-    "参赛单位：【学校 / 学院名称】",
-    "团队成员：【成员姓名，多人以顿号分隔】",
-    "指导教师：【指导教师姓名】",
+    "参赛队伍：你们说的对",
+    "参赛单位：大连理工大学",
+    "团队成员：谭畅 等 2 人",
+    "开源仓库：github.com/43aquarius/ShieldEar",
     "完成日期：2026 年 10 月",
   ],
   footerLeft: "ShieldEar · Voice Anti-Fraud Platform",
