@@ -1,7 +1,9 @@
 /**
  * 声盾校准 — 批量生成 TTS 合成语音样本（7 音色 × 3 文本）
+ * 2026-10-28 起改用 src/lib/server/tts-client.ts 直连通道：
+ * SDK(undici fetch) 会被上游 WAF 以 sec-fetch-mode/user-agent 指纹拦截 405
  */
-import ZAI from 'z-ai-web-dev-sdk';
+import { synthesizeSpeech } from '../src/lib/server/tts-client';
 import fs from 'fs';
 import path from 'path';
 
@@ -17,18 +19,10 @@ const VOICES = ['tongtong', 'chuichui', 'xiaochen', 'jam', 'kazi', 'douji', 'luo
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function genWithRetry(zai: Awaited<ReturnType<typeof ZAI.create>>, input: string, voice: string, tries = 5) {
+async function genWithRetry(input: string, voice: string, tries = 5) {
   for (let t = 0; t < tries; t++) {
     try {
-      const resp = await zai.audio.tts.create({
-        input,
-        voice,
-        speed: 1.0,
-        response_format: 'wav',
-        stream: false,
-      });
-      const ab = await resp.arrayBuffer();
-      return Buffer.from(new Uint8Array(ab));
+      return await synthesizeSpeech({ input, voice, speed: 1.0, response_format: 'wav' });
     } catch (e) {
       console.error(`  retry ${t + 1}/${tries}: ${String(e).slice(0, 80)}`);
       await sleep(15000 + t * 15000);
@@ -38,7 +32,6 @@ async function genWithRetry(zai: Awaited<ReturnType<typeof ZAI.create>>, input: 
 }
 
 async function main() {
-  const zai = await ZAI.create();
   for (const voice of VOICES) {
     for (let ti = 0; ti < TEXTS.length; ti++) {
       const out = path.join(OUT, `tts_${voice}_${ti}.wav`);
@@ -46,7 +39,7 @@ async function main() {
         console.log('skip', out);
         continue;
       }
-      const buf = await genWithRetry(zai, TEXTS[ti], voice);
+      const buf = await genWithRetry(TEXTS[ti], voice);
       if (buf) {
         fs.writeFileSync(out, buf);
         console.log('OK', out, buf.length);

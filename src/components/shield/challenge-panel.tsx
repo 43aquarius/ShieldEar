@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Loader2, ShieldAlert, AudioLines } from "lucide-react";
+import { Zap, Loader2, ShieldAlert, AudioLines, History } from "lucide-react";
 import { b64ToBlobUrl, formatDuration } from "@/lib/client/audio-client";
 import type { AnalysisResult } from "@/lib/engine/types";
 import { useShield } from "@/lib/store";
@@ -56,7 +56,11 @@ export function ChallengePanel() {
   const [voice, setVoice] = useState("tongtong");
   const [busy, setBusy] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [synthInfo, setSynthInfo] = useState<{ voice: string; durationSec: number } | null>(null);
+  const [synthInfo, setSynthInfo] = useState<{
+    voice: string;
+    durationSec: number;
+    mode: "live" | "fallback";
+  } | null>(null);
 
   const run = async () => {
     if (!text.trim()) {
@@ -76,7 +80,11 @@ export function ChallengePanel() {
       if (!resp.ok) throw new Error(data.error ?? "合成失败");
       const url = b64ToBlobUrl(data.audio.evidenceB64);
       setAudioUrl(url);
-      setSynthInfo({ voice: data.tts.voice, durationSec: data.audio.durationSec });
+      setSynthInfo({
+        voice: data.tts.voice,
+        durationSec: data.audio.durationSec,
+        mode: (data.mode as "live" | "fallback") ?? "live",
+      });
       setResult(
         data.analysis as AnalysisResult,
         {
@@ -85,7 +93,10 @@ export function ChallengePanel() {
           audioHash: data.audioHash,
           sourceHash: data.sourceHash,
           sourceType: "TTS",
-          sourceLabel: `现场合成挑战 · ${data.tts.voice}`,
+          sourceLabel:
+            (data.mode as string) === "fallback"
+              ? `合成挑战(预置样本回放) · ${data.tts.voice}`
+              : `现场合成挑战 · ${data.tts.voice}`,
           fileName: `tts_${data.tts.voice}.wav`,
           durationSec: data.audio.durationSec,
           engineVersion: data.analysis.engine.version,
@@ -94,7 +105,13 @@ export function ChallengePanel() {
         url
       );
       const risk = data.analysis.overall.risk as string;
-      if (risk === "HIGH" || risk === "CRITICAL") {
+      const isFallback = (data.mode as string) === "fallback";
+      if (isFallback) {
+        toast({
+          title: "TTS 通道暂不可用 — 已回放预置合成样本",
+          description: `${data.analysis.overall.verdict} · 同一 TTS 引擎预生成的诈骗话术样本，检测判决同样实时完成`,
+        });
+      } else if (risk === "HIGH" || risk === "CRITICAL") {
         toast({
           title: "现场合成的语音已被声盾识破",
           description: `${data.analysis.overall.verdict} · 合成置信度 ${(data.analysis.overall.syntheticRatio * 100).toFixed(1)}%`,
@@ -192,9 +209,22 @@ export function ChallengePanel() {
         {audioUrl && synthInfo && (
           <div className="space-y-2 rounded-lg border p-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <ShieldAlert className="h-3.5 w-3.5 text-amber-400" aria-hidden />
-              平台于现场使用 TTS 音色「{synthInfo.voice}」合成了 {formatDuration(synthInfo.durationSec)} 语音 —
-              下方检测结果即声盾对该段音频的实时判决
+              {synthInfo.mode === "fallback" ? (
+                <>
+                  <History className="h-3.5 w-3.5 text-amber-400" aria-hidden />
+                  <span className="rounded bg-amber-400/15 px-1.5 py-0.5 font-medium text-amber-500">
+                    预置样本回放
+                  </span>
+                  TTS 通道暂不可用，以下为同一 TTS 引擎预先生成的「{synthInfo.voice}」音色诈骗话术样本 —
+                  下方检测结果即声盾对该音频的实时判决（存证中已如实标注回放模式）
+                </>
+              ) : (
+                <>
+                  <ShieldAlert className="h-3.5 w-3.5 text-amber-400" aria-hidden />
+                  平台于现场使用 TTS 音色「{synthInfo.voice}」合成了 {formatDuration(synthInfo.durationSec)} 语音 —
+                  下方检测结果即声盾对该段音频的实时判决
+                </>
+              )}
             </div>
             <audio controls src={audioUrl} className="w-full">
               <track kind="captions" />
@@ -205,7 +235,8 @@ export function ChallengePanel() {
         <p className="text-xs leading-relaxed text-muted-foreground">
           说明：合成与检测均在服务端完成，原始合成音频与其 16kHz 分析副本分别计算 SHA-256
           并写入证据链（「这份音频确实由平台现场生成」与「检测对象即该音频」双向锚定）。
-          若遇平台限流，可改用「文件检测」中的预置合成样本。
+          若 TTS 通道暂时不可用（限流/风控），将自动回放同引擎预置合成样本并如实标注，演示闭环不中断；
+          亦可改用「文件检测」中的预置合成样本。
         </p>
       </CardContent>
     </Card>
