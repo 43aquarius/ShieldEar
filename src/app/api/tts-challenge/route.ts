@@ -113,7 +113,11 @@ export async function POST(req: NextRequest) {
       sourceHash,
       analysis: result.analysis,
       mode,
-      tts: { voice, text: text.trim(), sampleRate: decoded.sampleRate },
+      tts: {
+        voice,
+        text: mode === "live" ? text.trim() : "(预置合成样本，非当前文本现场合成)",
+        sampleRate: decoded.sampleRate,
+      },
       audio: {
         evidenceB64,
         originalB64,
