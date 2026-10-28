@@ -17,9 +17,9 @@
   .lead{font-size:var(--fs-body);line-height:1.7;color:var(--paper-dim);margin-top:12px}
 
   /* —— 全宽四列对比表：纸白表头 · 斑马纹 · 声盾列金色高亮 —— */
-  .tbl{table-layout:fixed;height:380px;margin-top:18px}
-  .tbl th{font-size:var(--fs-small);line-height:1.5;padding:12px 16px;vertical-align:middle;border-top:3px solid transparent}
-  .tbl td{font-size:var(--fs-small);line-height:1.55;padding:9px 16px;vertical-align:middle;color:var(--paper-dim)}
+  .tbl{table-layout:fixed;height:378px;margin-top:14px}
+  .tbl th{font-size:var(--fs-small);line-height:1.45;padding:10px 16px;vertical-align:middle;border-top:3px solid transparent}
+  .tbl td{font-size:var(--fs-small);line-height:1.5;padding:6px 16px;vertical-align:middle;color:var(--paper-dim)}
   .tbl th.cap{border-top:3px solid var(--gold)}
   .tbl th.shield{font-family:var(--font-heading);font-weight:900;font-size:16px}
   .tbl td.dim{font-family:var(--font-heading);font-weight:700;color:var(--paper)}
@@ -47,7 +47,7 @@
       <span class="en">POSITIONING</span>
     </div>
     <p class="standfirst">同一道题，我们选择先解决通话中的那几秒</p>
-    <p class="lead">谛听、白泽都是值得尊敬的作品——差异不在高下，在切入点：它们做事后的文件，声盾做进行中的通话。</p>
+    <p class="lead">谛听、白泽都是值得尊敬的作品——差异不在高下，在切入点：它们做事后的文件，声盾做进行中的通话；七个维度逐项对齐，长处与补位都摆在明面上。</p>
 
     <table class="tbl">
       <colgroup>
@@ -78,6 +78,18 @@
           <td class="hl-gold shield">可解释轻量引擎 + 流式滑窗 + 双端复核</td>
         </tr>
         <tr>
+          <td class="dim">实时性</td>
+          <td>事后批处理，无实时约束</td>
+          <td>离线训练视角</td>
+          <td class="hl-gold shield">边通话边判决 · <span class="num">RTF &lt; 0.015</span> · 时延 <span class="num">≤1s</span></td>
+        </tr>
+        <tr>
+          <td class="dim">可解释性</td>
+          <td>网络集成，判决难逐层拆解</td>
+          <td>面向隐私保护</td>
+          <td class="hl-gold shield">八维特征逐窗可溯 · 判决可拆到物理层</td>
+        </tr>
+        <tr>
           <td class="dim">业务形态</td>
           <td>事后检测，无业务闭环</td>
           <td>训练隐私保护视角</td>
@@ -105,6 +117,6 @@
 
 </div>
 
-<aside data-notes class="hidden" style="display:none;">先致敬：谛听、白泽都是值得尊敬的作品，差异不在高下、在切入点——它们做事后的文件，声盾做进行中的通话。对照表逐行念关键差异：对象上它们是离线文件和深伪视频，我们是实时通话语音流；核心上谛听是三个深度网络集成、白泽是联邦学习，我们是可解释轻量引擎加流式滑窗加双端复核；形态上我们把检测、告警、存证、报告做成闭环；口径上报 RTF 实测与校准集检出率，EER 留给深度引擎阶段；部署上普通 CPU、浏览器即可。我们不在更低 EER 上正面竞争，而在实时性、闭环、可解释上补位；十二周计划会把谛听验证过的 AASIST、RawGAT-ST 集成进来——站在肩膀上，而非替代。</aside>
+<aside data-notes class="hidden" style="display:none;">先致敬：谛听、白泽都是值得尊敬的作品，差异不在高下、在切入点——它们做事后的文件，声盾做进行中的通话。对照表七个维度逐行念关键差异：对象上它们是离线文件和深伪视频，我们是实时通话语音流；核心上谛听是三个深度网络集成、白泽是联邦学习，我们是可解释轻量引擎加流式滑窗加双端复核；实时性上我们边通话边判决、RTF小于0.015；可解释上八维特征逐窗可溯、判决可拆到物理层；形态上我们把检测、告警、存证、报告做成闭环；口径上报 RTF 实测与校准集检出率，EER 留给深度引擎阶段；部署上普通 CPU、浏览器即可。我们不在更低 EER 上正面竞争，而在实时性、闭环、可解释上补位；十二周计划会把谛听验证过的 AASIST、RawGAT-ST 集成进来——站在肩膀上，而非替代。</aside>
 </body>
 </html>

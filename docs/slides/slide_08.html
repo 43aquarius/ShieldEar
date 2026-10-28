@@ -28,10 +28,10 @@
   .dlab { font-size:var(--fs-micro); color:var(--muted); margin-top:8px; letter-spacing:.02em; }
   /* 右栏：三个副创新 hairline 纵列 */
   .rcol { flex:1; min-width:0; display:flex; flex-direction:column; }
-  .srow { flex:1; display:flex; flex-direction:column; justify-content:center; padding:18px 2px 18px 0; }
+  .srow { flex:1; display:flex; flex-direction:column; justify-content:center; padding:12px 2px 12px 0; }
   .srow + .srow { border-top:1px solid var(--line); }
-  .srow h3 { font-family:var(--font-heading); font-weight:700; font-size:var(--fs-h3); color:var(--paper); line-height:1.4; }
-  .srow p { font-size:var(--fs-small); color:var(--paper-dim); line-height:1.72; margin-top:9px; }
+  .srow h3 { font-family:var(--font-heading); font-weight:700; font-size:var(--fs-h3); color:var(--paper); line-height:1.35; }
+  .srow p { font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6; margin-top:7px; }
   /* 底部压舱 */
   .foot { position:absolute; left:64px; right:64px; bottom:34px; border-top:1px solid var(--line);
           padding-top:13px; font-size:var(--fs-micro); color:var(--muted); }
@@ -58,14 +58,15 @@
     <div class="lcol">
       <h2>从离线文件检测，到通话级实时流式</h2>
       <p class="lede">既有研究与同方向获奖作品做的都是事后检测一段文件；声盾的滑窗流式管线边通话、边判决、检出即告警——提前一分钟的告警，可能就直接拦下一笔转账。</p>
+      <p class="lede" style="margin-top:10px;">快不是堆算力堆出来的：零依赖纯 TS 引擎在普通 CPU 上就留足余量，这决定了它能进手机、进浏览器、进电话渠道的风控链路，而不是停在实验室的 GPU 服务器上。</p>
       <div class="dstack">
         <div class="drow">
           <div class="dnum">RTF &lt; 0.015</div>
-          <div class="dlab">纯 CPU · 普通终端可部署</div>
+          <div class="dlab">纯 CPU · 普通终端可部署（实测 p50 0.0064）</div>
         </div>
         <div class="drow">
           <div class="dnum">2s 窗 / 1s 步进</div>
-          <div class="dlab">逐窗置信度实时刷新</div>
+          <div class="dlab">逐窗置信度实时刷新 · 告警不等人</div>
         </div>
       </div>
     </div>
@@ -77,18 +78,22 @@
       </div>
       <div class="srow">
         <h3>检测—告警—存证—报告闭环</h3>
-        <p>四级风险分级、可疑片段时间轴、SHA-256 证据链、案件编号与 PDF 核验报告，结论无须二次加工即可进入举报协查</p>
+        <p>四级风险分级、可疑片段时间轴、SHA-256 证据链、案件编号与可打印核验报告，结论无须二次加工即可进入举报协查</p>
       </div>
       <div class="srow">
         <h3>现场自证的双哈希锚定</h3>
         <p>合成挑战把 TTS 原始输出与分析副本分别哈希入库：这份音频确由平台现场生成、无法事后构造</p>
       </div>
+      <div class="srow">
+        <h3>演示永续的四级合成链</h3>
+        <p>网关 TTS → Edge 神经合成 → espeak-ng 本地 → 预置回放逐级降级，限流也不中断演示，且界面如实标注回退模式</p>
+      </div>
     </div>
   </section>
 
-  <footer class="foot">三个副点各服务主点：可解释让结论可信 · 闭环让结论可用 · 锚定让演示可验。</footer>
+  <footer class="foot">四个副点各服务主点：可解释让结论可信 · 闭环让结论可用 · 锚定让演示可验 · 四级链让演示永续。</footer>
 </div>
 
-<aside data-notes class="hidden" style="display:none;">主创新先讲：既有研究和同方向获奖作品做的都是事后检测一段文件，声盾把检测搬进通话里——滑窗流式管线边通话、边判决、检出即告警，提前一分钟的告警可能直接拦下一笔转账。而纯 CPU 上 RTF 小于 0.015，2 秒窗、1 秒步进，逐窗置信度实时刷新。三个副点各一句：可解释引擎加数据校准，让结论可信；检测到报告的闭环，结论无须二次加工即可进入举报协查，让结论可用；双哈希锚定证明音频确由现场生成、无法事后构造，让演示可验。</aside>
+<aside data-notes class="hidden" style="display:none;">主创新先讲：既有研究和同方向获奖作品做的都是事后检测一段文件，声盾把检测搬进通话里——滑窗流式管线边通话、边判决、检出即告警，提前一分钟的告警可能直接拦下一笔转账。快不是堆算力堆出来的：零依赖纯TS引擎在普通CPU上就留足余量，实测 RTF 中位数 0.0064，能进手机、进浏览器、进电话风控链路。四个副点各一句：可解释引擎加数据校准，让结论可信；检测到报告的闭环，结论无须二次加工即可进入举报协查，让结论可用；双哈希锚定证明音频确由现场生成、无法事后构造，让演示可验；四级合成链逐级降级、限流也不中断、界面如实标注，让演示永续。</aside>
 </body>
 </html>

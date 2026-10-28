@@ -13,30 +13,37 @@
   .slide { display:flex; flex-direction:column; }
   .cd-h { padding-top:24px; }
   .cd-h .ts { margin-left:auto; font-family:var(--font-heading); font-weight:600; font-size:var(--fs-h3); color:var(--gold-bright); white-space:nowrap; }
-  /* 指标行：四数据位横排 */
-  .metrics { display:flex; margin-top:20px; }
-  .mcell { flex:1; min-width:0; border-left:1px solid var(--line); padding:2px 16px 0 22px; }
+  /* 指标行：六数据位横排 */
+  .metrics { display:flex; margin-top:16px; }
+  .mcell { flex:1; min-width:0; border-left:1px solid var(--line); padding:2px 14px 0 18px; }
   .mcell:first-child { border-left:none; padding-left:0; }
-  .mnum { font-family:var(--font-num); font-variant-numeric:tabular-nums; font-size:38px; font-weight:700;
+  .mnum { font-family:var(--font-num); font-variant-numeric:tabular-nums; font-size:31px; font-weight:700;
           color:var(--gold); line-height:1.08; white-space:nowrap; }
-  .mlab { font-size:var(--fs-micro); color:var(--muted); margin-top:7px; letter-spacing:.02em; }
+  .mlab { font-size:var(--fs-micro); color:var(--muted); margin-top:6px; letter-spacing:.02em; line-height:1.45; }
   /* 主体两栏 */
-  .main { flex:1; min-height:0; display:flex; gap:26px; margin:22px 0 88px; }
-  .lcol { width:622px; flex:none; display:flex; flex-direction:column; min-height:0; }
+  .main { flex:1; min-height:0; display:flex; gap:26px; margin:18px 0 78px; }
+  .lcol { width:600px; flex:none; display:flex; flex-direction:column; min-height:0; }
   .plate { flex:1; min-height:0; }
   .plate img { width:100%; height:100%; object-fit:contain; display:block; background:#FFFFFF; }
-  /* 右栏：如实边界 + 口径注 */
-  .rcol { flex:1; min-width:0; display:flex; flex-direction:column; gap:14px; }
-  .bcard { flex:1; padding:18px 22px; display:flex; flex-direction:column; justify-content:center; }
+  /* 右栏：如实边界 + 分组明细 + 口径注 */
+  .rcol { flex:1; min-width:0; display:flex; flex-direction:column; gap:12px; }
+  .bcard { flex:1; padding:13px 20px; display:flex; flex-direction:column; justify-content:center; }
   .btag { font-family:var(--font-mono); font-size:var(--fs-micro); letter-spacing:.12em; }
-  .bcard p { font-size:var(--fs-small); color:var(--paper-dim); line-height:1.75; margin-top:10px; }
+  .bcard p { font-size:var(--fs-small); color:var(--paper-dim); line-height:1.65; margin-top:7px; }
   .bcard p .num { font-weight:600; }
-  .caliber { border-top:1px solid var(--line); padding-top:12px; }
-  .crow { display:flex; gap:9px; margin-top:6px; font-size:var(--fs-micro); color:var(--muted); line-height:1.6; }
+  /* 分组明细表 */
+  .groups { border-top:1px solid var(--line); padding-top:10px; }
+  .groups .gtitle { font-family:var(--font-mono); font-size:var(--fs-micro); letter-spacing:.14em; color:var(--gold-bright); }
+  .grow { display:flex; align-items:baseline; gap:8px; margin-top:7px; font-size:var(--fs-micro); color:var(--muted); line-height:1.5; }
+  .grow .gname { color:var(--paper-dim); flex:none; width:118px; }
+  .grow .gn { font-family:var(--font-mono); color:var(--faint); flex:none; }
+  .grow .gacc { font-family:var(--font-num); font-weight:600; color:var(--gold-bright); margin-left:auto; }
+  .caliber { border-top:1px solid var(--line); padding-top:10px; }
+  .crow { display:flex; gap:9px; margin-top:5px; font-size:var(--fs-micro); color:var(--muted); line-height:1.55; }
   .crow .clab { font-family:var(--font-mono); color:var(--faint); flex:none; }
   /* 底部压舱 */
-  .foot { position:absolute; left:64px; right:64px; bottom:34px; border-top:1px solid var(--line);
-          padding-top:13px; font-size:var(--fs-micro); color:var(--muted); }
+  .foot { position:absolute; left:64px; right:64px; bottom:32px; border-top:1px solid var(--line);
+          padding-top:11px; font-size:var(--fs-micro); color:var(--muted); line-height:1.5; }
 </style>
 </head>
 <body>
@@ -59,15 +66,23 @@
   <section class="metrics pad">
     <div class="mcell">
       <div class="mnum">20/20</div>
-      <div class="mlab">宽带合成检出 · TTS n=20</div>
+      <div class="mlab">宽带合成检出 · 校准集 TTS n=20</div>
     </div>
     <div class="mcell">
       <div class="mnum">4/5</div>
-      <div class="mlab">自然语音放行 · 自然 n=5</div>
+      <div class="mlab">自然语音放行 · 自然源 n=5</div>
+    </div>
+    <div class="mcell">
+      <div class="mnum">0.917</div>
+      <div class="mlab">宽带 F1 · 扩展集 105 文件</div>
     </div>
     <div class="mcell">
       <div class="mnum">0.003–0.015</div>
       <div class="mlab">RTF 实时因子 · 纯 CPU</div>
+    </div>
+    <div class="mcell">
+      <div class="mnum">9.15ms</div>
+      <div class="mlab">单窗耗时 P99 · 160 窗微基准</div>
     </div>
     <div class="mcell">
       <div class="mnum">≤1s</div>
@@ -86,23 +101,30 @@
     <div class="rcol">
       <div class="card card-r bcard">
         <div class="btag no-t">窄带电话信道</div>
-        <p><span class="num">16/20</span> 检出率——300–3400Hz 带宽直接抹掉高频信息，退化如实标注、不藏着</p>
+        <p><span class="num">16/20</span> 检出——300–3400Hz 带宽直接抹掉高频信息，退化如实标注、不藏着</p>
       </div>
       <div class="card card-r bcard">
         <div class="btag no-t">有声书边界</div>
         <p><span class="num">10/50</span> 误判——录音棚级自然音的生产洁净度与轻量特征耦合，这正是启动深度引擎的直接动机，而非调参掩盖</p>
       </div>
+      <div class="groups">
+        <p class="gtitle">分组准确率 · GROUP DETAIL</p>
+        <div class="grow"><span class="gname">N1 自然·原始</span><span class="gn">n=10</span><span class="gacc">0.80</span></div>
+        <div class="grow"><span class="gname">N2 自然·鲁棒变体</span><span class="gn">n=40</span><span class="gacc">0.80</span></div>
+        <div class="grow"><span class="gname">T1 合成·校准集</span><span class="gn">n=40</span><span class="gacc">0.90</span></div>
+        <div class="grow"><span class="gname">T3 合成·退化变体</span><span class="gn">n=120</span><span class="gacc">0.783</span></div>
+      </div>
       <div class="caliber">
         <div class="crow"><span class="clab">权威基准</span><span>——EER / t-DCF（ASVspoof 2019/2021 LA，深度引擎阶段既定指标）</span></div>
-        <div class="crow"><span class="clab">本阶段实测</span><span>——校准集检出率 + RTF + 时延</span></div>
+        <div class="crow"><span class="clab">本阶段实测</span><span>——校准集检出率 + RTF + 时延 + 分组准确率</span></div>
         <div class="crow"><span class="clab">业务端到端</span><span>——无头浏览器全流程通过</span></div>
       </div>
     </div>
   </section>
 
-  <footer class="foot">扩展测试集 105 文件 × 双信道 = 210 条判决 · 宽带 Acc 0.876 / F1 0.917 · 单窗 P99 9.15ms · 详见《系统测试报告》</footer>
+  <footer class="foot">扩展测试集 105 文件 × 双信道 = 210 条判决 · 宽带 Acc 0.876 / P 0.935 / R 0.900 · RTF 分布 p50 0.0064 · p95 0.0082 · max 0.0118 · 详见《系统测试报告》</footer>
 </div>
 
-<aside data-notes class="hidden" style="display:none;">四个指标先念：宽带合成检出 20/20，自然放行 4/5，纯 CPU 实时因子 0.003 到 0.015，时延不超过 1 秒。两条边界主动摆出来：窄带 16/20，是电话带宽直接抹掉高频信息，退化如实标注不藏着；有声书 10/50 误判，棚级自然音太干净与轻量特征耦合，这正是启动深度引擎的动机，不靠调参掩盖。指标分三层口径，不把计划中的 EER 包装成已有结果。210 条判决，测试报告可查。</aside>
+<aside data-notes class="hidden" style="display:none;">六个指标先念：宽带合成检出 20/20，自然放行 4/5，扩展集 F1 0.917，纯 CPU 实时因子 0.003 到 0.015，单窗 P99 九点一亳秒，时延不超过 1 秒。分组明细也摆出来：自然原始 0.80、自然鲁棒变体 0.80、合成校准集 0.90、合成退化变体 0.783——最难的是退化变体。两条边界主动摆出来：窄带 16/20，是电话带宽直接抹掉高频信息，退化如实标注不藏着；有声书 10/50 误判，棚级自然音太干净与轻量特征耦合，这正是启动深度引擎的动机，不靠调参掩盖。指标分三层口径，不把计划中的 EER 包装成已有结果。RTF 分布 p50 0.0064、p95 0.0082，210 条判决测试报告可查。</aside>
 </body>
 </html>

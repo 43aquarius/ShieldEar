@@ -13,19 +13,23 @@
   .cd-h { padding-top:24px; }
   .cd-h .ts { margin-left:auto; font-family:var(--font-heading); font-weight:600; font-size:var(--fs-h3); color:var(--gold-bright); white-space:nowrap; }
   /* 上半区：截图 hero 图版 */
-  .hero-shot { margin:18px 64px 0; }
-  .hero { height:300px; }
+  .hero-shot { margin:16px 64px 0; }
+  .hero { height:272px; }
   .hero img { width:100%; height:100%; object-fit:cover; object-position:top; display:block; }
-  .hcap { text-align:center; margin-top:9px; }
+  .hcap { text-align:center; margin-top:8px; }
   /* 下半区：三步时间线 */
-  .steps { display:flex; margin-top:24px; }
+  .steps { display:flex; margin-top:18px; }
   .stepcol { flex:1; min-width:0; padding:2px 26px 0; border-left:1px solid var(--line); }
   .stepcol:first-child { border-left:none; padding-left:0; }
-  .stno { font-family:var(--font-num); font-variant-numeric:tabular-nums; font-size:44px; font-weight:700;
+  .stno { font-family:var(--font-num); font-variant-numeric:tabular-nums; font-size:40px; font-weight:700;
           color:var(--gold); line-height:1; }
   .stepcol h3 { font-family:var(--font-heading); font-weight:700; font-size:var(--fs-h3); color:var(--paper);
-                margin-top:12px; line-height:1.4; }
-  .stepcol p { font-size:var(--fs-small); color:var(--paper-dim); line-height:1.72; margin-top:8px; }
+                margin-top:10px; line-height:1.4; }
+  .stepcol p { font-size:var(--fs-small); color:var(--paper-dim); line-height:1.62; margin-top:7px; }
+  /* 容错设计横条 */
+  .fallback { margin-top:16px; border-top:1px solid var(--line); padding-top:11px; display:flex; align-items:baseline; gap:10px; }
+  .fallback .tag { font-family:var(--font-mono); font-size:var(--fs-micro); letter-spacing:.16em; color:var(--gold-bright); flex:none; }
+  .fallback p { font-size:var(--fs-micro); color:var(--muted); line-height:1.55; }
   /* 底部压舱：两端对齐 */
   .foot { position:absolute; left:64px; right:64px; bottom:34px; border-top:1px solid var(--line);
           padding-top:14px; display:flex; justify-content:space-between; align-items:baseline; }
@@ -61,19 +65,24 @@
     <div class="stepcol">
       <div class="stno">1</div>
       <h3>现场合成挑战</h3>
-      <p>评委任意输入文本，服务端当场 TTS 合成诈骗话术语音</p>
+      <p>评委任意输入文本，服务端当场 TTS 合成诈骗话术语音；原始 WAV 与分析副本分别 SHA-256 入库，证明音频确系现场生成</p>
     </div>
     <div class="stepcol">
       <div class="stno">2</div>
       <h3>实时鉴听</h3>
-      <p>外放同时开启鉴听：波形滚动、逐窗置信度刷新，高置信片段红色告警 + 提示音</p>
+      <p>外放同时开启鉴听：波形滚动、逐窗置信度刷新，高置信片段红色告警 + 提示音；可随时叫停追问可疑片段时间戳</p>
     </div>
     <div class="stepcol">
       <div class="stno">3</div>
       <h3>存证与报告</h3>
-      <p>SHA-256 自动固定，生成案件编号 SS-日期-序号，导出含时间轴与逐窗明细的核验报告</p>
+      <p>SHA-256 自动固定，生成案件编号 SS-日期-序号；案例库当场调出历史案件，导出含时间轴与逐窗明细的八章核验报告</p>
     </div>
   </section>
+
+  <div class="fallback pad">
+    <span class="tag">容错设计</span>
+    <p>四级合成链逐级降级：网关 TTS → Edge 神经合成 → espeak-ng 本地 → 预置回放；限流时自动回退且界面如实标注「预置样本回放」徽标——演示永不中断，诚实的降级也是产品的一部分</p>
+  </div>
 
   <footer class="foot">
     <span class="fl">不依赖任何预置素材——文本是评委给的，音频是现场生成的</span>
@@ -81,6 +90,6 @@
   </footer>
 </div>
 
-<aside data-notes class="hidden" style="display:none;">演示就三步：先现场合成——评委任意输入文本，服务端当场合成诈骗话术语音；再实时鉴听——波形滚动、逐窗置信度刷新，高置信片段红色告警加提示音；最后存证报告——SHA-256 固定、生成案件编号、导出核验报告。全程不依赖预置素材：文本评委给、音频现场生成、双哈希无法事后构造；限流时才回放预置样本且界面如实标注。欢迎各位亲手出题。</aside>
+<aside data-notes class="hidden" style="display:none;">演示就三步：先现场合成——评委任意输入文本，服务端当场合成诈骗话术语音，原始WAV和分析副本分别SHA-256入库，证明音频确系现场生成；再实时鉴听——波形滚动、逐窗置信度刷新，高置信片段红色告警加提示音，可以随时叫停追问时间戳；最后存证报告——SHA-256固定、生成SS-日期-序号案件编号、案例库当场调出、导出八章核验报告。容错也交代一句：四级合成链逐级降级，限流时自动回放预置样本且界面如实标注——演示永不中断，诚实的降级也是产品的一部分。全程不依赖预置素材：文本评委给、音频现场生成、双哈希无法事后构造。欢迎各位亲手出题。</aside>
 </body>
 </html>

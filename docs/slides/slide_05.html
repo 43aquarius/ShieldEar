@@ -33,17 +33,18 @@
       <div class="serif" style="margin-left:auto; font-weight:600; font-size:var(--fs-h3); color:var(--gold-bright);">八个特征，每一个都能回答为什么</div>
     </div>
 
-    <p style="margin-top:12px; font-size:var(--fs-body); color:var(--paper-dim); line-height:1.6;">每一维都锚定人怎么发声、声码器怎么生成的物理差异——判决依据逐特征可追溯，第三方可复算，不依赖黑盒打分。</p>
+    <p style="margin-top:12px; font-size:var(--fs-body); color:var(--paper-dim); line-height:1.6;">每一维都锚定人怎么发声、声码器怎么生成的物理差异——判决依据逐特征可追溯，第三方可复算，不依赖黑盒打分；八维特征经统一管线汇成整段判决，每一步都有显式公式。</p>
 
     <main style="flex:1; min-height:0; display:flex; gap:36px; margin-top:18px;">
 
       <!-- 左：主角特征卡 -->
-      <div class="card card-g" style="width:40%; flex:none; display:flex; flex-direction:column; padding:28px;">
+      <div class="card card-g" style="width:40%; flex:none; display:flex; flex-direction:column; padding:24px 28px;">
         <div class="mono" style="font-size:var(--fs-micro); letter-spacing:.14em; color:var(--gold-bright);">自研 · 分离度最高的一维</div>
-        <div class="serif" style="margin-top:12px; font-weight:700; font-size:var(--fs-h2); color:var(--paper); line-height:1.3;">高频周期性</div>
-        <p style="margin-top:12px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.75;">掩蔽谱 IFFT 取高频段信号，在基音周期处做自相关——声码器把谐波结构延展到 4–8kHz，而自然人声的高频几乎只有气息噪声，这道生理天花板合成器很难伪装。</p>
+        <div class="serif" style="margin-top:10px; font-weight:700; font-size:var(--fs-h2); color:var(--paper); line-height:1.3;">高频周期性</div>
+        <p style="margin-top:10px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.7;">掩蔽谱 IFFT 取高频段信号，在基音周期处做自相关——声码器把谐波结构延展到 4–8kHz，而自然人声的高频几乎只有气息噪声，这道生理天花板合成器很难伪装。</p>
+        <p style="margin-top:8px; font-size:var(--fs-micro); color:var(--muted); line-height:1.6;">基音轨迹由自相关 + 抛物线精化求得，避免倍频/半频误判拉偏周期峰值</p>
         <div style="flex:1;"></div>
-        <div class="hairline" style="padding-top:16px; display:flex; gap:44px;">
+        <div class="hairline" style="padding-top:14px; display:flex; gap:44px;">
           <div>
             <div class="hero-stat">1.28</div>
             <div style="margin-top:5px; font-size:var(--fs-micro); color:var(--muted); letter-spacing:.04em;">类间分离度</div>
@@ -115,13 +116,20 @@
 
     </main>
 
+    <!-- 判决融合公式链 -->
+    <div class="equation" style="margin-top:14px; display:flex; align-items:baseline; gap:22px;">
+      <span class="mono" style="font-size:var(--fs-micro); letter-spacing:.16em; color:var(--gold-bright); flex:none;">判决融合</span>
+      <p style="font-family:var(--font-num); font-size:var(--fs-body); color:var(--paper); white-space:nowrap;">z<sub>i</sub> = (x<sub>i</sub> − μ<sub>i</sub>) / σ<sub>i</sub>&ensp;→&ensp;P = σ(Σ w<sub>i</sub>·z<sub>i</sub>)&ensp;→&ensp;中值滤波 + EMA + 能量加权&ensp;→&ensp;整段判决</p>
+      <p style="font-size:var(--fs-micro); color:var(--muted); line-height:1.5; flex:1; min-width:0;">μ、σ 取自然类先验（分宽带/窄带两套）；w 为下一页逻辑回归拟合权重；静音窗在加权前排除</p>
+    </div>
+
     <!-- 底部收束行 -->
-    <div class="hairline" style="margin-top:18px; padding-top:14px; text-align:center;">
+    <div class="hairline" style="margin-top:14px; padding-top:12px; text-align:center;">
       <span class="serif" style="font-weight:600; font-size:var(--fs-small); color:var(--paper); letter-spacing:.03em;">同一特征集宽带 8 维 / 窄带 5 维随信道自适应——可解释不是口号：每个判决都能拆到物理层。</span>
     </div>
 
   </div>
 </div>
-<aside data-notes class="hidden" style="display:none;">这一页先亮立场：不追黑盒精度，追可审计——这是反诈取证的刚性要求。主角是自研的高频周期性：掩蔽谱IFFT取高频段信号，在基音周期处做自相关；声码器把谐波延展到4到8kHz，自然人声那里几乎只有气息噪声，这道生理天花板很难伪装，类间分离度1.28、拟合权重0.289。其余七维都在刻画同一件事：自然发声的生理抖动，对上声码器的机器稳定——谐波规整度、基音微扰、谱通量波动都是这个逻辑。被数据证伪的高频谱平坦度，也诚实保留在列表里。可解释的含义是：每个判决都能拆到物理层。</aside>
+<aside data-notes class="hidden" style="display:none;">这一页先亮立场：不追黑盒精度，追可审计——这是反诈取证的刚性要求。主角是自研的高频周期性：掩蔽谱IFFT取高频段信号，在基音周期处做自相关；声码器把谐波延展到4到8kHz，自然人声那里几乎只有气息噪声，这道生理天花板很难伪装，类间分离度1.28、拟合权重0.289。其余七维都在刻画同一件事：自然发声的生理抖动，对上声码器的机器稳定——谐波规整度、基音微扰、谱通量波动都是这个逻辑。判决融合是一条显式公式链：z标准化、加权逻辑回归、中值滤波加EMA加能量加权，静音窗提前排除；宽带八维、窄带五维随信道自适应。被数据证伪的高频谱平坦度，也诚实保留在列表里。可解释的含义是：每个判决都能拆到物理层。</aside>
 </body>
 </html>

@@ -34,7 +34,7 @@
       <div class="serif" style="margin-left:auto; font-weight:600; font-size:var(--fs-h3); color:var(--gold-bright);">一份引擎，跑在两端——谁也糊弄不了谁</div>
     </div>
 
-    <p style="margin-top:14px; font-size:var(--fs-body); color:var(--paper-dim); line-height:1.62; max-width:1120px;">浏览器先判一遍、服务端再核一遍，跑的是同一份 TypeScript 引擎：录音文件与实时通话的结论完全一致，客户端结果可被独立复核。检测不快不行、存证不严不行——这两个要求决定了下面五层。</p>
+    <p style="margin-top:14px; font-size:var(--fs-body); color:var(--paper-dim); line-height:1.62; max-width:1120px;">浏览器先判一遍、服务端再核一遍，跑的是同一份 TypeScript 引擎：录音文件与实时通话的结论完全一致，客户端结果可被独立复核。检测不快不行、存证不严不行——这两个要求决定了下面五层；而每一层都有对应的服务端接口与数据落盘位置，不是纸面架构。</p>
 
     <main style="flex:1; min-height:0; display:flex; justify-content:space-between; margin-top:18px; gap:56px;">
 
@@ -45,21 +45,22 @@
           <p class="layer-run"><span class="mono" style="font-size:var(--fs-micro); color:var(--faint); letter-spacing:.06em;">L1</span>&ensp;<span class="layer-name">采集</span>&ensp;<span style="color:var(--faint);">——</span>&ensp;<span style="font-size:var(--fs-small); color:var(--paper-dim);">麦克风实时流（AudioWorklet 16kHz）· 文件导入 · TTS现场合成，统一为单声道标准输入</span></p>
         </div>
 
-        <div class="card card-g" style="flex:1.5 1 auto; min-height:0; display:flex; flex-direction:column; justify-content:center; padding:14px 20px;">
+        <div class="card card-g" style="flex:1.5 1 auto; min-height:0; display:flex; flex-direction:column; justify-content:center; padding:12px 20px;">
           <div style="display:flex; align-items:baseline; gap:8px;">
             <span class="mono" style="font-size:var(--fs-micro); color:var(--faint); letter-spacing:.06em;">L2</span>
             <span class="layer-name">检测引擎</span>
           </div>
-          <p style="margin-top:6px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.62;">纯 TypeScript 零依赖，八维特征 + 2s 窗 / 1s 步进 / 50% 重叠滑窗</p>
-          <p class="kai" style="margin-top:8px; font-size:var(--fs-body); color:var(--paper); line-height:1.6;">「全片最厚的一层——左右两端跑同一份代码」</p>
+          <p style="margin-top:5px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">纯 TypeScript 零依赖，八维特征 + 2s 窗 / 1s 步进 / 50% 重叠滑窗</p>
+          <p style="margin-top:5px; font-size:var(--fs-micro); color:var(--muted); line-height:1.55;">DSP 基座：FFT 512 点 · Hann 窗 · 自相关基音（抛物线精化）· 抗混叠重采样</p>
+          <p class="kai" style="margin-top:7px; font-size:var(--fs-body); color:var(--paper); line-height:1.55;">「全片最厚的一层——左右两端跑同一份代码」</p>
         </div>
 
         <div class="card" style="flex:0.9 1 auto; min-height:0; display:flex; align-items:center; padding:10px 18px;">
-          <p class="layer-run"><span class="mono" style="font-size:var(--fs-micro); color:var(--faint); letter-spacing:.06em;">L3</span>&ensp;<span class="layer-name">判决融合</span>&ensp;<span style="color:var(--faint);">——</span>&ensp;<span style="font-size:var(--fs-small); color:var(--paper-dim);">中值滤波 + 指数平滑 + 能量加权整段判决，静音窗显式排除、不参与统计</span></p>
+          <p class="layer-run"><span class="mono" style="font-size:var(--fs-micro); color:var(--faint); letter-spacing:.06em;">L3</span>&ensp;<span class="layer-name">判决融合</span>&ensp;<span style="color:var(--faint);">——</span>&ensp;<span style="font-size:var(--fs-small); color:var(--paper-dim);">中值滤波 + 指数平滑 + 能量加权整段判决，静音窗显式排除；检出阈值 <span class="num acc-b">0.72</span> · 可疑 <span class="num acc-b">0.50</span>，四级风险分级 <span class="num acc-b">0.35 / 0.55 / 0.75</span></span></p>
         </div>
 
         <div class="card" style="flex:0.9 1 auto; min-height:0; display:flex; align-items:center; padding:10px 18px;">
-          <p class="layer-run"><span class="mono" style="font-size:var(--fs-micro); color:var(--faint); letter-spacing:.06em;">L4</span>&ensp;<span class="layer-name">业务</span>&ensp;<span style="color:var(--faint);">——</span>&ensp;<span style="font-size:var(--fs-small); color:var(--paper-dim);">SHA-256 证据固定 · 案件入库 · 可导出核验报告</span></p>
+          <p class="layer-run"><span class="mono" style="font-size:var(--fs-micro); color:var(--faint); letter-spacing:.06em;">L4</span>&ensp;<span class="layer-name">业务</span>&ensp;<span style="color:var(--faint);">——</span>&ensp;<span style="font-size:var(--fs-small); color:var(--paper-dim);">SHA-256 证据固定 · 案件编号 <span class="mono acc-b">SS-日期-序号</span> · WAV 证据下载 · 八章可打印核验报告</span></p>
         </div>
 
         <div class="card" style="flex:0.75 1 auto; min-height:0; display:flex; align-items:center; padding:10px 18px;">
@@ -70,26 +71,32 @@
 
       <!-- 右栏：落地性 -->
       <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
-        <div class="card card-g" style="flex:1; min-height:0; display:flex; flex-direction:column; padding:18px 22px;">
+        <div class="card card-g" style="flex:1; min-height:0; display:flex; flex-direction:column; padding:16px 22px;">
           <div class="serif" style="font-weight:700; font-size:var(--fs-h3); color:var(--paper);">为什么敢说能落地</div>
-          <div style="flex:1; display:flex; flex-direction:column; justify-content:space-evenly; margin-top:4px;">
+          <div style="flex:1; display:flex; flex-direction:column; justify-content:space-evenly; margin-top:2px;">
             <div>
               <div class="land-key">普通 CPU</div>
-              <p style="margin-top:4px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">无需 GPU，浏览器与服务端皆可跑</p>
+              <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.55;">无需 GPU，浏览器与服务端皆可跑</p>
             </div>
             <div class="hairline"></div>
             <div>
               <div class="land-key">Next.js + TS</div>
-              <p style="margin-top:4px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">一套语言栈贯穿前后端与引擎</p>
+              <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.55;">一套语言栈贯穿前后端与引擎</p>
             </div>
             <div class="hairline"></div>
             <div>
               <div class="land-key">SQLite</div>
-              <p style="margin-top:4px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">案件与证据链本地落盘，可审计</p>
+              <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.55;">案件与证据链本地落盘，可审计</p>
+            </div>
+            <div class="hairline"></div>
+            <div>
+              <div class="land-key" style="font-size:var(--fs-small);">双端复核</div>
+              <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.55;">检测结束自动 POST 服务端复核，两遍一致才入库</p>
             </div>
           </div>
         </div>
-        <p class="mono" style="margin-top:10px; font-size:var(--fs-micro); color:var(--faint); letter-spacing:.04em;">Next.js 16 · TypeScript · Prisma/SQLite · Web Audio API</p>
+        <p class="mono" style="margin-top:9px; font-size:var(--fs-micro); color:var(--faint); letter-spacing:.04em;">Next.js 16 · TypeScript · Prisma/SQLite · Web Audio API</p>
+        <p class="mono" style="margin-top:5px; font-size:var(--fs-micro); color:var(--faint); letter-spacing:.02em;">/api/analyze · /api/tts-challenge · /api/cases · /api/evidence/[caseNo]</p>
       </div>
 
     </main>
@@ -101,6 +108,6 @@
 
   </div>
 </div>
-<aside data-notes class="hidden" style="display:none;">架构五层，从下往上过一遍：L1采集，把麦克风实时流、文件导入和现场合成统一成单声道标准输入；L2是全片最厚的检测引擎，纯TypeScript零依赖，八维特征加2秒窗、1秒步进的滑窗；L3用中值滤波、指数平滑、能量加权融合出整段判决；L4做SHA-256证据固定和案件入库；L5单页展示零跳转。重点是同构引擎：浏览器和服务端跑的是同一份代码，结论完全一致、可被独立复核——这是证据链成立的前提。为什么敢说能落地？纯CPU、一套语言栈、SQLite本地落盘可审计。</aside>
+<aside data-notes class="hidden" style="display:none;">架构五层，从下往上过一遍：L1采集，把麦克风实时流、文件导入和现场合成统一成16kHz单声道标准输入；L2是全片最厚的检测引擎，纯TypeScript零依赖，八维特征加2秒窗、1秒步进的滑窗，DSP基座是FFT加Hann窗加自相关基音；L3用中值滤波、指数平滑、能量加权融合出整段判决，检出阈值0.72，四级风险分级的线在0.35、0.55、0.75；L4做SHA-256证据固定、SS-日期-序号案件编号、WAV证据下载和八章核验报告；L5单页展示零跳转。重点是同构引擎：浏览器和服务端跑同一份代码，检测结束还会自动POST服务端复核、两遍一致才入库——这是证据链成立的前提。为什么敢说能落地？纯CPU、一套语言栈、SQLite本地落盘可审计，四个接口都在。</aside>
 </body>
 </html>

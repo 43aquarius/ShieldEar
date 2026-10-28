@@ -13,17 +13,21 @@
   .cd-h { padding-top:26px; }
   .cd-h .ts { margin-left:auto; font-family:var(--font-heading); font-weight:600; font-size:var(--fs-h3); color:var(--gold-bright); white-space:nowrap; }
   /* 上半区：四步横向流 */
-  .steps { display:flex; gap:10px; margin-top:24px; }
-  .stepcard { flex:1; min-height:205px; padding:20px 20px 18px; }
+  .steps { display:flex; gap:10px; margin-top:18px; }
+  .stepcard { flex:1; min-height:186px; padding:16px 20px 14px; }
   .stepcard .stno { font-family:var(--font-mono); font-size:var(--fs-micro); color:var(--faint); letter-spacing:.16em; }
-  .stepcard h3 { font-family:var(--font-heading); font-weight:700; font-size:var(--fs-h3); color:var(--paper); line-height:1.4; margin-top:10px; }
-  .stepcard p { font-size:var(--fs-small); color:var(--paper-dim); line-height:1.72; margin-top:9px; }
+  .stepcard h3 { font-family:var(--font-heading); font-weight:700; font-size:var(--fs-h3); color:var(--paper); line-height:1.4; margin-top:8px; }
+  .stepcard p { font-size:var(--fs-small); color:var(--paper-dim); line-height:1.66; margin-top:8px; }
+  /* 样本全景条 */
+  .inv { margin-top:14px; border-top:1px solid var(--line); padding-top:11px; display:flex; align-items:baseline; gap:10px; }
+  .inv .tag { font-family:var(--font-mono); font-size:var(--fs-micro); letter-spacing:.16em; color:var(--gold-bright); flex:none; }
+  .inv p { font-size:var(--fs-micro); color:var(--muted); line-height:1.6; }
   /* 下半区：证伪对撞 */
-  .sect { margin-top:34px; font-family:var(--font-heading); font-weight:900; font-size:var(--fs-h2); color:var(--paper); line-height:1.4; }
-  .versus { display:flex; align-items:stretch; margin-top:18px; }
+  .sect { margin-top:20px; font-family:var(--font-heading); font-weight:900; font-size:var(--fs-h2); color:var(--paper); line-height:1.4; }
+  .versus { display:flex; align-items:stretch; margin-top:14px; }
   .vs-sep { width:72px; flex:none; display:flex; align-items:center; justify-content:center;
             font-family:var(--font-heading); font-weight:700; font-size:34px; color:var(--gold); }
-  .vcard { flex:1; min-height:172px; padding:22px 26px 24px; }
+  .vcard { flex:1; min-height:150px; padding:18px 26px 20px; }
   .vtag { font-family:var(--font-mono); font-size:var(--fs-micro); letter-spacing:.12em; }
   .vbody { display:flex; align-items:center; gap:26px; margin-top:16px; }
   .vnumwrap { flex:none; width:178px; }
@@ -58,23 +62,32 @@
       <div class="stno">STEP 1</div>
       <h3>构造样本</h3>
       <p>自然类 5 种公开人声（含有声书）· TTS 7 音色 × 3 文本，均再造 300–3400Hz 窄带版</p>
+      <p class="mono" style="margin-top:6px; font-size:var(--fs-micro); color:var(--faint);">25 段 × 双信道 = 50 条</p>
     </div>
     <div class="card stepcard">
       <div class="stno">STEP 2</div>
       <h3>拟合自然先验</h3>
       <p>按信道取自然类各特征均值/标准差，z 分数即偏离自然语音的程度</p>
+      <p class="mono" style="margin-top:6px; font-size:var(--fs-micro); color:var(--faint);">宽带 / 窄带各一套 μ、σ</p>
     </div>
     <div class="card stepcard">
       <div class="stno">STEP 3</div>
       <h3>逻辑回归定权</h3>
       <p>类加权（自然 ×4）的 L2 正则，梯度下降 4000 轮</p>
+      <p class="mono" style="margin-top:6px; font-size:var(--fs-micro); color:var(--faint);">自然类误判代价 ↑，防「宁错杀」</p>
     </div>
     <div class="card stepcard">
       <div class="stno">STEP 4</div>
       <h3>两重验证</h3>
       <p>混淆矩阵 + 自然类留一法（LOO）稳定性检验</p>
+      <p class="mono" style="margin-top:6px; font-size:var(--fs-micro); color:var(--faint);">权重过零特征自动出局</p>
     </div>
   </section>
+
+  <div class="inv pad">
+    <span class="tag">样本全景</span>
+    <p>校准 50 条之上，再扩自然鲁棒变体（±6dB · 变速 1.05 · 20dB 加噪，20 段）与合成退化变体（加噪 · MP3 64kbps · 变速，60 段）——共 105 文件 × 双信道 = 210 条判决，见下一页</p>
+  </div>
 
   <section class="pad">
     <h2 class="sect">校准中最有意思的一件事：直觉被数据否决了</h2>
@@ -106,6 +119,6 @@
   <footer class="foot">校准全流程脚本化，样本扩展后可一键重拟合 · <span class="mono">scripts/calibrate-engine.ts</span> 与 <span class="mono">fit-weights.ts</span> 随作品提交。</footer>
 </div>
 
-<aside data-notes class="hidden" style="display:none;">这一页讲权重从哪儿来，四步：构造样本、按信道拟合自然先验、类加权逻辑回归定权、混淆矩阵加留一法双重验证。最有意思的是证伪这件事，我讲慢一点：高频谱平坦度，文献和直觉都说该有效，实测分离度只有 0.10，权重自动归零；自研的高频周期性反而拿到 1.28，在数据上站住了。所以我认一个理——先拟合、后信任。校准脚本随作品提交，样本扩展后可一键重拟合。</aside>
+<aside data-notes class="hidden" style="display:none;">这一页讲权重从哪儿来，四步：构造样本——自然五种公开人声、TTS七音色×三文本，再造窄带版，共50条；按信道拟合自然先验——宽带窄带各一套均值方差；类加权逻辑回归定权——自然类加权四倍，防止把自然人声错杀；混淆矩阵加留一法双重验证，权重过零的特征自动出局。最有意思的是证伪这件事，我讲慢一点：高频谱平坦度，文献和直觉都说该有效，实测分离度只有 0.10，权重自动归零；自研的高频周期性反而拿到 1.28，在数据上站住了。所以我认一个理——先拟合、后信任。校准之后又扩了自然鲁棒变体和合成退化变体，共105文件×双信道210条判决，下一页见。校准脚本随作品提交，样本扩展后可一键重拟合。</aside>
 </body>
 </html>

@@ -52,6 +52,23 @@
     <p class="standfirst">十二周，从轻量引擎走到深度集成</p>
     <p class="lead">轻量可解释引擎是第一阶段的诚实交付；深度引擎不是推翻它，而是把有声书误判、窄带退化这两个已知边界补上。每一阶段都有可检验的交付物。</p>
 
+    <!-- 可行性三证 -->
+    <div class="feasible" style="margin-top:22px; display:flex; gap:14px;">
+      <div style="flex:1; border-left:3px solid var(--gold); padding-left:18px;">
+        <p style="font-family:var(--font-heading);font-weight:700;font-size:var(--fs-h3);color:var(--paper);line-height:1.4;">底座全部开源</p>
+        <p style="font-size:var(--fs-small);color:var(--paper-dim);line-height:1.6;margin-top:6px;">AASIST、RawGAT-ST、Rawboost 均有官方复现流程，无需自造轮子</p>
+      </div>
+      <div style="flex:1; border-left:3px solid var(--gold); padding-left:18px;">
+        <p style="font-family:var(--font-heading);font-weight:700;font-size:var(--fs-h3);color:var(--paper);line-height:1.4;">接口已预留</p>
+        <p style="font-size:var(--fs-small);color:var(--paper-dim);line-height:1.6;margin-top:6px;">业务层只认「引擎接口」不认实现——ONNX 替换后检测、存证、报告零改动</p>
+      </div>
+      <div style="flex:1; border-left:3px solid var(--gold); padding-left:18px;">
+        <p style="font-family:var(--font-heading);font-weight:700;font-size:var(--fs-h3);color:var(--paper);line-height:1.4;">两周一交付</p>
+        <p style="font-size:var(--fs-small);color:var(--paper-dim);line-height:1.6;margin-top:6px;">每段以可检验交付物收口（基线 EER、消融表、RTF 实测），进度可验收</p>
+      </div>
+    </div>
+    <p class="mono" style="margin-top:12px; font-size:var(--fs-micro); color:var(--faint); letter-spacing:.04em;">算力边界：全程以 CPU 推理为硬约束——ONNX 动态量化不达标则用知识蒸馏兜底，不上 GPU。</p>
+
     <div class="spacer"></div>
 
     <div class="tl">
@@ -99,6 +116,6 @@
 
 </div>
 
-<aside data-notes class="hidden" style="display:none;">先说态度：轻量可解释引擎是我们第一阶段的诚实交付，深度引擎不是推翻它，而是把有声书误判、窄带退化这两个已知边界补上。五段各一句：W01–02 按官方流程复现 AASIST 基线、交付 EER 同量级基线——第一周就复现基线，是锁定整条路线的关键决策；W03–05 RawGAT-ST 训练加软投票集成，交付消融表；W06–07 ONNX 动态量化做 CPU 推理，交付 RTF 小于 1 的实测；W10 跨信道评测，自建 8kHz 窄带子集；W11–12 联调与答辩定稿。每个交付物都可检验；开源底座都是现成项目，架构已预留 ONNX 替换接口、业务层零改动。</aside>
+<aside data-notes class="hidden" style="display:none;">先说态度：轻量可解释引擎是我们第一阶段的诚实交付，深度引擎不是推翻它，而是把有声书误判、窄带退化这两个已知边界补上。为什么十二周走得完？三个理由：底座全部开源，AASIST、RawGAT-ST、Rawboost 都有官方复现流程；接口已预留，业务层只认引擎接口不认实现，ONNX替换后检测、存证、报告零改动；每两周一个可检验交付物，进度可验收。算力边界也说死：全程以 CPU 推理为硬约束，量化不达标就用蒸馏兜底，不上 GPU。五段各一句：W01–02 按官方流程复现 AASIST 基线、交付 EER 同量级基线；W03–05 RawGAT-ST 训练加软投票集成，交付消融表；W06–07 ONNX 动态量化做 CPU 推理，交付 RTF 小于 1 的实测；W10 跨信道评测，自建 8kHz 窄带子集；W11–12 联调与答辩定稿。开源底座都是现成项目，架构已预留 ONNX 替换接口、业务层零改动。</aside>
 </body>
 </html>
