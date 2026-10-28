@@ -2,11 +2,19 @@
  * POST /api/tts-challenge — 现场合成挑战
  * 服务端用 TTS 现场合成语音 → 声盾引擎现场检测 → 存证入库 → 返回音频与判决
  * 演示叙事：评委亲眼见证"AI 语音被生成"，随后被声盾实时识破。
+ *
+ * 四级合成链（2026-10-28 重构）——保证「现场合成用户输入文本」永远可用：
+ *   Tier 1 · z-ai 网关 TTS（原通道；WAF 路径惩罚期间熔断 5 分钟自动探活恢复）
+ *   Tier 2 · Edge 神经 TTS（微软公共神经语音，合成用户文本，与云端商用 TTS 同类声学）
+ *   Tier 3 · espeak-ng 本地合成（完全离线兜底，仍为真实合成用户文本）
+ *   Tier 4 · 预置样本回放（仅在以上全部不可用时，如实标注 fallback）
+ * 每次使用的引擎在响应 mode/engine/engineLabel 与存证 notes 三处如实记录。
  */
 import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 import { synthesizeSpeech } from "@/lib/server/tts-client";
+import { synthesizeEdge, synthesizeEspeak } from "@/lib/server/local-tts";
 import { decodeWav, mixToMono, encodeWav16, floatToInt16 } from "@/lib/audio/wav";
 import { resampleTo16k } from "@/lib/engine/dsp";
 import { analyzeAndPersist } from "@/lib/server/analysis-service";
@@ -16,6 +24,20 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 const VOICES = ["tongtong", "chuichui", "xiaochen", "jam", "kazi", "douji", "luodo"] as const;
+
+/** z-ai 网关熔断器：WAF 拦截后 5 分钟内跳过 Tier 1，避免每次演示都撞墙 */
+let zaiCircuitOpenUntil = 0;
+const ZAI_CIRCUIT_MS = 5 * 60 * 1000;
+
+/** 四级链统一产出（在 SynthResult 之上补 zai / preset 两档） */
+interface TierSynth {
+  wavBuffer: Buffer;
+  originalBuffer: Buffer;
+  originalMime: string;
+  originalExt: string;
+  engine: "zai" | "edge" | "espeak" | "preset";
+  engineLabel: string;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,77 +50,127 @@ export async function POST(req: NextRequest) {
     if (!text || !text.trim()) {
       return NextResponse.json({ error: "请输入要合成的文本" }, { status: 400 });
     }
-    if (text.length > 1024) {
+    // 去除控制字符（子进程安全 + 展示安全）
+    const cleanText = text.trim().replace(/[\u0000-\u001f\u007f]/g, "");
+    if (cleanText.length > 1024) {
       return NextResponse.json({ error: "文本过长（上限 1024 字符）" }, { status: 400 });
     }
     if (!VOICES.includes(voice as (typeof VOICES)[number])) {
       return NextResponse.json({ error: `音色不支持，可用：${VOICES.join(" / ")}` }, { status: 400 });
     }
+    const spd = Math.min(2, Math.max(0.5, speed));
 
-    // 1. 现场合成（服务端调用 TTS，输出 24kHz WAV）
-    //    走 src/lib/server/tts-client.ts 直连通道：SDK(undici fetch) 会被上游 WAF
-    //    以 sec-fetch-mode/user-agent 脚本指纹拦截 405，直连客户端只携带 4 个必要头。
-    let ttsBuffer: Buffer;
+    const tierErrors: string[] = [];
+    let synth: TierSynth | null = null;
     let mode: "live" | "fallback" = "live";
-    let fallbackNote = "";
-    try {
-      ttsBuffer = await synthesizeSpeech({
-        input: text.trim(),
-        voice,
-        speed: Math.min(2, Math.max(0.5, speed)),
-        response_format: "wav",
-      });
-    } catch (e) {
-      // TTS 通道不可用（WAF 拦截/限流）→ 诚实降级：回放预置合成样本（同一 TTS 引擎预生成），
-      // 保证「生成→检出→存证」演示闭环不中断；mode=fallback 会在前端与存证中如实标注。
-      console.error("[api/tts-challenge] TTS error, fallback to preset:", e);
+
+    // ── Tier 1 · z-ai 网关（熔断保护，快速失败：单次尝试 15s 超时） ──
+    if (Date.now() >= zaiCircuitOpenUntil) {
       try {
-        ttsBuffer = await readFile(
+        const buf = await synthesizeSpeech(
+          { input: cleanText, voice, speed: spd, response_format: "wav" },
+          15_000,
+          1
+        );
+        synth = {
+          wavBuffer: buf,
+          originalBuffer: buf,
+          originalMime: "audio/wav",
+          originalExt: "wav",
+          engine: "zai",
+          engineLabel: "云端 TTS · z-ai 网关",
+        };
+      } catch (e) {
+        zaiCircuitOpenUntil = Date.now() + ZAI_CIRCUIT_MS;
+        tierErrors.push(`zai网关: ${e instanceof Error ? e.message.slice(0, 120) : String(e)}`);
+        console.error("[api/tts-challenge] Tier1(z-ai) 失败，熔断 5 分钟");
+      }
+    }
+
+    // ── Tier 2 · Edge 神经 TTS（微软公共神经语音，合成用户文本） ──
+    if (!synth) {
+      try {
+        const r = await synthesizeEdge(cleanText, voice, spd);
+        synth = { ...r };
+      } catch (e) {
+        tierErrors.push(`Edge: ${e instanceof Error ? e.message.slice(0, 120) : String(e)}`);
+        console.error("[api/tts-challenge] Tier2(edge) 失败:", e);
+      }
+    }
+
+    // ── Tier 3 · espeak-ng 本地合成（完全离线兜底） ──
+    if (!synth) {
+      try {
+        const r = await synthesizeEspeak(cleanText, voice, spd);
+        synth = { ...r };
+      } catch (e) {
+        tierErrors.push(`espeak: ${e instanceof Error ? e.message.slice(0, 120) : String(e)}`);
+        console.error("[api/tts-challenge] Tier3(espeak) 失败:", e);
+      }
+    }
+
+    // ── Tier 4 · 预置样本回放（同引擎预生成，如实标注 fallback） ──
+    if (!synth) {
+      try {
+        const preset = await readFile(
           path.join(process.cwd(), "public", "samples", "challenge", `tts_${voice}.wav`)
         );
+        synth = {
+          wavBuffer: preset,
+          originalBuffer: preset,
+          originalMime: "audio/wav",
+          originalExt: "wav",
+          engine: "preset",
+          engineLabel: "预置样本回放",
+        };
+        mode = "fallback";
       } catch {
         return NextResponse.json(
-          { error: "语音合成通道暂时不可用（已自动重试），请稍候片刻再试；亦可改用「文件检测」中的预置合成样本" },
+          {
+            error:
+              "语音合成通道暂时不可用（已自动尝试 4 级通道），请稍候片刻再试；亦可改用「文件检测」中的预置合成样本",
+          },
           { status: 503 }
         );
       }
-      mode = "fallback";
-      fallbackNote = e instanceof Error ? e.message.slice(0, 160) : String(e);
     }
-    if (!ttsBuffer || ttsBuffer.length < 2000) {
+
+    if (!synth.wavBuffer || synth.wavBuffer.length < 2000) {
       return NextResponse.json({ error: "合成结果异常，请重试" }, { status: 502 });
     }
 
-    // 2. 解码 → 16kHz 单声道
-    const decoded = decodeWav(ttsBuffer);
+    // 解码 → 16kHz 单声道（Edge 已是 16k；espeak 22.05k / z-ai 24k 统一重采样）
+    const decoded = decodeWav(synth.wavBuffer);
     const mono = mixToMono(decoded.pcm, decoded.channels);
     const pcm16k = resampleTo16k(mono, decoded.sampleRate);
 
-    // 3. 原始合成音频哈希（证据：本音频确实由平台现场生成）
-    const sourceHash = sha256Hex(ttsBuffer);
+    // 原始合成产物哈希（证据：本音频确实由平台现场生成）
+    const sourceHash = sha256Hex(synth.originalBuffer);
 
-    // 4. 服务端分析并存证（sourceType=TTS）
+    const isFallback = mode === "fallback";
+    const sourceLabel = isFallback
+      ? `合成挑战(预置样本回放) · ${voice}`
+      : `现场合成挑战 · ${voice}（${synth.engineLabel}）`;
+
+    // 服务端分析并存证（sourceType=TTS）
     const result = await analyzeAndPersist(pcm16k, {
       sourceType: "TTS",
-      sourceLabel:
-        mode === "live"
-          ? `现场合成挑战 · ${voice}`
-          : `合成挑战(预置样本回放) · ${voice}`,
-      fileName: `tts_${voice}.wav`,
-      fileSize: ttsBuffer.length,
+      sourceLabel,
+      fileName: isFallback ? `tts_${voice}.wav` : `tts_${voice}.${synth.originalExt}`,
+      fileSize: synth.originalBuffer.length,
       sourceHash,
-      notes:
-        mode === "live"
-          ? "该音频由平台 TTS 引擎现场合成，用于鉴伪能力演示"
-          : `TTS 通道暂不可用，回放同引擎预置合成样本；通道错误摘要：${fallbackNote}`,
+      notes: isFallback
+        ? `四级合成通道均不可用，回放同引擎预置合成样本；通道错误摘要：${tierErrors.join(" | ").slice(0, 300)}`
+        : `该音频由「${synth.engineLabel}」现场合成用户输入文本，用于鉴伪能力演示` +
+          (tierErrors.length ? `；通道降级记录：${tierErrors.join(" | ").slice(0, 200)}` : ""),
     });
 
-    // 5. 证据 WAV（16kHz）的 Int16 视图 → base64（前端播放 + 可下载）
+    // 证据 WAV（16kHz）与原始产物的 base64（前端播放 + 可下载）
     const evidenceWav = encodeWav16(pcm16k, 16000);
     const evidenceB64 = Buffer.from(evidenceWav).toString("base64");
-    const originalB64 = ttsBuffer.toString("base64");
+    const originalB64 = synth.originalBuffer.toString("base64");
 
-    // 附带引擎复核用的 Int16 PCM（供前端做逐窗回放对齐）
+    // 引擎复核用的 Int16 PCM（前端逐窗回放对齐）
     const pcmI16 = floatToInt16(pcm16k);
     const pcmB64 = Buffer.from(
       pcmI16.buffer,
@@ -113,14 +185,18 @@ export async function POST(req: NextRequest) {
       sourceHash,
       analysis: result.analysis,
       mode,
+      engine: synth.engine,
+      engineLabel: synth.engineLabel,
+      sourceLabel,
       tts: {
         voice,
-        text: mode === "live" ? text.trim() : "(预置合成样本，非当前文本现场合成)",
+        text: isFallback ? "(预置合成样本，非当前文本现场合成)" : cleanText,
         sampleRate: decoded.sampleRate,
       },
       audio: {
         evidenceB64,
         originalB64,
+        originalMime: synth.originalMime,
         pcmB64,
         durationSec: pcm16k.length / 16000,
       },

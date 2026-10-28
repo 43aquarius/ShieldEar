@@ -60,6 +60,8 @@ export function ChallengePanel() {
     voice: string;
     durationSec: number;
     mode: "live" | "fallback";
+    engine: string;
+    engineLabel: string;
   } | null>(null);
 
   const run = async () => {
@@ -84,6 +86,8 @@ export function ChallengePanel() {
         voice: data.tts.voice,
         durationSec: data.audio.durationSec,
         mode: (data.mode as "live" | "fallback") ?? "live",
+        engine: (data.engine as string) ?? "zai",
+        engineLabel: (data.engineLabel as string) ?? "云端 TTS",
       });
       setResult(
         data.analysis as AnalysisResult,
@@ -94,9 +98,10 @@ export function ChallengePanel() {
           sourceHash: data.sourceHash,
           sourceType: "TTS",
           sourceLabel:
-            (data.mode as string) === "fallback"
+            (data.sourceLabel as string) ??
+            ((data.mode as string) === "fallback"
               ? `合成挑战(预置样本回放) · ${data.tts.voice}`
-              : `现场合成挑战 · ${data.tts.voice}`,
+              : `现场合成挑战 · ${data.tts.voice}`),
           fileName: `tts_${data.tts.voice}.wav`,
           durationSec: data.audio.durationSec,
           engineVersion: data.analysis.engine.version,
@@ -108,18 +113,18 @@ export function ChallengePanel() {
       const isFallback = (data.mode as string) === "fallback";
       if (isFallback) {
         toast({
-          title: "TTS 通道暂不可用 — 已回放预置合成样本",
+          title: "四级合成通道均不可用 — 已回放预置合成样本",
           description: `${data.analysis.overall.verdict} · 同一 TTS 引擎预生成的诈骗话术样本，检测判决同样实时完成`,
         });
       } else if (risk === "HIGH" || risk === "CRITICAL") {
         toast({
           title: "现场合成的语音已被声盾识破",
-          description: `${data.analysis.overall.verdict} · 合成置信度 ${(data.analysis.overall.syntheticRatio * 100).toFixed(1)}%`,
+          description: `${data.engineLabel} 现场合成的语音 → ${data.analysis.overall.verdict} · 合成置信度 ${(data.analysis.overall.syntheticRatio * 100).toFixed(1)}%`,
         });
       } else {
         toast({
           title: "检测完成",
-          description: `${data.analysis.overall.verdict} · 该音色在本引擎下的检出置信度偏低，可换音色对比`,
+          description: `${data.engineLabel} · ${data.analysis.overall.verdict} · 该音色在本引擎下的检出置信度偏低，可换音色对比`,
         });
       }
     } catch (err) {
@@ -215,14 +220,29 @@ export function ChallengePanel() {
                   <span className="rounded bg-amber-400/15 px-1.5 py-0.5 font-medium text-amber-500">
                     预置样本回放
                   </span>
-                  TTS 通道暂不可用，以下为同一 TTS 引擎预先生成的「{synthInfo.voice}」音色诈骗话术样本 —
+                  四级合成通道均不可用，以下为同一 TTS 引擎预先生成的「{synthInfo.voice}」音色诈骗话术样本 —
                   下方检测结果即声盾对该音频的实时判决（存证中已如实标注回放模式）
                 </>
               ) : (
                 <>
                   <ShieldAlert className="h-3.5 w-3.5 text-amber-400" aria-hidden />
-                  平台于现场使用 TTS 音色「{synthInfo.voice}」合成了 {formatDuration(synthInfo.durationSec)} 语音 —
-                  下方检测结果即声盾对该段音频的实时判决
+                  <span
+                    className={`rounded px-1.5 py-0.5 font-medium ${
+                      synthInfo.engine === "edge"
+                        ? "bg-emerald-400/15 text-emerald-500"
+                        : synthInfo.engine === "espeak"
+                          ? "bg-sky-400/15 text-sky-500"
+                          : "bg-emerald-400/15 text-emerald-500"
+                    }`}
+                  >
+                    {synthInfo.engine === "edge"
+                      ? "现场合成 · Edge 神经 TTS"
+                      : synthInfo.engine === "espeak"
+                        ? "现场合成 · 本地 espeak-ng"
+                        : "现场合成 · 云端 TTS"}
+                  </span>
+                  平台于现场使用「{synthInfo.engineLabel}」将输入文本合成为 {formatDuration(synthInfo.durationSec)} 语音 —
+                  下方检测结果即声盾对该段音频的实时判决（存证中已如实记录合成引擎）
                 </>
               )}
             </div>
@@ -235,8 +255,8 @@ export function ChallengePanel() {
         <p className="text-xs leading-relaxed text-muted-foreground">
           说明：合成与检测均在服务端完成，原始合成音频与其 16kHz 分析副本分别计算 SHA-256
           并写入证据链（「这份音频确实由平台现场生成」与「检测对象即该音频」双向锚定）。
-          若 TTS 通道暂时不可用（限流/风控），将自动回放同引擎预置合成样本并如实标注，演示闭环不中断；
-          亦可改用「文件检测」中的预置合成样本。
+          合成采用四级通道自动选择：云端 TTS → Edge 神经 TTS → 本地 espeak-ng → 预置样本回放，
+          实际使用的引擎在结果与存证中如实标注；演示闭环永不中断。
         </p>
       </CardContent>
     </Card>

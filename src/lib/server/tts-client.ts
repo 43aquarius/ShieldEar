@@ -100,10 +100,12 @@ const RETRY_DELAYS_MS = [1200, 3500];
 /**
  * 直连上游 TTS 通道合成语音，返回音频 Buffer（wav 格式时已校验 RIFF 魔数）。
  * 网络错误 / 405(WAF) / 429(限流) / 5xx / 非 WAV 魔数会自动重试，最多 3 次尝试。
+ * maxAttempts=1 可用于快速失败场景（如挑战路由的多级合成链首级）。
  */
 export async function synthesizeSpeech(
   opts: TTSOptions,
-  timeoutMs = 60_000
+  timeoutMs = 60_000,
+  maxAttempts = RETRY_DELAYS_MS.length + 1
 ): Promise<Buffer> {
   const cfg = await loadConfig();
   const url = `${cfg.baseUrl.replace(/\/+$/, "")}/audio/tts`;
@@ -128,7 +130,8 @@ export async function synthesizeSpeech(
   });
 
   let lastErr: unknown = null;
-  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+  const totalAttempts = Math.max(1, Math.min(maxAttempts, RETRY_DELAYS_MS.length + 1));
+  for (let attempt = 0; attempt < totalAttempts; attempt++) {
     if (attempt > 0) {
       await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt - 1]));
     }
