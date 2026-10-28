@@ -1,73 +1,74 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>02｜问题与背景</title>
+<meta name="viewport" content="width=1280, initial-scale=1">
+<title>声盾 ShieldEar · 02 痛点</title>
 <link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  html,body{margin:0;padding:0;width:1280px;height:720px;overflow:hidden}
+  html, body { margin:0; padding:0; width:1280px; height:720px; overflow:hidden; }
+  .anchor-num { font-family: var(--font-display); font-weight: 700; font-size: 38px; line-height: 1.1; color: var(--gold); font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
-<div class="slide ch1">
+<div class="slide" style="display:flex; flex-direction:column;">
 
   <nav class="nav">
-    <div class="nav-cell on"><span class="nav-no">01</span>问题与定位</div>
-    <div class="nav-cell"><span class="nav-no">02</span>系统与引擎</div>
-    <div class="nav-cell"><span class="nav-no">03</span>评测与创新</div>
+    <div class="nav-cell on"><span class="nav-no">01</span>问题与背景</div>
+    <div class="nav-cell"><span class="nav-no">02</span>技术方案</div>
+    <div class="nav-cell"><span class="nav-no">03</span>实测结果</div>
     <div class="nav-cell"><span class="nav-no">04</span>演示与对比</div>
-    <div class="nav-cell"><span class="nav-no">05</span>前景与计划</div>
+    <div class="nav-cell"><span class="nav-no">05</span>前景与路线</div>
   </nav>
-  <div class="nav-progress"><i style="width:15.4%"></i></div>
+  <div class="nav-progress"><i style="width:15%"></i></div>
 
-  <!-- 题头 -->
-  <div style="padding:38px 64px 0;">
+  <div style="flex:1; min-height:0; display:flex; flex-direction:column; padding:30px 64px 40px;">
+
     <div class="cd-h">
-      <h1 class="cn">诈骗话术，已经可以整段合成</h1>
-      <span class="en">THE PROBLEM</span>
+      <div class="cn">一通熟悉的声音，可能是 AI 的表演</div>
+      <div class="en">THE PROBLEM</div>
     </div>
-  </div>
 
-  <!-- 叙事主体：楷体引文体 -->
-  <div style="padding:26px 64px 0; max-width:1010px;">
-    <p class="kai" style="font-size:30px; font-weight:700; line-height:1.78; color:var(--primary);">
-      「妈，是我啊，手机摔坏了，这是同学的号。<br>急需<span class="no-t">八千块</span>周转，先别告诉我爸……」
-    </p>
-    <p style="margin-top:20px; font-size:var(--fs-body); color:var(--ink); line-height:1.8; max-width:920px;">
-      声音、语气、口头禅，都对——这通电话里唯一的假货，是声音本身。我们防备陌生人，却对「熟悉的声音」天然卸下防备；
-      下面三件事，决定了这道题已经轮到用户侧来解。
-    </p>
-  </div>
+    <main style="flex:1; min-height:0; display:flex; gap:48px; margin-top:30px;">
 
-  <!-- 三个排版数字锚点（具名、具数，非卡片） -->
-  <div style="padding:34px 64px 0;">
-    <div class="tickrule" style="color:var(--ch1-line); width:100%;"></div>
-    <div style="display:flex; gap:72px; padding-top:22px;">
-      <div style="flex:1;">
-        <p class="num" style="font-size:34px; font-weight:700; color:var(--no); line-height:1;">2 亿港元</p>
-        <p style="margin-top:10px; font-size:var(--fs-small); color:var(--muted); line-height:1.68;">2024 年香港深伪视频会议诈骗案——<br>职员被 AI 仿冒的「高管」骗走转账</p>
+      <!-- 左区：话术引文 + 展开 -->
+      <div class="rule-l" style="width:58%; flex:none; padding-left:26px; display:flex; flex-direction:column;">
+        <p class="kai" style="font-size:var(--fs-h2); color:var(--paper); line-height:1.85;">「妈，是我啊，手机摔坏了，这是同学的号。<br>急需八千块周转，先别告诉我爸……」</p>
+        <p style="margin-top:26px; font-size:var(--fs-body); color:var(--paper-dim); line-height:1.78; max-width:640px;">声音、语气、口头禅都对——这通电话里唯一的假货，是声音本身。我们防备陌生人，却对熟悉的声音天然卸下防备。</p>
+        <div style="flex:1;"></div>
+        <p style="font-size:var(--fs-small); color:var(--muted); line-height:1.7;">此为诈骗话术示例，声盾现场合成挑战即用此类文本演示鉴伪。</p>
       </div>
-      <div style="flex:1;">
-        <p class="num" style="font-size:34px; font-weight:700; color:var(--gold-ink); line-height:1;">分钟级</p>
-        <p style="margin-top:10px; font-size:var(--fs-small); color:var(--muted); line-height:1.68;">克隆一个声音所需的采样时长——<br>开源工具与商业服务均已消费级化</p>
+
+      <!-- 右区：三个排版数字锚点 -->
+      <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+          <div class="anchor-num">2 亿港元</div>
+          <p style="margin-top:9px; font-size:var(--fs-micro); color:var(--muted); line-height:1.65;">2024 香港深伪视频会议诈骗案，职员被 AI 仿冒高管骗走转账</p>
+        </div>
+        <div class="hairline"></div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+          <div class="anchor-num">分钟级</div>
+          <p style="margin-top:9px; font-size:var(--fs-micro); color:var(--muted); line-height:1.65;">克隆一个声音所需采样时长，开源工具与商业服务均已消费级化</p>
+        </div>
+        <div class="hairline"></div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+          <div class="anchor-num no-t">0 个</div>
+          <p style="margin-top:9px; font-size:var(--fs-micro); color:var(--muted); line-height:1.65;">通话进行中，普通人可用的验真手段——这就是我们要补上的位置</p>
+        </div>
       </div>
-      <div style="flex:1;">
-        <p class="num" style="font-size:34px; font-weight:700; color:var(--primary); line-height:1;">0 个</p>
-        <p style="margin-top:10px; font-size:var(--fs-small); color:var(--muted); line-height:1.68;">通话进行中普通人可用的验真手段——<br>这就是我们要补上的位置</p>
-      </div>
+
+    </main>
+
+    <!-- 底部压舱行 -->
+    <div class="hairline" style="margin-top:20px; padding-top:15px; display:flex; justify-content:space-between; align-items:baseline; gap:24px;">
+      <span style="font-size:var(--fs-micro); color:var(--faint); line-height:1.6; flex:1; min-width:0;">《反电信网络诈骗法》2022.12 施行 · 《互联网信息服务深度合成管理规定》2023.01 施行——治理框架已就位，用户侧工具仍缺位</span>
+      <span class="serif" style="font-weight:700; font-size:var(--fs-h3); color:var(--paper); white-space:nowrap;">反诈的最后一公里，就在<span style="color:var(--gold-bright);">接听的那几秒</span>。</span>
     </div>
-  </div>
 
-  <!-- 底部压舱：政策脚注 + 落点句 -->
-  <div style="position:absolute; left:64px; right:64px; bottom:40px;">
-    <div class="hairline" style="padding-top:15px; display:flex; justify-content:space-between; align-items:baseline; gap:40px;">
-      <p style="font-size:var(--fs-micro); color:var(--faint); line-height:1.7;">《反电信网络诈骗法》2022.12 施行 · 《互联网信息服务深度合成管理规定》2023.01 施行——治理框架已就位，用户侧工具仍缺位</p>
-      <p class="serif" style="font-size:var(--fs-h3); font-weight:700; color:var(--primary); white-space:nowrap;">反诈的最后一公里，<span class="acc-b">就在接听的那几秒</span>。</p>
-    </div>
   </div>
 </div>
-
-<aside data-notes class="hidden" style="display:none;">先从一个真实的场景说起。「妈，是我啊，手机摔坏了，急需八千块周转」——声音、语气、口头禅都对，这通电话里唯一的假货，是声音本身。这样的能力已经不稀缺：2024 年初，香港一家公司的职员在深伪视频会议里被 AI 仿冒的高管骗走两亿港元；克隆一个声音，开源工具几分钟就能做到。但直到今天，通话进行中的那一刻，普通人可用的验真手段是零个。反诈法和深度合成管理规定都已施行，治理框架就位了，用户侧的工具还缺着——反诈的最后一公里，就在接听的那几秒。</aside>
+<aside data-notes class="hidden" style="display:none;">我们从一通电话说起。「妈，是我啊，手机摔坏了，急需八千块周转」——声音、语气、口头禅都对，这通电话里唯一的假货，就是声音本身。威胁不是未来时：2024年香港深伪视频会议诈骗，职员被AI仿冒的高管骗走2亿港元；今天克隆一个声音只要分钟级采样，开源工具和商业服务都消费级化了。可在通话进行中，普通人可用的验真手段是0个——这就是我们要补的位置。政策框架已经就位，用户侧工具仍然缺位。反诈的最后一公里，就卡在接听的那几秒。</aside>
 </body>
 </html>

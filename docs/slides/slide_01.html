@@ -1,60 +1,76 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>01｜封面</title>
+<meta name="viewport" content="width=1280, initial-scale=1">
+<title>声盾 ShieldEar · 01 封面</title>
 <link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  html,body{margin:0;padding:0;width:1280px;height:720px;overflow:hidden}
+  html, body { margin:0; padding:0; width:1280px; height:720px; overflow:hidden; }
+  .cover-title { font-family: var(--font-heading); font-weight: 900; font-size: 104px; line-height: 1.02; letter-spacing: .04em; color: var(--paper); }
+  .stat-num { font-family: var(--font-display); font-weight: 700; font-size: 54px; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .stat-unit { font-family: var(--font-num); font-weight: 500; font-size: 17px; color: var(--paper-dim); }
 </style>
 </head>
 <body>
-<div class="slide dark">
+<div class="slide">
 
-  <!-- 右上点阵装饰层（编辑式，克制） -->
-  <div class="dotgrid-dark" style="position:absolute; right:0; top:0; width:470px; height:190px; opacity:.75;"></div>
-
-  <!-- 顶部：赛事一行 -->
-  <div style="position:absolute; left:72px; right:72px; top:42px; display:flex; justify-content:space-between; align-items:baseline;">
-    <p class="mono" style="font-size:var(--fs-micro); color:rgba(239,235,221,.58); letter-spacing:.17em;">全国大学生信息安全竞赛 · 作品赛 · 应用安全（内容安全）</p>
-    <p class="num" style="font-size:var(--fs-micro); color:rgba(239,235,221,.58);">2026.10</p>
+  <!-- 顶部赛事行 -->
+  <div style="position:absolute; left:80px; right:80px; top:36px; display:flex; justify-content:space-between; align-items:baseline;">
+    <span style="font-size:var(--fs-micro); color:var(--muted); letter-spacing:.06em;">全国大学生信息安全竞赛 · 作品赛 · 应用安全（内容安全）</span>
+    <span class="mono" style="font-size:var(--fs-micro); color:var(--muted); letter-spacing:.14em;">2026.10</span>
   </div>
 
-  <!-- 左区：字标与定位 -->
-  <div style="position:absolute; left:72px; top:148px; width:660px;">
-    <p class="mono" style="font-size:var(--fs-micro); color:var(--accent); letter-spacing:.17em;">SHIELDEAR</p>
-    <h1 class="serif" style="margin-top:16px; font-size:116px; font-weight:900; line-height:1.06; letter-spacing:.04em; color:#F2EFE7;">声盾</h1>
-    <div class="tickrule" style="margin-top:28px; width:360px; color:var(--accent);"></div>
-    <p class="kai" style="margin-top:26px; font-size:var(--fs-h2); line-height:1.72; color:#EFEBDD;">接起电话的那一刻，<br>普通人也需要一个<span style="color:var(--accent);">验真声音</span>的办法。</p>
-    <p style="margin-top:14px; font-size:var(--fs-small); line-height:1.75; color:rgba(239,235,221,.66);">面向 AI 语音克隆诈骗的实时鉴伪反诈平台——边通话、边检测、边存证。</p>
+  <!-- 右上点阵 + 下缘刻度线（装饰） -->
+  <div class="dotgrid" data-decor aria-hidden="true" style="position:absolute; top:62px; right:0; width:436px; height:140px;"></div>
+  <div class="tickrule" data-decor aria-hidden="true" style="position:absolute; top:202px; right:0; width:436px;"></div>
+
+  <!-- 左区：重心下沉非对称主标题 -->
+  <div style="position:absolute; left:80px; top:168px; max-width:700px;">
+    <div class="mono" style="font-size:var(--fs-small); font-weight:500; letter-spacing:.5em; color:var(--gold-bright);">SHIELDEAR</div>
+    <h1 class="cover-title" style="margin-top:22px;">声盾</h1>
+    <div data-decor aria-hidden="true" style="width:72px; height:3px; background:var(--gold); margin:30px 0 28px;"></div>
+    <p class="kai" style="font-size:var(--fs-h2); color:var(--paper); line-height:1.7;">接起电话的那一刻，普通人也需要一个验真声音的办法。</p>
+    <p style="margin-top:18px; font-size:var(--fs-small); color:var(--muted); letter-spacing:.02em;">面向 AI 语音克隆诈骗的实时鉴伪平台 —— 边通话、边检测、边存证</p>
   </div>
 
-  <!-- 右下：三组 Playfair 大数字（数据版面，非图库照） -->
-  <div style="position:absolute; right:72px; bottom:132px; display:flex; gap:52px;">
-    <div style="text-align:right;">
-      <p style="font-family:var(--font-display); font-size:42px; font-weight:600; color:var(--accent); line-height:1;">20<span style="font-size:26px;">/20</span></p>
-      <p style="margin-top:10px; font-size:var(--fs-micro); line-height:1.6; color:rgba(239,235,221,.62);">宽带合成语音盲测满分<br>TTS <span class="num">n=20</span> 全检出</p>
-    </div>
-    <div style="text-align:right;">
-      <p style="font-family:var(--font-display); font-size:42px; font-weight:600; color:var(--accent); line-height:1;">0.015</p>
-      <p style="margin-top:10px; font-size:var(--fs-micro); line-height:1.6; color:rgba(239,235,221,.62);">峰值实时因子 RTF<br>纯 CPU 可达</p>
-    </div>
-    <div style="text-align:right;">
-      <p style="font-family:var(--font-display); font-size:42px; font-weight:600; color:var(--accent); line-height:1;">≤1s</p>
-      <p style="margin-top:10px; font-size:var(--fs-micro); line-height:1.6; color:rgba(239,235,221,.62);">端到端判决时延<br>窗口步进主导</p>
+  <!-- 右下数据版面 -->
+  <div style="position:absolute; right:80px; bottom:150px; width:300px; text-align:right;">
+    <div class="mono" style="font-size:var(--fs-micro); letter-spacing:.14em; color:var(--gold-bright);">现场合成 · 现场检出 · 现场存证</div>
+    <div style="margin-top:14px;">
+      <div style="padding:13px 0;">
+        <div class="stat-num">20 / 20</div>
+        <div style="margin-top:6px; font-size:var(--fs-micro); color:var(--muted); letter-spacing:.03em;">宽带盲测 · TTS合成检出满分</div>
+      </div>
+      <div class="hairline"></div>
+      <div style="padding:13px 0;">
+        <div style="display:flex; justify-content:flex-end; align-items:baseline; gap:10px;">
+          <span class="stat-num">0.015</span>
+          <span class="stat-unit">RTF峰值</span>
+        </div>
+        <div style="margin-top:6px; font-size:var(--fs-micro); color:var(--muted); letter-spacing:.03em;">纯CPU实时因子</div>
+      </div>
+      <div class="hairline"></div>
+      <div style="padding:13px 0 0;">
+        <div style="display:flex; justify-content:flex-end; align-items:baseline; gap:8px;">
+          <span class="stat-unit" style="font-size:20px;">≤</span>
+          <span class="stat-num">1</span>
+          <span class="stat-unit" style="font-size:20px;">s</span>
+        </div>
+        <div style="margin-top:6px; font-size:var(--fs-micro); color:var(--muted); letter-spacing:.03em;">端到端判决时延</div>
+      </div>
     </div>
   </div>
 
-  <!-- 底部压舱：团队信息行 -->
-  <div style="position:absolute; left:72px; right:72px; bottom:44px;">
-    <div class="hairline" style="padding-top:16px; display:flex; justify-content:space-between; align-items:baseline;">
-      <p style="font-size:var(--fs-small); color:rgba(239,235,221,.85);">参赛团队：<span style="color:#F2EFE7;">【团队名称】</span> · 答辩人：【成员姓名】</p>
-      <p style="font-size:var(--fs-micro); color:rgba(239,235,221,.55);">大连理工大学</p>
-    </div>
+  <!-- 底部压舱行 -->
+  <div class="hairline-strong" style="position:absolute; left:80px; right:80px; bottom:44px; padding-top:18px; display:flex; justify-content:space-between; align-items:baseline; gap:24px;">
+    <span style="font-size:var(--fs-small); color:var(--paper-dim);">参赛团队：<span style="color:var(--paper);">【团队名称】</span> · 答辩人：<span style="color:var(--paper);">【成员姓名】</span></span>
+    <span style="font-size:var(--fs-micro); color:var(--muted); letter-spacing:.08em;">大连理工大学</span>
   </div>
+
 </div>
-
-<aside data-notes class="hidden" style="display:none;">各位评委老师好，我们是【团队名称】，来自大连理工大学，答辩人【成员姓名】。今天带来的作品叫「声盾」，一句话说清楚：它要解决 AI 语音克隆诈骗里的验真问题——接起电话的那一刻，普通人也需要一个能相信的答案。封面右下这三个数字是我们目前的实测结果：宽带条件下二十个合成样本全部检出，峰值实时因子零点零一五，端到端判决一秒以内。待会儿的演示环节，欢迎各位评委任意出题，我们现场合成、现场检出。</aside>
+<aside data-notes class="hidden" style="display:none;">各位评委老师好！我们是大连理工大学的参赛团队，我是答辩人【成员姓名】。我们的作品叫声盾，一句话定位：在接起电话的那一刻，给普通人一个验真声音的办法——边通话、边检测、边存证。待会儿的演示环节，欢迎各位评委任意给一段文本，我们当场合成、当场检出。它是怎么做到的？请看下一页。</aside>
 </body>
 </html>

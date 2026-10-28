@@ -1,93 +1,111 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>06｜数据驱动校准</title>
+<meta name="viewport" content="width=1280, initial-scale=1">
+<title>06 · 数据驱动校准 — 声盾 ShieldEar</title>
 <link rel="stylesheet" href="global.css">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  html,body{margin:0;padding:0;width:1280px;height:720px;overflow:hidden}
+  html, body { margin:0; padding:0; width:1280px; height:720px; overflow:hidden; }
+  body { -webkit-font-smoothing: antialiased; }
+  .pad { padding-left:64px; padding-right:64px; }
+  .cd-h { padding-top:26px; }
+  .cd-h .ts { margin-left:auto; font-family:var(--font-heading); font-weight:600; font-size:var(--fs-h3); color:var(--gold-bright); white-space:nowrap; }
+  /* 上半区：四步横向流 */
+  .steps { display:flex; gap:10px; margin-top:24px; }
+  .stepcard { flex:1; min-height:205px; padding:20px 20px 18px; }
+  .stepcard .stno { font-family:var(--font-mono); font-size:var(--fs-micro); color:var(--faint); letter-spacing:.16em; }
+  .stepcard h3 { font-family:var(--font-heading); font-weight:700; font-size:var(--fs-h3); color:var(--paper); line-height:1.4; margin-top:10px; }
+  .stepcard p { font-size:var(--fs-small); color:var(--paper-dim); line-height:1.72; margin-top:9px; }
+  /* 下半区：证伪对撞 */
+  .sect { margin-top:34px; font-family:var(--font-heading); font-weight:900; font-size:var(--fs-h2); color:var(--paper); line-height:1.4; }
+  .versus { display:flex; align-items:stretch; margin-top:18px; }
+  .vs-sep { width:72px; flex:none; display:flex; align-items:center; justify-content:center;
+            font-family:var(--font-heading); font-weight:700; font-size:34px; color:var(--gold); }
+  .vcard { flex:1; min-height:172px; padding:22px 26px 24px; }
+  .vtag { font-family:var(--font-mono); font-size:var(--fs-micro); letter-spacing:.12em; }
+  .vbody { display:flex; align-items:center; gap:26px; margin-top:16px; }
+  .vnumwrap { flex:none; width:178px; }
+  .vnum { font-family:var(--font-num); font-variant-numeric:tabular-nums; font-size:44px; font-weight:700; line-height:1.05; }
+  .vlab { font-size:var(--fs-micro); color:var(--muted); margin-top:8px; line-height:1.5; }
+  .vtxt { font-size:var(--fs-small); color:var(--paper-dim); line-height:1.78; }
+  /* 底部压舱 */
+  .foot { position:absolute; left:64px; right:64px; bottom:34px; border-top:1px solid var(--line);
+          padding-top:13px; font-size:var(--fs-micro); color:var(--muted); }
+  .foot .mono { color:var(--faint); }
 </style>
 </head>
 <body>
-<div class="slide ch2">
-
+<div class="slide">
   <nav class="nav">
-    <div class="nav-cell"><span class="nav-no">01</span>问题与定位</div>
-    <div class="nav-cell on"><span class="nav-no">02</span>系统与引擎</div>
-    <div class="nav-cell"><span class="nav-no">03</span>评测与创新</div>
+    <div class="nav-cell"><span class="nav-no">01</span>问题与背景</div>
+    <div class="nav-cell on"><span class="nav-no">02</span>技术方案</div>
+    <div class="nav-cell"><span class="nav-no">03</span>实测结果</div>
     <div class="nav-cell"><span class="nav-no">04</span>演示与对比</div>
-    <div class="nav-cell"><span class="nav-no">05</span>前景与计划</div>
+    <div class="nav-cell"><span class="nav-no">05</span>前景与路线</div>
   </nav>
-  <div class="nav-progress"><i style="width:46.2%"></i></div>
+  <div class="nav-progress"><i style="width:46%"></i></div>
 
-  <!-- 题头 -->
-  <div style="padding:30px 64px 0;">
-    <div class="cd-h">
-      <h1 class="cn">权重不是拍的，是拟合出来的——还被数据推翻过一次</h1>
-      <span class="en">CALIBRATION</span>
-    </div>
+  <div class="cd-h pad">
+    <span class="cn">数据驱动校准</span>
+    <span class="en">CALIBRATION</span>
+    <span class="ts">权重不是拍的，是拟合出来的——还被数据推翻过一次</span>
   </div>
 
-  <!-- 四步横向流：各一句人话 -->
-  <div style="padding:22px 64px 0; display:flex; align-items:flex-start;">
-    <div style="flex:1.1; padding-right:26px;">
-      <p class="mono" style="font-size:var(--fs-micro); color:var(--gold-ink); letter-spacing:.17em;">STEP 1</p>
-      <p style="margin-top:6px; font-size:var(--fs-body); font-weight:700; color:var(--primary);">构造样本</p>
-      <p style="margin-top:5px; font-size:var(--fs-small); color:var(--muted); line-height:1.62;">自然 <span class="num">5</span> 种公开人声 · TTS <span class="num">7</span> 音色 × <span class="num">3</span> 文本；均再造 <span class="num">300–3400Hz</span> 窄带版</p>
+  <section class="steps pad">
+    <div class="card stepcard">
+      <div class="stno">STEP 1</div>
+      <h3>构造样本</h3>
+      <p>自然类 5 种公开人声（含有声书）· TTS 7 音色 × 3 文本，均再造 300–3400Hz 窄带版</p>
     </div>
-    <div style="flex:1; padding:0 26px; border-left:1px solid var(--ch2-line);">
-      <p class="mono" style="font-size:var(--fs-micro); color:var(--gold-ink); letter-spacing:.17em;">STEP 2</p>
-      <p style="margin-top:6px; font-size:var(--fs-body); font-weight:700; color:var(--primary);">拟合自然先验</p>
-      <p style="margin-top:5px; font-size:var(--fs-small); color:var(--muted); line-height:1.62;">按信道取自然类各特征均值 / 标准差，z 分数即偏离自然语音的程度</p>
+    <div class="card stepcard">
+      <div class="stno">STEP 2</div>
+      <h3>拟合自然先验</h3>
+      <p>按信道取自然类各特征均值/标准差，z 分数即偏离自然语音的程度</p>
     </div>
-    <div style="flex:1; padding:0 26px; border-left:1px solid var(--ch2-line);">
-      <p class="mono" style="font-size:var(--fs-micro); color:var(--gold-ink); letter-spacing:.17em;">STEP 3</p>
-      <p style="margin-top:6px; font-size:var(--fs-body); font-weight:700; color:var(--primary);">逻辑回归定权</p>
-      <p style="margin-top:5px; font-size:var(--fs-small); color:var(--muted); line-height:1.62;">类加权（自然 <span class="num">×4</span>）L2 正则，梯度下降 <span class="num">4000</span> 轮</p>
+    <div class="card stepcard">
+      <div class="stno">STEP 3</div>
+      <h3>逻辑回归定权</h3>
+      <p>类加权（自然 ×4）的 L2 正则，梯度下降 4000 轮</p>
     </div>
-    <div style="flex:1; padding-left:26px; border-left:1px solid var(--ch2-line);">
-      <p class="mono" style="font-size:var(--fs-micro); color:var(--gold-ink); letter-spacing:.17em;">STEP 4</p>
-      <p style="margin-top:6px; font-size:var(--fs-body); font-weight:700; color:var(--primary);">两重验证</p>
-      <p style="margin-top:5px; font-size:var(--fs-small); color:var(--muted); line-height:1.62;">混淆矩阵 + 自然类留一法（LOO）稳定性检验</p>
+    <div class="card stepcard">
+      <div class="stno">STEP 4</div>
+      <h3>两重验证</h3>
+      <p>混淆矩阵 + 自然类留一法（LOO）稳定性检验</p>
     </div>
-  </div>
+  </section>
 
-  <!-- 证伪故事：左右对撞 -->
-  <div style="position:absolute; left:64px; right:64px; top:330px; bottom:96px;">
-    <p class="serif" style="font-size:var(--fs-h3); font-weight:900; color:var(--primary);">校准中最有意思的一件事：直觉被数据否决了</p>
-    <div style="margin-top:16px; display:grid; grid-template-columns:1fr 64px 1fr; align-items:stretch; height:calc(100% - 44px);">
-      <div class="card card-r" style="padding:20px 26px;">
-        <p style="font-size:var(--fs-small); color:var(--no); font-weight:700;">被证伪 · 高频谱平坦度</p>
-        <div style="margin-top:12px; display:flex; align-items:baseline; gap:16px;">
-          <p class="num" style="font-size:46px; font-weight:700; color:var(--no); line-height:1;">0.10</p>
-          <p style="font-size:var(--fs-small); color:var(--muted); line-height:1.55;">类间分离度<br>→ 拟合权重自动趋零</p>
+  <section class="pad">
+    <h2 class="sect">校准中最有意思的一件事：直觉被数据否决了</h2>
+    <div class="versus">
+      <div class="card card-r vcard">
+        <div class="vtag no-t">被证伪 · 高频谱平坦度</div>
+        <div class="vbody">
+          <div class="vnumwrap">
+            <div class="vnum no-t">0.10</div>
+            <div class="vlab">类间分离度</div>
+          </div>
+          <p class="vtxt">文献与直觉都说它有效，实测分不开自然与合成——拟合权重自动归零</p>
         </div>
-        <p style="margin-top:12px; font-size:var(--fs-small); color:var(--muted); line-height:1.65;">文献与直觉都说它有效；实测分不开自然与合成，权重自己归零。</p>
       </div>
-      <div style="display:flex; align-items:center; justify-content:center;">
-        <p class="kai" style="font-size:var(--fs-h3); color:var(--muted);">对</p>
-      </div>
-      <div class="card card-ok" style="padding:20px 26px;">
-        <p style="font-size:var(--fs-small); color:var(--ok); font-weight:700;">被验证 · 高频周期性（自研）</p>
-        <div style="margin-top:12px; display:flex; align-items:baseline; gap:16px;">
-          <p class="num" style="font-size:46px; font-weight:700; color:var(--ok); line-height:1;">1.28</p>
-          <p style="font-size:var(--fs-small); color:var(--muted); line-height:1.55;">类间分离度<br>→ 权重 <span class="num">0.289</span> 显著贡献</p>
+      <div class="vs-sep">对</div>
+      <div class="card card-ok vcard">
+        <div class="vtag ok-t">被验证 · 高频周期性（自研）</div>
+        <div class="vbody">
+          <div class="vnumwrap">
+            <div class="vnum acc-b">1.28</div>
+            <div class="vlab">类间分离度 → 权重 0.289</div>
+          </div>
+          <p class="vtxt">自研特征反而在数据上站住了——这就是先拟合后信任的理由。</p>
         </div>
-        <p style="margin-top:12px; font-size:var(--fs-small); color:var(--muted); line-height:1.65;">自研特征反而在数据上站住了——这就是先拟合、后信任的理由。</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- 底部压舱 -->
-  <div style="position:absolute; left:64px; right:64px; bottom:40px;">
-    <div class="hairline" style="padding-top:14px; display:flex; justify-content:space-between; align-items:baseline;">
-      <p style="font-size:var(--fs-small); color:var(--ink);">校准全流程脚本化，样本扩展后可一键重拟合</p>
-      <p class="mono" style="font-size:var(--fs-micro); color:var(--faint);">scripts/calibrate-engine.ts · fit-weights.ts</p>
-    </div>
-  </div>
+  <footer class="foot">校准全流程脚本化，样本扩展后可一键重拟合 · <span class="mono">scripts/calibrate-engine.ts</span> 与 <span class="mono">fit-weights.ts</span> 随作品提交。</footer>
 </div>
 
-<aside data-notes class="hidden" style="display:none;">校准四步过得快一点：构造样本、拟合自然先验、逻辑回归定权、两重验证，每一步都是脚本。这一页真正想讲的是下面这个对撞：校准中最有意思的一件事，是直觉被数据否决了。高频谱平坦度，文献和直觉都说它有效，实测类间分离度只有零点一，分不开自然与合成，拟合权重自己归了零；而我们自研的高频周期性，分离度一点二八，权重零点二八九，在数据上站住了。这就是先拟合、后信任的理由——全流程脚本化，样本扩展后可以一键重拟合，评委可以复算。</aside>
+<aside data-notes class="hidden" style="display:none;">这一页讲权重从哪儿来，四步：构造样本、按信道拟合自然先验、类加权逻辑回归定权、混淆矩阵加留一法双重验证。最有意思的是证伪这件事，我讲慢一点：高频谱平坦度，文献和直觉都说该有效，实测分离度只有 0.10，权重自动归零；自研的高频周期性反而拿到 1.28，在数据上站住了。所以我认一个理——先拟合、后信任。校准脚本随作品提交，样本扩展后可一键重拟合。</aside>
 </body>
 </html>

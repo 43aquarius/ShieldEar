@@ -2,88 +2,103 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>12｜后续路线</title>
+<meta name="viewport" content="width=1280, initial-scale=1">
+<title>12 · 后续路线 — 声盾 ShieldEar</title>
 <link rel="stylesheet" href="global.css">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   html,body{margin:0;padding:0;width:1280px;height:720px;overflow:hidden}
+  body{-webkit-font-smoothing:antialiased}
+
+  .slide{display:flex;flex-direction:column}
+  .content{flex:1;min-height:0;display:flex;flex-direction:column;padding:28px 64px 86px}
+
+  .standfirst{font-family:var(--font-heading);font-weight:600;font-size:var(--fs-h3);line-height:1.5;color:var(--gold-bright);margin-top:10px}
+  .lead{font-size:var(--fs-body);line-height:1.75;color:var(--paper-dim);margin-top:14px;max-width:980px}
+  .spacer{flex:1;min-height:0}
+
+  /* —— 底部压舱时间轴 —— */
+  .wk{display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:8px}
+  .wk span{font-family:var(--font-mono);font-size:var(--fs-micro);letter-spacing:.08em;color:var(--gold-bright);padding-left:18px}
+  .wk span:first-child{padding-left:0}
+  .phases{display:grid;grid-template-columns:repeat(5,1fr)}
+  .ph{min-height:180px;display:flex;flex-direction:column;padding:16px 18px 16px;border-left:1px solid var(--line)}
+  .ph:first-child{border-left:none;padding-left:0}
+  .ph h3{font-family:var(--font-heading);font-weight:700;font-size:var(--fs-h3);line-height:1.4;color:var(--paper)}
+  .ph .mech{font-size:var(--fs-small);line-height:1.7;color:var(--paper-dim);margin-top:8px}
+  .ph .dely{font-family:var(--font-mono);font-size:var(--fs-micro);line-height:1.55;color:var(--gold-bright);margin-top:auto;padding-top:14px}
+
+  .foot{position:absolute;left:64px;right:64px;bottom:40px;border-top:1px solid var(--line);padding-top:13px}
+  .foot p{font-size:var(--fs-micro);line-height:1.6;color:var(--muted)}
 </style>
 </head>
 <body>
-<div class="slide ch5">
+<div class="slide">
 
   <nav class="nav">
-    <div class="nav-cell"><span class="nav-no">01</span>问题与定位</div>
-    <div class="nav-cell"><span class="nav-no">02</span>系统与引擎</div>
-    <div class="nav-cell"><span class="nav-no">03</span>评测与创新</div>
+    <div class="nav-cell"><span class="nav-no">01</span>问题与背景</div>
+    <div class="nav-cell"><span class="nav-no">02</span>技术方案</div>
+    <div class="nav-cell"><span class="nav-no">03</span>实测结果</div>
     <div class="nav-cell"><span class="nav-no">04</span>演示与对比</div>
-    <div class="nav-cell on"><span class="nav-no">05</span>前景与计划</div>
+    <div class="nav-cell on"><span class="nav-no">05</span>前景与路线</div>
   </nav>
-  <div class="nav-progress"><i style="width:92.3%"></i></div>
+  <div class="nav-progress"><i style="width:92%"></i></div>
 
-  <!-- 题头 -->
-  <div style="padding:30px 64px 0;">
+  <div class="content">
     <div class="cd-h">
-      <h1 class="cn">十二周，从轻量引擎走到深度集成</h1>
+      <h1 class="cn">后续路线</h1>
       <span class="en">ROADMAP</span>
     </div>
-    <p style="margin-top:12px; font-size:var(--fs-body); color:var(--ink); line-height:1.76; max-width:980px;">
-      轻量可解释引擎是第一阶段的诚实交付；深度引擎不是推翻它，而是把「有声书误判、窄带退化」这两个已知边界补上——每一阶段都有可检验的交付物。
-    </p>
-  </div>
+    <p class="standfirst">十二周，从轻量引擎走到深度集成</p>
+    <p class="lead">轻量可解释引擎是第一阶段的诚实交付；深度引擎不是推翻它，而是把有声书误判、窄带退化这两个已知边界补上。每一阶段都有可检验的交付物。</p>
 
-  <!-- 时间轴：贴近底部压舱 -->
-  <div style="position:absolute; left:64px; right:64px; bottom:100px;">
-    <div class="tickrule" style="color:var(--gold-ink); margin-bottom:10px;"></div>
-    <div style="display:flex; align-items:baseline; gap:10px; padding-bottom:12px;">
-      <span class="mono" style="font-size:var(--fs-micro); color:var(--gold-ink); letter-spacing:.1em;">W01–02</span>
-      <span style="flex:1;"></span>
-      <span class="mono" style="font-size:var(--fs-micro); color:var(--gold-ink); letter-spacing:.1em;">W03–05</span>
-      <span style="flex:1;"></span>
-      <span class="mono" style="font-size:var(--fs-micro); color:var(--gold-ink); letter-spacing:.1em;">W06–07</span>
-      <span style="flex:1;"></span>
-      <span class="mono" style="font-size:var(--fs-micro); color:var(--gold-ink); letter-spacing:.1em;">W10</span>
-      <span style="flex:1;"></span>
-      <span class="mono" style="font-size:var(--fs-micro); color:var(--gold-ink); letter-spacing:.1em;">W11–12</span>
-    </div>
-    <div style="display:flex; gap:28px;">
-      <div style="flex:1.05;">
-        <p class="serif" style="font-size:var(--fs-h3); font-weight:900; color:var(--primary);">AASIST 基线复现</p>
-        <p style="margin-top:6px; font-size:var(--fs-small); color:var(--muted); line-height:1.6;">按官方流程在 ASVspoof 2019 LA 训练评测，工程正确性的锚点</p>
-        <p style="margin-top:9px; font-size:var(--fs-micro); color:var(--faint);">交付物：<span class="num" style="color:var(--gold-ink);">EER 同量级基线</span></p>
+    <div class="spacer"></div>
+
+    <div class="tl">
+      <div class="wk">
+        <span>W01–02</span>
+        <span>W03–05</span>
+        <span>W06–07</span>
+        <span>W10</span>
+        <span>W11–12</span>
       </div>
-      <div style="flex:1; border-left:1px solid var(--ch5-line); padding-left:28px;">
-        <p class="serif" style="font-size:var(--fs-h3); font-weight:900; color:var(--primary);">双网络融合</p>
-        <p style="margin-top:6px; font-size:var(--fs-small); color:var(--muted); line-height:1.6;">RawGAT-ST 训练 + 软投票集成 + 消融实验</p>
-        <p style="margin-top:9px; font-size:var(--fs-micro); color:var(--faint);">交付物：<span class="num" style="color:var(--gold-ink);">消融表</span></p>
-      </div>
-      <div style="flex:1; border-left:1px solid var(--ch5-line); padding-left:28px;">
-        <p class="serif" style="font-size:var(--fs-h3); font-weight:900; color:var(--primary);">ONNX 轻量化</p>
-        <p style="margin-top:6px; font-size:var(--fs-small); color:var(--muted); line-height:1.6;">动态量化 CPU 推理，蒸馏兜底</p>
-        <p style="margin-top:9px; font-size:var(--fs-micro); color:var(--faint);">交付物：<span class="num" style="color:var(--gold-ink);">RTF&lt;1 实测</span></p>
-      </div>
-      <div style="flex:1; border-left:1px solid var(--ch5-line); padding-left:28px;">
-        <p class="serif" style="font-size:var(--fs-h3); font-weight:900; color:var(--primary);">跨信道评测</p>
-        <p style="margin-top:6px; font-size:var(--fs-small); color:var(--muted); line-height:1.6;">ASVspoof 2021 LA + 自建 8kHz 窄带子集 + Rawboost</p>
-        <p style="margin-top:9px; font-size:var(--fs-micro); color:var(--faint);">交付物：<span class="num" style="color:var(--gold-ink);">8kHz 窄带子集</span></p>
-      </div>
-      <div style="flex:0.95; border-left:1px solid var(--ch5-line); padding-left:28px;">
-        <p class="serif" style="font-size:var(--fs-h3); font-weight:900; color:var(--primary);">联调与答辩</p>
-        <p style="margin-top:6px; font-size:var(--fs-small); color:var(--muted); line-height:1.6;">演示排练、测试数据、报告与视频定稿</p>
-        <p style="margin-top:9px; font-size:var(--fs-micro); color:var(--faint);">交付物：<span class="num" style="color:var(--gold-ink);">定稿材料</span></p>
+      <div class="tickrule"></div>
+      <div class="phases">
+        <div class="ph">
+          <h3><span class="num">AASIST</span> 基线复现</h3>
+          <p class="mech">按官方流程在 <span class="num">ASVspoof 2019 LA</span> 训练评测，工程正确性的锚点</p>
+          <p class="dely">交付物：EER 同量级基线</p>
+        </div>
+        <div class="ph">
+          <h3>双网络融合</h3>
+          <p class="mech"><span class="num">RawGAT-ST</span> 训练 + 软投票集成 + 消融实验</p>
+          <p class="dely">交付物：消融表</p>
+        </div>
+        <div class="ph">
+          <h3><span class="num">ONNX</span> 轻量化</h3>
+          <p class="mech">动态量化 <span class="num">CPU</span> 推理，蒸馏兜底</p>
+          <p class="dely">交付物：RTF &lt; 1 实测</p>
+        </div>
+        <div class="ph">
+          <h3>跨信道评测</h3>
+          <p class="mech"><span class="num">ASVspoof 2021 LA</span> + 自建 <span class="num">8kHz</span> 窄带子集 + <span class="num">Rawboost</span></p>
+          <p class="dely">交付物：8kHz 窄带子集</p>
+        </div>
+        <div class="ph">
+          <h3>联调与答辩</h3>
+          <p class="mech">演示排练、测试数据、报告与视频定稿</p>
+          <p class="dely">交付物：定稿材料</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 底部压舱 -->
-  <div style="position:absolute; left:64px; right:64px; bottom:40px;">
-    <div class="hairline" style="padding-top:14px; display:flex; justify-content:space-between; align-items:baseline; gap:40px;">
-      <p style="font-size:var(--fs-micro); color:var(--faint);">开源底座：clovaai/aasist · asvspoof-challenge（RawGAT-ST）· Rawboost · torchaudio · ONNX Runtime</p>
-      <p style="font-size:var(--fs-small); color:var(--ink); white-space:nowrap;">架构已预留 ONNX 替换接口，业务层零改动</p>
-    </div>
-  </div>
+  <footer class="foot">
+    <p>开源底座：<span class="num">clovaai/aasist</span> · <span class="num">asvspoof-challenge</span>（<span class="num">RawGAT-ST</span>）· <span class="num">Rawboost</span> · <span class="num">torchaudio</span> · <span class="num">ONNX Runtime</span>｜架构已预留 <span class="num">ONNX</span> 替换接口，业务层零改动。</p>
+  </footer>
+
 </div>
 
-<aside data-notes class="hidden" style="display:none;">最后是十二周计划，先说清路线逻辑：轻量可解释引擎是第一阶段的诚实交付，深度引擎不是推翻它，而是把有声书误判和窄带退化这两个已知边界补上。五个阶段各点一句交付物：前两周复现 AASIST 基线，拿到同量级 EER，作为工程正确性的锚点；三到五周做 RawGAT-ST 加软投票融合，交消融表；六到七周 ONNX 轻量化，交 RTF 小于一的实测；第十周跨信道评测，自建八千赫兹窄带子集；最后两周联调答辩。架构已经预留了 ONNX 替换接口，业务层零改动。</aside>
+<aside data-notes class="hidden" style="display:none;">先说态度：轻量可解释引擎是我们第一阶段的诚实交付，深度引擎不是推翻它，而是把有声书误判、窄带退化这两个已知边界补上。五段各一句：W01–02 按官方流程复现 AASIST 基线、交付 EER 同量级基线——第一周就复现基线，是锁定整条路线的关键决策；W03–05 RawGAT-ST 训练加软投票集成，交付消融表；W06–07 ONNX 动态量化做 CPU 推理，交付 RTF 小于 1 的实测；W10 跨信道评测，自建 8kHz 窄带子集；W11–12 联调与答辩定稿。每个交付物都可检验；开源底座都是现成项目，架构已预留 ONNX 替换接口、业务层零改动。</aside>
 </body>
 </html>
