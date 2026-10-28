@@ -1,0 +1,101 @@
+{
+  "design": {
+    "title": "声盾 ShieldEar — 面向AI语音诈骗的实时鉴伪反诈平台",
+    "style_name": "暗色编辑排版（editorial dark）：衬线中文大标题 + 克制强调色 + 非对称版式",
+    "palette": {
+      "background": "#0A1410",
+      "primary": "#EAF6EF",
+      "accent": "#34D399"
+    },
+    "typography": {
+      "heading": "Noto Serif SC 600/700/900",
+      "body": "Noto Sans SC 400/500",
+      "numeric": "JetBrains Mono"
+    },
+    "reference": "Stripe dark editorial / Linear 文档风 / 中文刊物排版（去仪表盘感、去AI味）"
+  },
+  "global_css_path": "/home/z/my-project/download/slides/global.css",
+  "slides_dir": "/home/z/my-project/download/slides",
+  "language": "zh",
+  "speaker_notes": "short",
+  "slides": [
+    {
+      "title": "封面",
+      "layout": "cover",
+      "output_path": "/home/z/my-project/download/slides/slide_01.html",
+      "task_brief": "极简非对称：左下衬线大字「声盾」+一句话定位「接起电话的那一刻，普通人也需要一个验真声音的办法」；右下角唯一具象锚点（评审可任意输入文本现场合成检出）；底部压舱团队信息行。无网格无波形无角标。"
+    },
+    {
+      "title": "痛点",
+      "layout": "narrative + real case anchors",
+      "output_path": "/home/z/my-project/download/slides/slide_02.html",
+      "task_brief": "诈骗话术原文衬线大字叙事（八千块话术）→香港2亿港元真实案例/分钟级克隆成本/0个验真手段三个非卡片锚点→底部政策一行+落点句「反诈的最后一公里就在接听的那几秒」。"
+    },
+    {
+      "title": "定位",
+      "layout": "single question",
+      "output_path": "/home/z/my-project/download/slides/slide_03.html",
+      "task_brief": "核心命题大问句「这一通电话里的声音到底是不是AI合成的？」+选题依据（大工九件获奖作品规律校准）+四条取向横向流（长短不一）：一件小事做穿/指标可算/风口之上/三两人闭环。"
+    },
+    {
+      "title": "总体架构",
+      "layout": "vertical stack, unequal heights",
+      "output_path": "/home/z/my-project/download/slides/slide_04.html",
+      "task_brief": "标题「一份引擎跑在两端——谁也糊弄不了谁」；五层纵向流高度不等（引擎层最高、绿色左缘线）每层一句话人话；右侧「为什么敢说能落地」卡（普通CPU/Next.js+TS/SQLite）；底部点题同构引擎是证据链前提。"
+    },
+    {
+      "title": "检测引擎",
+      "layout": "1 hero + 7 compact list",
+      "output_path": "/home/z/my-project/download/slides/slide_05.html",
+      "task_brief": "打破均匀网格：自研高频周期性占左侧大卡（分离度1.28/权重0.289）为主角；其余七维右栏两列紧凑hairline列表（无编号无图标）；高频谱平坦度标注「被证伪仍保留」埋伏笔；底部收束句。"
+    },
+    {
+      "title": "数据驱动校准",
+      "layout": "process + collision story",
+      "output_path": "/home/z/my-project/download/slides/slide_06.html",
+      "task_brief": "四步横向流（构造样本/拟合先验/定权/双重验证）各一句人话；核心是证伪故事对撞布局：被证伪高频谱平坦度0.10（红）vs被验证自研高频周期性1.28（绿）；底部脚本化可复现。"
+    },
+    {
+      "title": "评测结果",
+      "layout": "chart hero + honest margins",
+      "output_path": "/home/z/my-project/download/slides/slide_07.html",
+      "task_brief": "指标行20/20、4/5、RTF 0.003-0.015、≤1s；真实图表chart_file_scores.png为左主视觉带图注；右侧两条如实边界（窄带16/20、有声书10/50误判转化为深度引擎动机）+三层评测口径；底部210条判决汇总行。"
+    },
+    {
+      "title": "创新点",
+      "layout": "1 main + 3 sub",
+      "output_path": "/home/z/my-project/download/slides/slide_08.html",
+      "task_brief": "主创新「把检测搬进通话里」占左大幅（从离线文件到通话级实时流式，提前一分钟告警可能拦下转账，RTF<0.015）；三个副创新右栏hairline纵列（可解释+校准/闭环/双哈希锚定）；底部一句点结构。"
+    },
+    {
+      "title": "演示动线",
+      "layout": "screenshot hero + 3-step timeline",
+      "output_path": "/home/z/my-project/download/slides/slide_09.html",
+      "task_brief": "工作台截图shield_home.png为视觉主体带图注；底部三步横排时间线1/2/3（现场合成挑战/实时鉴听/存证与报告）各一句；收束「欢迎各位亲手输入文本验证」。"
+    },
+    {
+      "title": "差异化",
+      "layout": "clean comparison table",
+      "output_path": "/home/z/my-project/download/slides/slide_10.html",
+      "task_brief": "标题「同一道题我们选择先解决通话中的那几秒」+先致敬谛听白泽；对比表呼吸感行高、声盾列仅左缘绿线+微底色（无图标列）：检测对象/技术核心/业务形态/指标口径/部署要求五行；底部「站在肩膀上」注脚。"
+    },
+    {
+      "title": "应用前景",
+      "layout": "1 story + 2 compact lists",
+      "output_path": "/home/z/my-project/download/slides/slide_11.html",
+      "task_brief": "以具体用户「王阿姨」场景故事为主叙事（左大幅），适老化三要素；右侧机构侧三个接入位+治理侧三条对应关系（hairline简列）；底部诚实边界声明压舱（辅助验真非执法结论）。"
+    },
+    {
+      "title": "后续十二周计划",
+      "layout": "bottom-anchored timeline",
+      "output_path": "/home/z/my-project/download/slides/slide_12.html",
+      "task_brief": "标题「十二周从轻量引擎走到深度集成」+路线逻辑（补已知边界非推翻）；时间轴贴近底部压舱（W01-02至W11-12五段，每段交付物具体）；底部开源底座一行+ONNX接口已预留。"
+    },
+    {
+      "title": "结尾",
+      "layout": "closing, human voice",
+      "output_path": "/home/z/my-project/download/slides/slide_13.html",
+      "task_brief": "非对称衬线大字「下一次接到熟人来电，希望几秒钟后你能有一个可以相信的答案」（替代鸡汤口号）；右下一行事实性小字（演示就绪/证据可复核/代码随作品提交）；底部致谢行。"
+    }
+  ]
+}

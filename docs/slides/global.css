@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  /* ===== 声盾暗色（与平台同源，但用得更克制） ===== */
+  --bg: #0A1410;
+  --bg-soft: #0E1913;
+  --surface: #111E17;
+  --line: rgba(52, 211, 153, 0.20);
+  --line-soft: rgba(52, 211, 153, 0.10);
+  --primary: #EAF6EF;
+  --secondary: #A8CCB8;
+  --muted: #73917F;
+  --accent: #34D399;
+  --accent-deep: #0E9F6E;
+  --warn: #FBBF24;
+  --danger: #F87171;
+
+  /* ===== 字体 ===== */
+  --font-heading: 'Noto Serif SC', serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --font-cn: 'Noto Sans SC', sans-serif;
+  --font-num: 'JetBrains Mono', monospace;
+
+  --fs-display: 88px;
+  --fs-h1: 38px;
+  --fs-h2: 26px;
+  --fs-h3: 20px;
+  --fs-body: 16px;
+  --fs-small: 13.5px;
+  --fs-micro: 11.5px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { background: var(--bg); }
+
+.slide {
+  width: 1280px;
+  height: 720px;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg);
+  color: var(--primary);
+  font-family: var(--font-body);
+}
+
+/* 衬线标题（编辑排版气质） */
+.serif { font-family: var(--font-heading); }
+
+/* 弱面卡片：只做轻微分层，不做发光 */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+}
+
+/* 强调：只用于真实数据与关键结论 */
+.accent { color: var(--accent); }
+.warn { color: var(--warn); }
+.danger { color: var(--danger); }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* 结论竖线（左侧细线，替代底色块） */
+.rule-l { border-left: 3px solid var(--accent); }
+
+/* 截图容器：细边、无发光 */
+.shot {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0D1712;
+}
+.shot img { display: block; width: 100%; }
+
+/* 分隔细线 */
+.hairline { border-top: 1px solid var(--line-soft); }
