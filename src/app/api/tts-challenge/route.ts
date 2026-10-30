@@ -29,6 +29,18 @@ const VOICES = ["tongtong", "chuichui", "xiaochen", "jam", "kazi", "douji", "luo
 let zaiCircuitOpenUntil = 0;
 const ZAI_CIRCUIT_MS = 5 * 60 * 1000;
 
+/**
+ * 联网合成开关（v1.3.2 起）：
+ *   未设置 / "0" → 完全离线模式：Tier 1/2 云端通道直接跳过，零联网尝试、零等待，
+ *                  合成一律走本地 espeak-ng（真合成），仅存 Tier 4 预置回放兜底。
+ *                  可执行程序包默认此模式 —— 单机断网完全可用。
+ *   "1" → 在线模式：四级链完整（z-ai → Edge → espeak → 预置），云端神经音色可用。
+ * 开启方式（包内）：在包根目录新建空文件 ENABLE-ONLINE-TTS.txt 后重启（见运行说明）。
+ */
+export function onlineTtsEnabled(): boolean {
+  return process.env.SHIELD_TTS_ONLINE === "1";
+}
+
 /** 四级链统一产出（在 SynthResult 之上补 zai / preset 两档） */
 interface TierSynth {
   wavBuffer: Buffer;
@@ -37,6 +49,18 @@ interface TierSynth {
   originalExt: string;
   engine: "zai" | "edge" | "espeak" | "preset";
   engineLabel: string;
+}
+
+export async function GET() {
+  return NextResponse.json({
+    online: onlineTtsEnabled(),
+    chain: onlineTtsEnabled()
+      ? ["云端 TTS · z-ai 网关", "Edge 神经 TTS", "本地 espeak-ng", "预置样本回放"]
+      : ["本地 espeak-ng（默认）", "预置样本回放"],
+    hint: onlineTtsEnabled()
+      ? "联网模式：四级合成链"
+      : "完全离线模式：仅本地通道，零联网依赖（如需云端神经音色，参阅运行说明开启联网开关）",
+  });
 }
 
 export async function POST(req: NextRequest) {
@@ -64,8 +88,8 @@ export async function POST(req: NextRequest) {
     let synth: TierSynth | null = null;
     let mode: "live" | "fallback" = "live";
 
-    // ── Tier 1 · z-ai 网关（熔断保护，快速失败：单次尝试 15s 超时） ──
-    if (Date.now() >= zaiCircuitOpenUntil) {
+    // ── Tier 1 · z-ai 网关（熔断保护，快速失败：单次尝试 15s 超时；离线模式下整体跳过） ──
+    if (onlineTtsEnabled() && Date.now() >= zaiCircuitOpenUntil) {
       try {
         const buf = await synthesizeSpeech(
           { input: cleanText, voice, speed: spd, response_format: "wav" },
@@ -87,8 +111,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── Tier 2 · Edge 神经 TTS（微软公共神经语音，合成用户文本） ──
-    if (!synth) {
+    // ── Tier 2 · Edge 神经 TTS（微软公共神经语音，合成用户文本；离线模式下整体跳过） ──
+    if (!synth && onlineTtsEnabled()) {
       try {
         const r = await synthesizeEdge(cleanText, voice, spd);
         synth = { ...r };
@@ -160,9 +184,13 @@ export async function POST(req: NextRequest) {
       fileSize: synth.originalBuffer.length,
       sourceHash,
       notes: isFallback
-        ? `四级合成通道均不可用，回放同引擎预置合成样本；通道错误摘要：${tierErrors.join(" | ").slice(0, 300)}`
+        ? `本地合成通道亦不可用，回放预置合成样本；通道错误摘要：${tierErrors.join(" | ").slice(0, 300)}`
         : `该音频由「${synth.engineLabel}」现场合成用户输入文本，用于鉴伪能力演示` +
-          (tierErrors.length ? `；通道降级记录：${tierErrors.join(" | ").slice(0, 200)}` : ""),
+          (onlineTtsEnabled()
+            ? tierErrors.length
+              ? `；通道降级记录：${tierErrors.join(" | ").slice(0, 200)}`
+              : ""
+            : "；当前为完全离线模式（云端通道未启用）"),
     });
 
     // 证据 WAV（16kHz）与原始产物的 base64（前端播放 + 可下载）
@@ -188,6 +216,7 @@ export async function POST(req: NextRequest) {
       engine: synth.engine,
       engineLabel: synth.engineLabel,
       sourceLabel,
+      online: onlineTtsEnabled(),
       tts: {
         voice,
         text: isFallback ? "(预置合成样本，非当前文本现场合成)" : cleanText,

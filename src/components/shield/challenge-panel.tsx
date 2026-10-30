@@ -6,7 +6,7 @@
  * 演示叙事：评委亲眼见证 AI 语音被生成，随后被声盾实时识破
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -63,6 +63,24 @@ export function ChallengePanel() {
     engine: string;
     engineLabel: string;
   } | null>(null);
+  const [ttsMode, setTtsMode] = useState<{
+    online: boolean;
+    chain: string[];
+    hint: string;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/tts-challenge")
+      .then((r) => r.json())
+      .then((d: { online?: boolean; chain?: string[]; hint?: string }) =>
+        setTtsMode({
+          online: !!d.online,
+          chain: d.chain ?? [],
+          hint: d.hint ?? "",
+        })
+      )
+      .catch(() => setTtsMode(null));
+  }, []);
 
   const run = async () => {
     if (!text.trim()) {
@@ -255,7 +273,11 @@ export function ChallengePanel() {
         <p className="text-xs leading-relaxed text-muted-foreground">
           说明：合成与检测均在服务端完成，原始合成音频与其 16kHz 分析副本分别计算 SHA-256
           并写入证据链（「这份音频确实由平台现场生成」与「检测对象即该音频」双向锚定）。
-          合成采用四级通道自动选择：云端 TTS → Edge 神经 TTS → 本地 espeak-ng → 预置样本回放，
+          {ttsMode
+            ? ` 合成通道：${ttsMode.chain.join(" → ")}（${
+                ttsMode.online ? "联网模式" : "完全离线模式，零联网依赖"
+              }）。`
+            : ""}
           实际使用的引擎在结果与存证中如实标注；演示闭环永不中断。
         </p>
       </CardContent>

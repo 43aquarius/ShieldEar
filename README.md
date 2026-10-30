@@ -4,7 +4,7 @@
 
 > 接到可疑来电，如何在转账之前知道对方的声音是不是 AI 合成的？声盾把这道反诈治理中最直接的问题，变成一次可以随身携带的浏览器操作：**边通话、边检测、边存证**。
 
-![version](https://img.shields.io/badge/version-v1.3.1--calibrated-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A)
+![version](https://img.shields.io/badge/version-v1.3.2--calibrated-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A)
 
 ---
 
@@ -49,12 +49,12 @@
 
 ### 方式一：可执行程序包（免安装，推荐评审使用）
 
-从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.1-portable.zip`（约 200MB）并解压：
+从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.2-portable.zip`（约 255MB）并解压：
 
 - **Windows**：双击 `启动声盾-Windows.bat`（中文系统推荐）或 `START-ShieldEar.bat`（英文/其他区域设置系统兜底入口）——包内含便携 Node.js 运行时、espeak-ng 离线合成组件与 ffmpeg 转码工具，无需任何预装环境；
 - **Linux（x86_64）/ macOS（Apple Silicon）**：终端执行 `bash start-shield-linux-mac.sh`（同样内置便携运行时；其他架构回退系统 Node.js ≥ 20）；
 - 等待数秒浏览器自动打开 `http://127.0.0.1:3000`（端口被占用时自动改用 3001-3009 并提示实际地址），包内已含 21 件演示案件与证据 WAV 存档（含与文档记载可交叉核对的真实案件），全部功能开箱即用；
-- 完全离线环境下「现场合成挑战」自动降级至 espeak-ng 真实本地合成（Windows）或预置回放，引擎来源如实标注，演示闭环不中断。
+- **v1.3.2 起默认「完全离线模式」**：「现场合成挑战」使用包内 espeak-ng 真实现场合成（Windows/Linux/macOS 三平台一致），零联网依赖，断网开箱即用；如需云端神经音色，在包根目录新建空文件 `ENABLE-ONLINE-TTS.txt` 后重启即切换联网模式，引擎来源与当前模式均如实标注。
 
 ### 方式二：源码运行
 
@@ -66,14 +66,15 @@ bun run dev            # 启动开发服务器
 # 浏览器打开 http://localhost:3000
 ```
 
-> 说明：「现场合成挑战」采用**四级合成通道自动选择**，保证「现场合成用户输入文本 → 当场检出」演示闭环永不中断：
+> 说明（v1.3.2 起）：「现场合成挑战」默认运行在**完全离线模式**——仅启用本地 espeak-ng 合成（真实现场合成用户文本）与预置样本回放兜底，**零联网尝试、零等待，单机断网完全可用**；实时鉴听、文件检测、案例库与报告导出在任何模式下均为纯本地功能。
+>
+> 设置环境变量 `SHIELD_TTS_ONLINE=1`（可执行程序包：在包根目录新建空文件 `ENABLE-ONLINE-TTS.txt`）后重启，即启用完整四级合成链（联网模式）：
 > 1. 云端 TTS（z-ai 网关，需 `.z-ai-config`）—— 官方通道，含 WAF 拦截熔断与自动探活恢复；
 > 2. Edge 神经 TTS（微软公共神经语音，8 个中文音色）—— 服务端纯 Node 协议栈直连（含 Sec-MS-GEC v2 DRM 移植，与 edge-tts 参考实现逐位对齐），需联网，无需 Python 环境；
 > 3. espeak-ng 本地合成（完全离线兜底）—— 发行包内置 Windows 版组件与中文声库（包内绝对路径自动定位），开发环境用系统 `espeak-ng`；
 > 4. 预置样本回放（仅在以上全部不可用时，响应与存证中如实标注 fallback）。
 >
-> 实际使用的引擎在界面徽标、API 响应（`mode`/`engine`/`engineLabel`）与数据库存证 `notes` 三处如实记录；
-> 未配置任何合成依赖时，实时鉴听、文件检测、案例库与报告等其余功能不受影响。
+> 当前模式在启动横幅、`GET /api/tts-challenge` 与界面说明文字三处如实展示；实际使用的引擎在界面徽标、API 响应（`mode`/`engine`/`engineLabel`/`online`）与数据库存证 `notes` 三处如实记录。
 
 ## 测试结果一键复现
 
