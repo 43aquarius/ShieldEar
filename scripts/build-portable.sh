@@ -22,7 +22,7 @@ rsync -a --exclude 'skills' --exclude 'repo-stage' --exclude 'download' \
   --exclude 'eslint.config.mjs' --exclude 'tailwind.config.ts' \
   --exclude 'tsconfig.json' --exclude 'postcss.config.mjs' \
   --exclude 'components.json' --exclude 'src' --exclude 'package-lock.json' \
-  --exclude '.env' --exclude '.env.*' \
+  --exclude '.env' --exclude '.env.*' --exclude 'docs' \
   ./ "$STAGE/server/"
 
 echo "── [2/8] 精简 node_modules（Windows 交付） ──"
