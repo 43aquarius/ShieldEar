@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -19,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Loader2, ShieldAlert, AudioLines, History } from "lucide-react";
+import { Zap, Loader2, ShieldAlert, AudioLines, History, CloudOff, CloudCog } from "lucide-react";
 import { b64ToBlobUrl, formatDuration } from "@/lib/client/audio-client";
 import type { AnalysisResult } from "@/lib/engine/types";
 import { useShield } from "@/lib/store";
@@ -63,24 +64,55 @@ export function ChallengePanel() {
     engine: string;
     engineLabel: string;
   } | null>(null);
-  const [ttsMode, setTtsMode] = useState<{
-    online: boolean;
-    chain: string[];
-    hint: string;
-  } | null>(null);
+  // 云端合成通道开关（v1.3.3：默认纯离线，零联网零尝试零等待；界面可即时切换，无需重启）
+  const [cloudOn, setCloudOn] = useState<boolean | null>(null); // null = 加载中
+  const [offlineMode, setOfflineMode] = useState(false);
 
   useEffect(() => {
-    fetch("/api/tts-challenge")
+    let alive = true;
+    fetch("/api/config/cloud")
       .then((r) => r.json())
-      .then((d: { online?: boolean; chain?: string[]; hint?: string }) =>
-        setTtsMode({
-          online: !!d.online,
-          chain: d.chain ?? [],
-          hint: d.hint ?? "",
-        })
-      )
-      .catch(() => setTtsMode(null));
+      .then((d: { cloudEnabled?: boolean; offlineMode?: boolean }) => {
+        if (!alive) return;
+        setCloudOn(!!d.cloudEnabled);
+        setOfflineMode(!!d.offlineMode);
+      })
+      .catch(() => {
+        if (alive) setCloudOn(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
+
+  const toggleCloud = async (next: boolean) => {
+    const prev = cloudOn;
+    setCloudOn(next); // 乐观更新
+    try {
+      const r = await fetch("/api/config/cloud", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? "切换失败");
+      setCloudOn(!!d.cloudEnabled);
+      setOfflineMode(!!d.offlineMode);
+      toast({
+        title: next ? "云端合成通道已开启" : "云端合成通道已关闭",
+        description: next
+          ? "合成链恢复四级自动降级：云端 TTS → Edge 神经 TTS → 本地 espeak-ng → 预置样本（需联网）"
+          : "仅使用本地 espeak-ng 合成（零联网、零等待）；检测与存证能力不受影响",
+      });
+    } catch (err) {
+      setCloudOn(prev);
+      toast({
+        title: "通道切换失败",
+        description: err instanceof Error ? err.message : "请稍后重试",
+        variant: "destructive",
+      });
+    }
+  };
 
   const run = async () => {
     if (!text.trim()) {
@@ -200,6 +232,31 @@ export function ChallengePanel() {
           </div>
         </div>
 
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed px-3 py-2">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {cloudOn === false ? (
+              <CloudOff className="h-4 w-4 text-sky-500" aria-hidden />
+            ) : (
+              <CloudCog className="h-4 w-4 text-emerald-500" aria-hidden />
+            )}
+            <span>
+              <span className="font-medium text-foreground">
+                {cloudOn === null ? "云端通道状态读取中…" : cloudOn ? "云端合成通道 · 开启" : "云端合成通道 · 关闭（纯离线）"}
+              </span>
+              {cloudOn === false &&
+                " 合成仅用本地 espeak-ng，全程不发任何网络请求；检测、鉴听、存证均为本地能力"}
+              {cloudOn === true && offlineMode &&
+                " （离线交付默认关闭，已手动开启；重启后恢复关闭）"}
+            </span>
+          </div>
+          <Switch
+            checked={cloudOn === true}
+            disabled={cloudOn === null}
+            onCheckedChange={(v) => void toggleCloud(v)}
+            aria-label="切换云端合成通道"
+          />
+        </div>
+
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">合成音色</Label>
@@ -273,12 +330,9 @@ export function ChallengePanel() {
         <p className="text-xs leading-relaxed text-muted-foreground">
           说明：合成与检测均在服务端完成，原始合成音频与其 16kHz 分析副本分别计算 SHA-256
           并写入证据链（「这份音频确实由平台现场生成」与「检测对象即该音频」双向锚定）。
-          {ttsMode
-            ? ` 合成通道：${ttsMode.chain.join(" → ")}（${
-                ttsMode.online ? "联网模式" : "完全离线模式，零联网依赖"
-              }）。`
-            : ""}
-          实际使用的引擎在结果与存证中如实标注；演示闭环永不中断。
+          {cloudOn === false
+            ? " 当前为纯离线模式：合成采用本地 espeak-ng（零联网零等待），实际使用的引擎在结果与存证中如实标注；演示闭环永不中断。"
+            : " 合成通道：云端 TTS → Edge 神经 TTS → 本地 espeak-ng → 预置样本回放（四级自动降级），实际使用的引擎在结果与存证中如实标注；演示闭环永不中断。"}
         </p>
       </CardContent>
     </Card>

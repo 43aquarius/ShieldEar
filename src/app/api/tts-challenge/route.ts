@@ -3,18 +3,23 @@
  * 服务端用 TTS 现场合成语音 → 声盾引擎现场检测 → 存证入库 → 返回音频与判决
  * 演示叙事：评委亲眼见证"AI 语音被生成"，随后被声盾实时识破。
  *
- * 四级合成链（2026-10-28 重构）——保证「现场合成用户输入文本」永远可用：
- *   Tier 1 · z-ai 网关 TTS（原通道；WAF 路径惩罚期间熔断 5 分钟自动探活恢复）
- *   Tier 2 · Edge 神经 TTS（微软公共神经语音，合成用户文本，与云端商用 TTS 同类声学）
- *   Tier 3 · espeak-ng 本地合成（完全离线兜底，仍为真实合成用户文本）
+ * 四级合成链（2026-10-28 重构，v1.3.3 融合）——保证「现场合成用户输入文本」永远可用：
+ *   Tier 1 · z-ai 网关 TTS（仅云端通道开启时尝试；WAF 路径惩罚期间熔断 5 分钟自动探活恢复）
+ *   Tier 2 · Edge 神经 TTS（微软公共神经语音；仅云端通道开启时尝试）
+ *   Tier 3 · espeak-ng 本地合成（完全离线；离线包默认主通道：零联网零尝试零等待）
  *   Tier 4 · 预置样本回放（仅在以上全部不可用时，如实标注 fallback）
  * 每次使用的引擎在响应 mode/engine/engineLabel 与存证 notes 三处如实记录。
+ *
+ * 云端通道（v1.3.3 统一到 src/lib/server/cloud-config.ts）：
+ *   环境默认：SHIELD_TTS_ONLINE=1 → 开启四级链；未设置 → 纯离线（便携包默认）；
+ *   运行时：GET/POST /api/config/cloud 界面即时切换，无需重启，重启回落环境默认。
  */
 import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 import { synthesizeSpeech } from "@/lib/server/tts-client";
 import { synthesizeEdge, synthesizeEspeak } from "@/lib/server/local-tts";
+import { isCloudEnabled, cloudChannelSummary } from "@/lib/server/cloud-config";
 import { decodeWav, mixToMono, encodeWav16, floatToInt16 } from "@/lib/audio/wav";
 import { resampleTo16k } from "@/lib/engine/dsp";
 import { analyzeAndPersist } from "@/lib/server/analysis-service";
@@ -29,18 +34,6 @@ const VOICES = ["tongtong", "chuichui", "xiaochen", "jam", "kazi", "douji", "luo
 let zaiCircuitOpenUntil = 0;
 const ZAI_CIRCUIT_MS = 5 * 60 * 1000;
 
-/**
- * 联网合成开关（v1.3.2 起）：
- *   未设置 / "0" → 完全离线模式：Tier 1/2 云端通道直接跳过，零联网尝试、零等待，
- *                  合成一律走本地 espeak-ng（真合成），仅存 Tier 4 预置回放兜底。
- *                  可执行程序包默认此模式 —— 单机断网完全可用。
- *   "1" → 在线模式：四级链完整（z-ai → Edge → espeak → 预置），云端神经音色可用。
- * 开启方式（包内）：在包根目录新建空文件 ENABLE-ONLINE-TTS.txt 后重启（见运行说明）。
- */
-export function onlineTtsEnabled(): boolean {
-  return process.env.SHIELD_TTS_ONLINE === "1";
-}
-
 /** 四级链统一产出（在 SynthResult 之上补 zai / preset 两档） */
 interface TierSynth {
   wavBuffer: Buffer;
@@ -53,13 +46,11 @@ interface TierSynth {
 
 export async function GET() {
   return NextResponse.json({
-    online: onlineTtsEnabled(),
-    chain: onlineTtsEnabled()
+    online: isCloudEnabled(),
+    chain: isCloudEnabled()
       ? ["云端 TTS · z-ai 网关", "Edge 神经 TTS", "本地 espeak-ng", "预置样本回放"]
       : ["本地 espeak-ng（默认）", "预置样本回放"],
-    hint: onlineTtsEnabled()
-      ? "联网模式：四级合成链"
-      : "完全离线模式：仅本地通道，零联网依赖（如需云端神经音色，参阅运行说明开启联网开关）",
+    hint: cloudChannelSummary(),
   });
 }
 
@@ -87,9 +78,10 @@ export async function POST(req: NextRequest) {
     const tierErrors: string[] = [];
     let synth: TierSynth | null = null;
     let mode: "live" | "fallback" = "live";
+    const cloudOn = isCloudEnabled();
 
-    // ── Tier 1 · z-ai 网关（熔断保护，快速失败：单次尝试 15s 超时；离线模式下整体跳过） ──
-    if (onlineTtsEnabled() && Date.now() >= zaiCircuitOpenUntil) {
+    // ── Tier 1 · z-ai 网关（云端通道开启时才尝试；熔断保护，快速失败：单次 15s 超时） ──
+    if (cloudOn && Date.now() >= zaiCircuitOpenUntil) {
       try {
         const buf = await synthesizeSpeech(
           { input: cleanText, voice, speed: spd, response_format: "wav" },
@@ -109,10 +101,12 @@ export async function POST(req: NextRequest) {
         tierErrors.push(`zai网关: ${e instanceof Error ? e.message.slice(0, 120) : String(e)}`);
         console.error("[api/tts-challenge] Tier1(z-ai) 失败，熔断 5 分钟");
       }
+    } else if (!cloudOn) {
+      tierErrors.push("zai网关: 云端通道已关闭（离线模式，未发任何网络请求）");
     }
 
-    // ── Tier 2 · Edge 神经 TTS（微软公共神经语音，合成用户文本；离线模式下整体跳过） ──
-    if (!synth && onlineTtsEnabled()) {
+    // ── Tier 2 · Edge 神经 TTS（微软公共神经语音；仅云端通道开启时尝试） ──
+    if (!synth && cloudOn) {
       try {
         const r = await synthesizeEdge(cleanText, voice, spd);
         synth = { ...r };
@@ -120,9 +114,11 @@ export async function POST(req: NextRequest) {
         tierErrors.push(`Edge: ${e instanceof Error ? e.message.slice(0, 120) : String(e)}`);
         console.error("[api/tts-challenge] Tier2(edge) 失败:", e);
       }
+    } else if (!synth && !cloudOn) {
+      tierErrors.push("Edge: 云端通道已关闭（离线模式，未发任何网络请求）");
     }
 
-    // ── Tier 3 · espeak-ng 本地合成（完全离线兜底） ──
+    // ── Tier 3 · espeak-ng 本地合成（完全离线；离线包默认主通道） ──
     if (!synth) {
       try {
         const r = await synthesizeEspeak(cleanText, voice, spd);
@@ -186,11 +182,11 @@ export async function POST(req: NextRequest) {
       notes: isFallback
         ? `本地合成通道亦不可用，回放预置合成样本；通道错误摘要：${tierErrors.join(" | ").slice(0, 300)}`
         : `该音频由「${synth.engineLabel}」现场合成用户输入文本，用于鉴伪能力演示` +
-          (onlineTtsEnabled()
+          (cloudOn
             ? tierErrors.length
               ? `；通道降级记录：${tierErrors.join(" | ").slice(0, 200)}`
               : ""
-            : "；当前为完全离线模式（云端通道未启用）"),
+            : "；当前为完全离线模式（云端通道关闭，未发任何网络请求）"),
     });
 
     // 证据 WAV（16kHz）与原始产物的 base64（前端播放 + 可下载）
@@ -216,7 +212,8 @@ export async function POST(req: NextRequest) {
       engine: synth.engine,
       engineLabel: synth.engineLabel,
       sourceLabel,
-      online: onlineTtsEnabled(),
+      online: cloudOn,
+      cloudEnabled: cloudOn,
       tts: {
         voice,
         text: isFallback ? "(预置合成样本，非当前文本现场合成)" : cleanText,
