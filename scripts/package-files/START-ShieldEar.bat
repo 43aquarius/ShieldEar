@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title ShieldEar v1.3.3 - Offline Mode
+title ShieldEar v1.3.4 - Offline Mode
 cd /d "%~dp0server"
 
 rem ============================================================
@@ -15,7 +15,7 @@ set "PORT=3000"
 set "HOSTNAME=127.0.0.1"
 
 echo ============================================================
-echo   ShieldEar v1.3.3 - AI Voice Fraud Detection Platform
+echo   ShieldEar v1.3.4 - AI Voice Fraud Detection Platform
 echo   Dalian University of Technology - InfoSec Competition
 echo ============================================================
 echo.

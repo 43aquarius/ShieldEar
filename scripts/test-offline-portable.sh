@@ -10,7 +10,29 @@ STAGE=/tmp/package-build/ShieldEar
 NODE=$(which node)
 
 # 回归脚本副本（netns 内 BASE 一致，走 localhost）
-cp /home/z/my-project/scripts/fusion/scripts/regress-all-apis.py /tmp/regress-offline.py
+# 注意：必须用主脚本（动态最新案号，8a61d31 修复）；
+#       scripts/fusion/ 下的暂存副本仍是硬编码旧案号，会误报存证 404。
+cp /home/z/my-project/scripts/regress-all-apis.py /tmp/regress-offline.py
+
+# ── 临时补 Linux 引擎到包内（仅测试期；包交付 Windows 引擎） ──
+# 说明：build-portable.sh 第 2/8 步删除了非 Windows 引擎以保证交付体积，
+#       Linux netns 内用本机 node 跑同构 standalone 需临时补回 debian 引擎；
+#       测试结束后删除，交付树恢复纯 Windows 形态。
+LINUX_ENGINE=$(ls /home/z/my-project/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node 2>/dev/null || true)
+if [ -z "$LINUX_ENGINE" ]; then
+  LINUX_ENGINE=$(ls /home/z/my-project/node_modules/@prisma/engines/libquery_engine-debian-openssl-3.0.x.so.node 2>/dev/null || true)
+fi
+if [ -n "$LINUX_ENGINE" ]; then
+  cp "$LINUX_ENGINE" "$STAGE/server/node_modules/.prisma/client/"
+  echo "[test] 已临时补入 Linux 引擎（测后删除）: $(basename "$LINUX_ENGINE")"
+else
+  echo "[test] ⚠ 未找到 debian 引擎，netns 内 Prisma 将无法初始化"
+fi
+
+cleanup_engine() {
+  rm -f "$STAGE/server/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node"
+}
+trap cleanup_engine EXIT
 
 unshare -rn bash -c "
 set -u
