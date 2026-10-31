@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>01｜封面</title>
+<link rel="stylesheet" href="global.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html,body{margin:0;padding:0;width:1280px;height:720px;overflow:hidden}
+</style>
+</head>
+<body>
+<div class="slide dark">
+
+  <!-- 右上点阵装饰层（编辑式，克制） -->
+  <div class="dotgrid-dark" style="position:absolute; right:0; top:0; width:470px; height:190px; opacity:.75;"></div>
+
+  <!-- 顶部：赛事一行 -->
+  <div style="position:absolute; left:72px; right:72px; top:42px; display:flex; justify-content:space-between; align-items:baseline;">
+    <p class="mono" style="font-size:var(--fs-micro); color:rgba(239,235,221,.58); letter-spacing:.17em;">全国大学生信息安全竞赛 · 作品赛 · 应用安全（内容安全）</p>
+    <p class="num" style="font-size:var(--fs-micro); color:rgba(239,235,221,.58);">2026.10</p>
+  </div>
+
+  <!-- 左区：字标与定位 -->
+  <div style="position:absolute; left:72px; top:148px; width:660px;">
+    <p class="mono" style="font-size:var(--fs-micro); color:var(--accent); letter-spacing:.17em;">SHIELDEAR</p>
+    <h1 class="serif" style="margin-top:16px; font-size:116px; font-weight:900; line-height:1.06; letter-spacing:.04em; color:#F2EFE7;">声盾</h1>
+    <div class="tickrule" style="margin-top:28px; width:360px; color:var(--accent);"></div>
+    <p class="kai" style="margin-top:26px; font-size:var(--fs-h2); line-height:1.72; color:#EFEBDD;">接起电话的那一刻，<br>普通人也需要一个<span style="color:var(--accent);">验真声音</span>的办法。</p>
+    <p style="margin-top:14px; font-size:var(--fs-small); line-height:1.75; color:rgba(239,235,221,.66);">面向 AI 语音克隆诈骗的实时鉴伪反诈平台——边通话、边检测、边存证。</p>
+  </div>
+
+  <!-- 右下：三组 Playfair 大数字（数据版面，非图库照） -->
+  <div style="position:absolute; right:72px; bottom:132px; display:flex; gap:52px;">
+    <div style="text-align:right;">
+      <p style="font-family:var(--font-display); font-size:42px; font-weight:600; color:var(--accent); line-height:1;">20<span style="font-size:26px;">/20</span></p>
+      <p style="margin-top:10px; font-size:var(--fs-micro); line-height:1.6; color:rgba(239,235,221,.62);">宽带合成语音盲测满分<br>TTS <span class="num">n=20</span> 全检出</p>
+    </div>
+    <div style="text-align:right;">
+      <p style="font-family:var(--font-display); font-size:42px; font-weight:600; color:var(--accent); line-height:1;">0.015</p>
+      <p style="margin-top:10px; font-size:var(--fs-micro); line-height:1.6; color:rgba(239,235,221,.62);">峰值实时因子 RTF<br>纯 CPU 可达</p>
+    </div>
+    <div style="text-align:right;">
+      <p style="font-family:var(--font-display); font-size:42px; font-weight:600; color:var(--accent); line-height:1;">≤1s</p>
+      <p style="margin-top:10px; font-size:var(--fs-micro); line-height:1.6; color:rgba(239,235,221,.62);">端到端判决时延<br>窗口步进主导</p>
+    </div>
+  </div>
+
+  <!-- 底部压舱：团队信息行 -->
+  <div style="position:absolute; left:72px; right:72px; bottom:44px;">
+    <div class="hairline" style="padding-top:16px; display:flex; justify-content:space-between; align-items:baseline;">
+      <p style="font-size:var(--fs-small); color:rgba(239,235,221,.85);">参赛团队：<span style="color:#F2EFE7;">【团队名称】</span> · 答辩人：【成员姓名】</p>
+      <p style="font-size:var(--fs-micro); color:rgba(239,235,221,.55);">大连理工大学</p>
+    </div>
+  </div>
+</div>
+
+<aside data-notes class="hidden" style="display:none;">各位评委老师好，我们是【团队名称】，来自大连理工大学，答辩人【成员姓名】。今天带来的作品叫「声盾」，一句话说清楚：它要解决 AI 语音克隆诈骗里的验真问题——接起电话的那一刻，普通人也需要一个能相信的答案。封面右下这三个数字是我们目前的实测结果：宽带条件下二十个合成样本全部检出，峰值实时因子零点零一五，端到端判决一秒以内。待会儿的演示环节，欢迎各位评委任意出题，我们现场合成、现场检出。</aside>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>09｜演示动线</title>
+<link rel="stylesheet" href="global.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html,body{margin:0;padding:0;width:1280px;height:720px;overflow:hidden}
+</style>
+</head>
+<body>
+<div class="slide ch4">
+
+  <nav class="nav">
+    <div class="nav-cell"><span class="nav-no">01</span>问题与定位</div>
+    <div class="nav-cell"><span class="nav-no">02</span>系统与引擎</div>
+    <div class="nav-cell"><span class="nav-no">03</span>评测与创新</div>
+    <div class="nav-cell on"><span class="nav-no">04</span>演示与对比</div>
+    <div class="nav-cell"><span class="nav-no">05</span>前景与计划</div>
+  </nav>
+  <div class="nav-progress"><i style="width:69.2%"></i></div>
+
+  <!-- 题头 -->
+  <div style="padding:28px 64px 0;">
+    <div class="cd-h">
+      <h1 class="cn">待会儿的现场演示，就这三步</h1>
+      <span class="en">LIVE DEMO</span>
+    </div>
+  </div>
+
+  <!-- 截图主视觉 -->
+  <div style="position:absolute; left:64px; right:64px; top:186px; height:332px; display:flex; flex-direction:column;">
+    <div class="shot" style="flex:1; overflow:hidden; background:#FFFFFF;">
+      <img src="../assets/shield_home.png" alt="声盾单页工作台" style="width:100%; height:100%; object-fit:cover; object-position:top center;">
+    </div>
+    <p class="figcap" style="margin-top:10px;"><span class="figno">图 2</span>　声盾单页工作台：实时鉴听 / 文件检测 / 合成挑战三种模式，全程零跳转</p>
+  </div>
+
+  <!-- 三步时间线：排版数字 1/2/3 -->
+  <div style="position:absolute; left:64px; right:64px; bottom:104px; display:flex; align-items:stretch;">
+    <div style="flex:1; display:flex; gap:18px; padding-right:28px;">
+      <p class="num" style="font-size:34px; font-weight:700; color:var(--gold-ink); line-height:1; flex:none;">1</p>
+      <div>
+        <p style="font-size:var(--fs-h3); font-weight:700; color:var(--primary);">现场合成挑战</p>
+        <p style="margin-top:6px; font-size:var(--fs-small); color:var(--muted); line-height:1.62;">评委任意输入文本，服务端当场 TTS 合成诈骗话术语音</p>
+      </div>
+    </div>
+    <div style="flex:1; display:flex; gap:18px; padding:0 28px; border-left:1px solid var(--ch4-line);">
+      <p class="num" style="font-size:34px; font-weight:700; color:var(--gold-ink); line-height:1; flex:none;">2</p>
+      <div>
+        <p style="font-size:var(--fs-h3); font-weight:700; color:var(--primary);">实时鉴听</p>
+        <p style="margin-top:6px; font-size:var(--fs-small); color:var(--muted); line-height:1.62;">外放同时开启鉴听：波形滚动、逐窗置信度刷新、高置信片段红色告警与提示音</p>
+      </div>
+    </div>
+    <div style="flex:1; display:flex; gap:18px; padding-left:28px; border-left:1px solid var(--ch4-line);">
+      <p class="num" style="font-size:34px; font-weight:700; color:var(--gold-ink); line-height:1; flex:none;">3</p>
+      <div>
+        <p style="font-size:var(--fs-h3); font-weight:700; color:var(--primary);">存证与报告</p>
+        <p style="margin-top:6px; font-size:var(--fs-small); color:var(--muted); line-height:1.62;">SHA-256 自动固定、生成案件编号 SS-日期-序号、导出含时间轴与逐窗明细的核验报告</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部压舱 -->
+  <div style="position:absolute; left:64px; right:64px; bottom:40px;">
+    <div class="hairline" style="padding-top:14px; display:flex; justify-content:space-between; align-items:baseline; gap:40px;">
+      <p style="font-size:var(--fs-small); color:var(--ink);">不依赖任何预置素材——文本是评委给的，音频是现场生成的</p>
+      <p class="serif" style="font-size:var(--fs-h3); font-weight:700; color:var(--primary); white-space:nowrap;">欢迎各位<span class="acc-b">亲手输入文本</span>验证。</p>
+    </div>
+  </div>
+</div>
+
+<aside data-notes class="hidden" style="display:none;">演示环节就三步，配合上面这张工作台截图先指认一下界面。第一步，现场合成挑战：请评委任意输入一段文本，服务端当场把它合成为诈骗话术语音；第二步，实时鉴听：外放的同时开启鉴听，波形滚动、置信度逐窗刷新，检出高置信片段会有红色告警和提示音；第三步，存证与报告：SHA-256 自动固定，生成案件编号，导出带时间轴和逐窗明细的核验报告。整个过程不依赖任何预置素材——文本是评委给的，音频是现场生成的。待会儿欢迎各位亲手出题。</aside>
+</body>
+</html>

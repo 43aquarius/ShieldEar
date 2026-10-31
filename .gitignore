@@ -32,3 +32,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# 便携包产物不入库（发布于 GitHub Release）
+download/*.zip

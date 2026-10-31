@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>04｜总体架构</title>
+<link rel="stylesheet" href="global.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html,body{margin:0;padding:0;width:1280px;height:720px;overflow:hidden}
+</style>
+</head>
+<body>
+<div class="slide ch2">
+
+  <nav class="nav">
+    <div class="nav-cell"><span class="nav-no">01</span>问题与定位</div>
+    <div class="nav-cell on"><span class="nav-no">02</span>系统与引擎</div>
+    <div class="nav-cell"><span class="nav-no">03</span>评测与创新</div>
+    <div class="nav-cell"><span class="nav-no">04</span>演示与对比</div>
+    <div class="nav-cell"><span class="nav-no">05</span>前景与计划</div>
+  </nav>
+  <div class="nav-progress"><i style="width:30.8%"></i></div>
+
+  <!-- 题头 -->
+  <div style="padding:32px 64px 0;">
+    <div class="cd-h">
+      <h1 class="cn">一份引擎，跑在两端——谁也糊弄不了谁</h1>
+      <span class="en">ARCHITECTURE</span>
+    </div>
+    <p style="margin-top:12px; font-size:var(--fs-body); color:var(--ink); line-height:1.78; max-width:1030px;">
+      浏览器先判一遍、服务端再核一遍，跑的是同一份 TypeScript 引擎：录音文件与实时通话的结论完全一致，客户端结果可被独立复核。
+      检测不快不行，存证不严不行——这两个要求，决定了下面五层。
+    </p>
+  </div>
+
+  <!-- 五层：高度不等的纵向流（引擎层最高、金色顶线） -->
+  <div style="position:absolute; left:64px; right:470px; top:238px; bottom:96px; display:flex; flex-direction:column; gap:8px;">
+
+    <div class="card" style="flex:0.9; padding:8px 20px; display:flex; align-items:center; gap:18px;">
+      <p class="num" style="font-size:var(--fs-micro); color:var(--faint); width:26px; flex:none;">L1</p>
+      <div>
+        <p style="font-size:var(--fs-h3); font-weight:700; color:var(--primary);">采集</p>
+        <p style="font-size:var(--fs-small); color:var(--muted); margin-top:2px; line-height:1.6;">麦克风实时流（AudioWorklet <span class="num">16kHz</span>）· 文件导入 · TTS 现场合成，统一为单声道标准输入</p>
+      </div>
+    </div>
+
+    <div class="card card-g" style="flex:1.5; padding:12px 20px; display:flex; align-items:center; gap:18px;">
+      <p class="num" style="font-size:var(--fs-micro); color:var(--gold-ink); width:26px; flex:none;">L2</p>
+      <div>
+        <p style="font-size:var(--fs-h3); font-weight:700; color:var(--primary);">检测引擎 <span class="num" style="font-size:var(--fs-micro); color:var(--faint); font-weight:400;">纯 TS · 零依赖</span></p>
+        <p style="font-size:var(--fs-small); color:var(--ink); margin-top:4px; line-height:1.65;">八维特征 + <span class="num">2s</span> 窗 / <span class="num">1s</span> 步进 / <span class="num">50%</span> 重叠滑窗——全片最厚的一层，左右两端跑的是同一份代码</p>
+      </div>
+    </div>
+
+    <div class="card" style="flex:0.9; padding:8px 20px; display:flex; align-items:center; gap:18px;">
+      <p class="num" style="font-size:var(--fs-micro); color:var(--faint); width:26px; flex:none;">L3</p>
+      <div>
+        <p style="font-size:var(--fs-h3); font-weight:700; color:var(--primary);">判决融合</p>
+        <p style="font-size:var(--fs-small); color:var(--muted); margin-top:2px; line-height:1.6;">中值滤波 + 指数平滑 + 能量加权整段判决；静音窗显式排除，不参与统计</p>
+      </div>
+    </div>
+
+    <div class="card" style="flex:0.9; padding:8px 20px; display:flex; align-items:center; gap:18px;">
+      <p class="num" style="font-size:var(--fs-micro); color:var(--faint); width:26px; flex:none;">L4</p>
+      <div>
+        <p style="font-size:var(--fs-h3); font-weight:700; color:var(--primary);">业务</p>
+        <p style="font-size:var(--fs-small); color:var(--muted); margin-top:2px; line-height:1.6;">SHA-256 证据固定 · 案件入库 · 可导出核验报告</p>
+      </div>
+    </div>
+
+    <div class="card" style="flex:0.75; padding:6px 20px; display:flex; align-items:center; gap:18px;">
+      <p class="num" style="font-size:var(--fs-micro); color:var(--faint); width:26px; flex:none;">L5</p>
+      <div>
+        <p style="font-size:var(--fs-h3); font-weight:700; color:var(--primary);">展示</p>
+        <p style="font-size:var(--fs-small); color:var(--muted); margin-top:2px; line-height:1.6;">单页应用零跳转，答辩演示全程不切屏</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧：落地依据栏 -->
+  <div style="position:absolute; right:64px; top:238px; width:372px;">
+    <div class="card card-g" style="padding:20px 24px;">
+      <p class="serif" style="font-size:var(--fs-h3); font-weight:900; color:var(--primary);">为什么敢说「能落地」</p>
+      <div style="margin-top:16px; display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <p class="num" style="font-size:var(--fs-h2); font-weight:700; color:var(--gold-ink);">普通 CPU</p>
+          <p style="font-size:var(--fs-small); color:var(--muted); margin-top:3px; line-height:1.6;">无需 GPU，浏览器与服务端皆可跑</p>
+        </div>
+        <div class="hairline" style="padding-top:12px;">
+          <p class="num" style="font-size:var(--fs-h2); font-weight:700; color:var(--primary);">Next.js + TS</p>
+          <p style="font-size:var(--fs-small); color:var(--muted); margin-top:3px; line-height:1.6;">一套语言栈贯穿前后端与引擎</p>
+        </div>
+        <div class="hairline" style="padding-top:12px;">
+          <p class="num" style="font-size:var(--fs-h2); font-weight:700; color:var(--primary);">SQLite</p>
+          <p style="font-size:var(--fs-small); color:var(--muted); margin-top:3px; line-height:1.6;">案件与证据链本地落盘，可审计</p>
+        </div>
+      </div>
+    </div>
+    <p style="margin-top:12px; font-size:var(--fs-micro); color:var(--faint); line-height:1.7;">技术栈：TypeScript · Next.js · Web Audio API · Prisma/SQLite · ffmpeg</p>
+  </div>
+
+  <!-- 底部压舱 -->
+  <div style="position:absolute; left:64px; right:64px; bottom:40px;">
+    <div class="hairline" style="padding-top:14px;">
+      <p style="font-size:var(--fs-small); color:var(--ink);">同构引擎的价值：检测结论不因端而异——这是「证据链」成立的技术前提。</p>
+    </div>
+  </div>
+</div>
+
+<aside data-notes class="hidden" style="display:none;">架构上先讲一个设计决定：浏览器先判一遍、服务端再核一遍，两端跑的是同一份 TypeScript 引擎。这样录音文件和实时通话的结论完全一致，客户端的结果还可以被独立复核——这是证据链能成立的技术前提。五层从上往下：采集层把麦克风、文件、现场合成统一成标准输入；第二层是全片最厚的检测引擎，八维特征、两秒窗一秒步进；往下是判决融合、存证业务和单页展示。右边回答评委最常问的落地问题：不要 GPU、一套语言栈、证据本地可审计。</aside>
+</body>
+</html>
