@@ -188,6 +188,137 @@
   background: transparent;
 }
 
+/* ============ 判决剧场 / 演示动效（v1.3.4 惊艳升级） ============ */
+
+/* 印章砸落：从放大虚影旋转砸到定格 + 边框震荡 */
+@keyframes stamp-slam {
+  0% {
+    opacity: 0;
+    transform: rotate(-18deg) scale(2.6);
+    filter: blur(6px);
+  }
+  55% {
+    opacity: 1;
+    transform: rotate(-9deg) scale(0.94);
+    filter: blur(0);
+  }
+  72% {
+    transform: rotate(-10.5deg) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-10deg) scale(1);
+  }
+}
+.stamp-slam {
+  animation: stamp-slam 0.62s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+/* 印章砸落瞬间的红色闪光 */
+@keyframes stamp-flash {
+  0% { opacity: 0; }
+  58% { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+.stamp-flash {
+  animation: stamp-flash 0.62s ease-out both;
+}
+
+/* 结果卡入场：上浮 + 辉光收束 */
+@keyframes verdict-in {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.verdict-in {
+  animation: verdict-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.verdict-in-1 { animation-delay: 0.06s; }
+.verdict-in-2 { animation-delay: 0.16s; }
+.verdict-in-3 { animation-delay: 0.26s; }
+.verdict-in-4 { animation-delay: 0.36s; }
+
+/* 环形仪表外圈呼吸辉光 */
+@keyframes gauge-breathe {
+  0%, 100% { filter: drop-shadow(0 0 6px oklch(0.77 0.16 163 / 35%)); }
+  50% { filter: drop-shadow(0 0 16px oklch(0.77 0.16 163 / 60%)); }
+}
+.gauge-breathe {
+  animation: gauge-breathe 2.8s ease-in-out infinite;
+}
+
+/* 高危判决：卡片缓慢红色呼吸描边 */
+@keyframes risk-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.66 0.21 25 / 0%), 0 1px 2px oklch(0 0 0 / 30%); }
+  50% { box-shadow: 0 0 22px 2px oklch(0.66 0.21 25 / 28%), 0 1px 2px oklch(0 0 0 / 30%); }
+}
+.risk-breathe {
+  animation: risk-breathe 2.2s ease-in-out infinite;
+}
+
+/* 告警横幅滑入 */
+@keyframes banner-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px);
+    max-height: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 72px;
+  }
+}
+.banner-drop {
+  animation: banner-drop 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  overflow: hidden;
+}
+
+/* 频谱图扫描定位线 */
+@keyframes scan-line {
+  0% { left: -2%; }
+  100% { left: 100%; }
+}
+
+/* 数字滚动完成后的轻微提亮 */
+@keyframes stat-pop {
+  0% { color: inherit; }
+  35% { color: oklch(0.9 0.12 163); text-shadow: 0 0 12px oklch(0.77 0.16 163 / 45%); }
+  100% { color: inherit; text-shadow: none; }
+}
+.stat-pop {
+  animation: stat-pop 0.9s ease-out 0.5s both;
+}
+
+/* Hero 声纹律动容器入场 */
+@keyframes hero-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.hero-in {
+  animation: hero-in 0.7s ease-out both;
+}
+
+/* 标签栏切换下划线光标 */
+.tab-glow {
+  box-shadow: 0 0 0 1px oklch(0.77 0.16 163 / 25%), 0 4px 18px oklch(0.77 0.16 163 / 12%);
+}
+
+/* 尊重减弱动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .stamp-slam, .stamp-flash, .verdict-in, .verdict-in-1, .verdict-in-2,
+  .verdict-in-3, .verdict-in-4, .gauge-breathe, .risk-breathe,
+  .banner-drop, .stat-pop, .hero-in, .radar-sweep::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 /* ============ 核验报告打印样式 ============ */
 #print-root {
   display: none;

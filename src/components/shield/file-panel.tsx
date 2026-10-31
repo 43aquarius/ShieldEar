@@ -75,7 +75,8 @@ export function FilePanel() {
     setProgress(10);
     setFileName(name);
     setFileSize(size);
-    setPreviewUrl(URL.createObjectURL(file));
+    const blobUrl = URL.createObjectURL(file);
+    setPreviewUrl(blobUrl);
     try {
       const { pcm, durationSec } = await decodeFileTo16k(file);
       setDuration(durationSec);
@@ -126,7 +127,7 @@ export function FilePanel() {
           engineVersion: data.analysis.engine.version,
           rtf: data.analysis.stats.rtf,
         },
-        null
+        blobUrl
       );
       toast({
         title: "检测完成，已存证",
