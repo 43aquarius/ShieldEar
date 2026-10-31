@@ -4,6 +4,7 @@
 import json, base64, urllib.request, urllib.error, sys
 
 BASE = "http://localhost:3000"
+_latest_case = "SS-20261027-0001"  # 案例库读取后动态更新
 PASS, FAIL = [], []
 
 def post(path, body, timeout=120):
@@ -49,14 +50,15 @@ try:
     code, raw = get("/api/cases?limit=5")
     d = json.loads(raw)
     cases = d.get("cases") or d.get("items") or []
-    print(f"[案例库]     HTTP {code} · {len(cases)} 条 · 最新: {cases[0]['caseNo'] if cases else '-'}")
+    _latest_case = cases[0]["caseNo"] if cases else ""
+    print(f"[案例库]     HTTP {code} · {len(cases)} 条 · 最新: {_latest_case or '-'}")
     PASS.append("案例库")
 except Exception as e:
     print(f"[案例库]     ✗ {e}"); FAIL.append("案例库")
 
-# ── 5. 存证包 ──
+# ── 5. 存证包（动态取最新案号，避免硬编码失效） ──
 try:
-    code, raw = get("/api/evidence/SS-20261029-0001", timeout=60)
+    code, raw = get("/api/evidence/" + _latest_case, timeout=60)
     magic = raw[:4]
     print(f"[存证包]     HTTP {code} · {len(raw)}B · magic={magic} ({'WAV✓' if magic==b'RIFF' else '非WAV✗'})")
     (PASS if magic == b"RIFF" else FAIL).append("存证包")
