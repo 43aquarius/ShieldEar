@@ -94,8 +94,8 @@ done
 
 echo "── [7/8] Node 运行时与启动脚本 ──"
 cp /tmp/node.exe "$STAGE/node.exe"
-cp "$PROJ/scripts/fusion/scripts/package-files/START-ShieldEar.bat" "$STAGE/"
-cp "$PROJ/scripts/fusion/scripts/package-files/README.txt" "$STAGE/"
+cp "$PROJ/scripts/package-files/START-ShieldEar.bat" "$STAGE/"
+cp "$PROJ/scripts/package-files/README.txt" "$STAGE/"
 
 echo "── [8/8] 体积统计 ──"
 du -sh "$STAGE"/* | sort -rh
