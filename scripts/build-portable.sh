@@ -70,10 +70,15 @@ require("./server.js");
 BOOTEOF
 rm -f "$STAGE/server/wrap-server.js"
 
-echo "── [5/8] 数据库与运行时数据校验 ──"
+echo "── [5/8] 数据库与运行时数据（standalone 缺失时从源仓库补齐） ──"
+mkdir -p "$STAGE/server/db" "$STAGE/server/evidence" "$STAGE/server/calibration"
+[ -f "$STAGE/server/db/custom.db" ] || cp "$PROJ/db/custom.db" "$STAGE/server/db/"
+[ -f "$STAGE/server/calibration/features.json" ] || cp "$PROJ/calibration/features.json" "$STAGE/server/calibration/"
+if [ -d "$PROJ/evidence" ] && [ -z "$(ls -A "$STAGE/server/evidence" 2>/dev/null)" ]; then
+  cp "$PROJ"/evidence/*.wav "$STAGE/server/evidence/" 2>/dev/null || true
+fi
 [ -f "$STAGE/server/db/custom.db" ] || { echo "✗ db/custom.db 缺失"; exit 1; }
 [ -f "$STAGE/server/calibration/features.json" ] || { echo "✗ calibration/features.json 缺失"; exit 1; }
-mkdir -p "$STAGE/server/evidence"
 
 echo "── [6/8] espeak-ng Windows 组件 ──"
 mkdir -p "$STAGE/espeak-ng/espeak-ng-data"
