@@ -6,7 +6,7 @@
 #   1. 推送 v1.3.4-pending → origin/main（fast-forward）
 #   2. 打 tag v1.3.4 并推送
 #   3. 创建 GitHub Release（附说明与 sha256）
-#   4. 上传便携包资产（67MB，走 API，断点由 GitHub 处理）
+#   4. 上传便携包资产（66MB，走 API，断点由 GitHub 处理）
 # ============================================================
 set -euo pipefail
 
@@ -44,7 +44,7 @@ body = """## 声盾 ShieldEar v1.3.4 — 判决剧场惊艳升级
 - 全部动效尊重 prefers-reduced-motion
 
 ### 交付
-- 纯离线便携包 67.1MB（v1.3.3 为 81.1MB）
+- 纯离线便携包 65.7MB（v1.3.3 为 81.1MB）
 - 断网 netns 实测 6/6 全绿（仅 lo 接口，合成 0.18s 零联网零等待）
 - SHA-256: `%s`
 
