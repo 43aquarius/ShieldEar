@@ -6,12 +6,12 @@
 #   1. 推送 v1.3.4-pending → origin/main（fast-forward）
 #   2. 打 tag v1.3.4 并推送
 #   3. 创建 GitHub Release（附说明与 sha256）
-#   4. 上传便携包资产（66MB，走 API，断点由 GitHub 处理）
+#   4. 上传便携包资产（62MB，走 API，断点由 GitHub 处理）
 # ============================================================
 set -euo pipefail
 
 TOKEN="${GH_TOKEN:?请提供 GitHub PAT：GH_TOKEN=github_pat_xxx bash scripts/push-v134.sh}"
-REPO="43aquaris/ShieldEar"
+REPO="43aquarius/ShieldEar"
 BRANCH_TIP="$(git rev-parse v1.3.4-pending)"
 ZIP="${1:-/home/z/my-project/download/ShieldEar-v1.3.4-portable.zip}"
 SHA256="$(sha256sum "$ZIP" | cut -d' ' -f1)"
@@ -39,12 +39,12 @@ body = """## 声盾 ShieldEar v1.3.4 — 判决剧场惊艳升级
 - **时频取证视图**：客户端 FFT（1024 点 / 汉宁窗）→ 对数频率轴 magma 热力瀑布图，可疑片段红色高亮、播放光标联动、点击跳转
 - **Hero 声纹律动**：多频正弦叠加有机律动，开屏即"系统活着"
 - **威胁热力时间线**：实时鉴听逐窗落格战况带 + 告警横幅滑入
-- **真伪 A/B 对比试听**：内置对照样本浏览器内双判决（实测真人 20.2% vs 合成 72.5%）
+- **真伪 A/B 对比试听**：内置对照样本浏览器内双判决（实测真人 25.4% vs 合成 76.0%）
 - 三条链路（鉴听/文件/挑战）全部打通本地回放与时频分析
 - 全部动效尊重 prefers-reduced-motion
 
 ### 交付
-- 纯离线便携包 65.5MB（v1.3.3 为 81.1MB）
+- 纯离线便携包 62.1MB（v1.3.3 为 81.1MB）
 - 断网 netns 实测 6/6 全绿（仅 lo 接口，合成 0.18s 零联网零等待）
 - SHA-256: `%s`
 
@@ -62,7 +62,7 @@ print(json.dumps({
 PY
 )" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id') or d)")
 
-echo "── [4/4] 上传便携包资产（67MB，约需数分钟）──"
+echo "── [4/4] 上传便携包资产（62MB，约需数分钟）──"
 curl -s -X POST \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/zip" \
