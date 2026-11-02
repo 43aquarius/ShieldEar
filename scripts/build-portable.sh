@@ -17,7 +17,7 @@ echo "── [1/8] 复制 standalone 服务端（排除沙箱杂物） ──"
 cd "$PROJ/.next/standalone"
 mkdir -p "$STAGE/server"
 rsync -a --exclude 'skills' --exclude 'repo-stage' --exclude 'download' \
-  --exclude 'upload' --exclude 'tool-results' --exclude 'tests' \
+  --exclude 'upload' --exclude 'tool-results' --exclude 'tests' --exclude 'scripts' \
   --exclude 'Caddyfile' --exclude 'dev.log' --exclude 'bun.lock' \
   --exclude 'eslint.config.mjs' --exclude 'tailwind.config.ts' \
   --exclude 'tsconfig.json' --exclude 'postcss.config.mjs' \
