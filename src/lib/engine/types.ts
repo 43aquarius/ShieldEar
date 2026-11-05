@@ -3,7 +3,7 @@
  */
 
 export const ENGINE_NAME = "ShieldEar";
-export const ENGINE_VERSION = "v1.3.0-calibrated";
+export const ENGINE_VERSION = "v1.3.5-calibrated";
 
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type WindowLabel = "silent" | "natural" | "suspect" | "synthetic";

@@ -22,8 +22,10 @@ import { RiskBadge } from "./risk-ui";
 import { HashText } from "./hash-text";
 import { ConfidenceCurve } from "./confidence-curve";
 import { FeatureProfile } from "./feature-profile";
+import { IntegritySeal } from "./integrity-seal";
 import { useShield } from "@/lib/store";
 import { formatDuration, formatTime } from "@/lib/client/audio-client";
+import { fetchJson } from "@/lib/client/safe-json";
 import type { AnalysisResult } from "@/lib/engine/types";
 import { RefreshCw, Trash2, Eye, Printer, Download, Inbox } from "lucide-react";
 
@@ -61,12 +63,14 @@ export function CasesView() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const resp = await fetch("/api/cases?limit=100");
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error);
+      const data = await fetchJson<{ cases: CaseRow[] }>("/api/cases?limit=100");
       setCases(data.cases);
-    } catch {
-      toast({ title: "案例库加载失败", variant: "destructive" });
+    } catch (err) {
+      toast({
+        title: "案例库加载失败",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -78,9 +82,8 @@ export function CasesView() {
 
   const openDetail = async (row: CaseRow) => {
     try {
-      const resp = await fetch(`/api/cases/${row.caseNo}?full=1`);
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = await fetchJson<{ case: any }>(`/api/cases/${row.caseNo}?full=1`);
       const c = data.case;
       const analysis: AnalysisResult = {
         engine: { name: "ShieldEar", version: c.engineVersion, windowSec: 2, hopSec: 1 },
@@ -107,20 +110,27 @@ export function CasesView() {
         stats: { rtf: c.rtf, analyzeMs: 0 },
       };
       setDetail({ row, analysis });
-    } catch {
-      toast({ title: "读取案例详情失败", variant: "destructive" });
+    } catch (err) {
+      toast({
+        title: "读取案例详情失败",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "destructive",
+      });
     }
   };
 
   const remove = async (caseNo: string) => {
     try {
-      const resp = await fetch(`/api/cases/${caseNo}`, { method: "DELETE" });
-      if (!resp.ok) throw new Error();
+      await fetchJson(`/api/cases/${caseNo}`, { method: "DELETE" });
       setCases((cs) => cs?.filter((c) => c.caseNo !== caseNo) ?? null);
       if (detail?.row.caseNo === caseNo) setDetail(null);
       toast({ title: "案例已删除", description: `证据文件同步清理：${caseNo}` });
-    } catch {
-      toast({ title: "删除失败", variant: "destructive" });
+    } catch (err) {
+      toast({
+        title: "删除失败",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "destructive",
+      });
     }
   };
 
@@ -265,6 +275,7 @@ export function CasesView() {
                     引擎 {detail.row.engineVersion} · 信道模式：{detail.row.channel === "narrowband" ? "窄带" : "宽带"}
                   </p>
                 </div>
+                <IntegritySeal caseNo={detail.row.caseNo} />
                 <div className="flex justify-end gap-2">
                   <Button size="sm" variant="outline" className="gap-1.5" onClick={openInWorkbench}>
                     <Printer className="h-3.5 w-3.5" aria-hidden /> 在工作台打开并导出核验报告

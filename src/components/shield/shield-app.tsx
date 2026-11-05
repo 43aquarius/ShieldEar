@@ -5,7 +5,7 @@
  * 工作台（实时鉴听 / 文件检测 / 现场合成挑战）· 案例库 · 技术方案
  */
 
-import { Shield as ShieldAppIcon, PhoneCall, FileAudio, Zap, BookOpen, Database, Cog } from "lucide-react";
+import { Shield as ShieldAppIcon, PhoneCall, FileAudio, Zap, BookOpen, Database, Cog, Activity } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,20 +14,24 @@ import { ENGINE_VERSION } from "@/lib/engine/types";
 import { LivePanel } from "./live-panel";
 import { FilePanel } from "./file-panel";
 import { ChallengePanel } from "./challenge-panel";
+import { AbCompareCard } from "./ab-compare";
 import { ResultPanel } from "./result-panel";
 import { CasesView } from "./cases-view";
 import { TechView } from "./tech-view";
+import { SelfCheckView } from "./self-check-view";
 import { ReportPrint } from "./report-print";
+import { VoiceprintBars } from "./voiceprint-bars";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { key: "workbench", label: "检测工作台", icon: PhoneCall },
   { key: "cases", label: "案例库", icon: Database },
   { key: "tech", label: "技术方案", icon: Cog },
+  { key: "selfcheck", label: "系统自检", icon: Activity },
 ] as const;
 
 export function ShieldApp() {
-  const { view, setView, workMode, setWorkMode, result } = useShield();
+  const { view, setView, workMode, setWorkMode, result, meta } = useShield();
 
   return (
     <>
@@ -105,6 +109,16 @@ export function ShieldApp() {
                     </ol>
                   </div>
                 </div>
+
+                {/* 声纹律动条 — 系统活着的第一眼 */}
+                <div className="hero-in relative mt-1 overflow-hidden rounded-lg border bg-black/30">
+                  <div className="grid-bg pointer-events-none absolute inset-0" aria-hidden />
+                  <VoiceprintBars className="relative h-16 w-full sm:h-20" />
+                  <div className="pointer-events-none absolute bottom-1.5 right-2.5 flex items-center gap-1.5 font-mono-data text-[10px] text-emerald-300/70">
+                    <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
+                    SHIELDEAR ENGINE · {ENGINE_VERSION} · LISTENING
+                  </div>
+                </div>
               </section>
 
               {/* 模式切换 */}
@@ -126,15 +140,16 @@ export function ShieldApp() {
                 <TabsContent value="file" className="mt-4">
                   <FilePanel />
                 </TabsContent>
-                <TabsContent value="challenge" className="mt-4">
+                <TabsContent value="challenge" className="mt-4 space-y-4">
                   <ChallengePanel />
+                  <AbCompareCard />
                 </TabsContent>
               </Tabs>
 
-              {/* 检测结果 */}
+              {/* 检测结果（key 按案件号重播判决剧场） */}
               {result && (
                 <section aria-label="检测结果">
-                  <ResultPanel />
+                  <ResultPanel key={meta?.caseNo ?? "result"} />
                 </section>
               )}
             </div>
@@ -142,6 +157,7 @@ export function ShieldApp() {
 
           {view === "cases" && <CasesView />}
           {view === "tech" && <TechView />}
+          {view === "selfcheck" && <SelfCheckView />}
         </main>
 
         {/* 页脚 */}

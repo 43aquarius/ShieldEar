@@ -4,7 +4,7 @@
 
 > 接到可疑来电，如何在转账之前知道对方的声音是不是 AI 合成的？声盾把这道反诈治理中最直接的问题，变成一次可以随身携带的浏览器操作：**边通话、边检测、边存证**。
 
-![version](https://img.shields.io/badge/version-v1.3.2--calibrated-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A)
+![version](https://img.shields.io/badge/version-v1.3.5--calibrated-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9)
 
 ---
 
@@ -18,8 +18,10 @@
 |------|------|
 | **实时鉴听** | AudioWorklet 16kHz 采集，2s 滑动窗口 / 1s 步进流式分析，逐窗置信度曲线与告警脉冲同屏呈现 |
 | **文件检测** | 拖拽即测，输出判决卡、可疑片段时间轴与可解释的八维声学特征剖面 |
-| **现场合成挑战** | 四级合成链保证任意输入文本被真实合成并当场检出，答辩现场可演示「合成 → 检测 → 告警 → 双哈希存证」完整闭环 |
+| **现场合成挑战** | 发行包内置 espeak-ng 本地真合成，任意输入文本当场合成、当场检出，答辩现场可演示「合成 → 检测 → 告警 → 双哈希存证」完整闭环 |
 | **案例库与证据链** | 检测案件入库、WAV 证据下载、音频与检测结果双 SHA-256 哈希校验 |
+| **证据完整性核验** | 一键重读证据 WAV 并重算 SHA-256 与入库值比对，绿色印章证明证据自存证以来未被篡改 —「存证 → 验真」闭环的验真端（v1.3.5） |
+| **系统自检** | 一键体检数据引擎、证据目录、引擎校准、本地合成引擎、离线声明，逐项打勾全绿即就绪（v1.3.5） |
 | **可打印核验报告** | 八章节取证报告，可直接作为 96110 举报与反诈取证材料 |
 
 全部功能在**单页应用内零跳转**完成；浏览器端（初判）与服务端（复核）运行**同一份同构 TypeScript 引擎**，双端判决一致性由架构保证。
@@ -49,12 +51,12 @@
 
 ### 方式一：可执行程序包（免安装，推荐评审使用）
 
-从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.2-portable.zip`（约 255MB）并解压：
+从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.5-portable.zip`（约 65MB）并解压：
 
-- **Windows**：双击 `启动声盾-Windows.bat`（中文系统推荐）或 `START-ShieldEar.bat`（英文/其他区域设置系统兜底入口）——包内含便携 Node.js 运行时、espeak-ng 离线合成组件与 ffmpeg 转码工具，无需任何预装环境；
-- **Linux（x86_64）/ macOS（Apple Silicon）**：终端执行 `bash start-shield-linux-mac.sh`（同样内置便携运行时；其他架构回退系统 Node.js ≥ 20）；
-- 等待数秒浏览器自动打开 `http://127.0.0.1:3000`（端口被占用时自动改用 3001-3009 并提示实际地址），包内已含 21 件演示案件与证据 WAV 存档（含与文档记载可交叉核对的真实案件），全部功能开箱即用；
-- **v1.3.3 起默认「完全离线模式」**：「现场合成挑战」使用包内 espeak-ng 真实现场合成（Windows/Linux/macOS 三平台一致），零联网依赖，断网开箱即用；如需云端神经音色对比，直接在网页「合成挑战」页顶部切换「云端合成通道」开关（即时生效、无需重启），引擎来源与当前模式均如实标注，重启后自动恢复离线默认。
+- **Windows**：双击 `START-ShieldEar.bat`——包内含便携 Node.js 运行时与 espeak-ng 离线合成组件，无需任何预装环境；启动时自动完成启动自检（数据引擎/数据库/校准数据/合成组件），异常会在启动窗口给出中文提示并写入 `STARTUP-ERROR.txt`，不再出现含义不明的页面报错；
+- 等待数秒浏览器自动打开 `http://127.0.0.1:3000`，包内已含 4 件演示案件与对应证据 WAV 存档，全部功能开箱即用；
+- **v1.3.5 起 Release 包为「纯离线发行版」**：云端合成通道已从发行包中整体移除（界面无开关、接口 403 锁死），现场合成仅用包内 espeak-ng，零联网依赖，断网开箱即用。源码开发版（`npm run dev`）仍保留四级合成链与云端通道开关用于对比实验；
+- **常见问题**：若启动自检提示 DLL/模块加载失败，多为系统缺少微软 VC++ 2015-2022 运行库 x64，安装后重启即可（boot.js 自检提示中附官方下载链接）。
 
 ### 方式二：源码运行
 

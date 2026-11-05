@@ -16,8 +16,10 @@ import { WaveformCanvas } from "./waveform-canvas";
 import { LabelBadge, scoreColor } from "./risk-ui";
 import { StreamingAnalyzer } from "@/lib/engine/engine";
 import { SCORE_THRESHOLDS, type AnalysisResult, type WindowResult } from "@/lib/engine/types";
-import { pcmToB64, formatDuration } from "@/lib/client/audio-client";
+import { pcmToB64, pcmToWavUrl, formatDuration } from "@/lib/client/audio-client";
+import { ThreatRibbon } from "./threat-ribbon";
 import { useShield } from "@/lib/store";
+import { fetchJson } from "@/lib/client/safe-json";
 import { cn } from "@/lib/utils";
 
 const WORKLET_CODE = `
@@ -232,9 +234,17 @@ export function LivePanel() {
     const internal = analyzer as unknown as { samples: Float32Array };
     pcm.set(internal.samples.subarray(0, totalSamples));
     analyzerRef.current = null;
+    // 本地回放/时频分析用的 WAV blob
+    const wavUrl = pcmToWavUrl(pcm);
 
     try {
-      const resp = await fetch("/api/analyze", {
+      const data = await fetchJson<{
+        caseNo: string;
+        createdAt: string;
+        audioHash: string;
+        analysis: AnalysisResult;
+        error?: string;
+      }>("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -244,8 +254,6 @@ export function LivePanel() {
           notes: "客户端流式初判 + 服务端复核存证",
         }),
       });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error ?? "服务端复核失败");
       setResult(
         data.analysis as AnalysisResult,
         {
@@ -259,7 +267,7 @@ export function LivePanel() {
           engineVersion: data.analysis.engine.version,
           rtf: data.analysis.stats.rtf,
         },
-        null
+        wavUrl
       );
       setState((s) => ({ ...s, submitting: false, submitted: true }));
       setView("workbench");
@@ -269,7 +277,7 @@ export function LivePanel() {
       });
     } catch (err) {
       // 服务端失败时退回本地结果（无存证）
-      setResult(localResult, null, null);
+      setResult(localResult, null, wavUrl);
       setState((s) => ({ ...s, submitting: false }));
       toast({
         title: "服务端存证失败",
@@ -320,16 +328,21 @@ export function LivePanel() {
             )}
           </div>
 
-          {/* 告警条 */}
+          {/* 告警横幅（滑入 + 脉冲） */}
           {state.alertActive && (
-            <div className="alert-pulse flex items-center gap-2 rounded-lg border border-red-800 bg-red-950/70 px-4 py-3 text-sm font-semibold text-red-300">
-              <ShieldAlert className="h-5 w-5 shrink-0" aria-hidden />
-              当前语音疑似 AI 合成 · 置信度 {((lastVoiced?.score ?? 0) * 100).toFixed(1)}%
-              <span className="ml-auto font-normal text-red-400/80">
-                勿转账 · 勿泄露验证码 · 回拨核实
-              </span>
+            <div className="banner-drop">
+              <div className="alert-pulse flex items-center gap-2 rounded-lg border border-red-800 bg-red-950/70 px-4 py-3 text-sm font-semibold text-red-300">
+                <ShieldAlert className="h-5 w-5 shrink-0" aria-hidden />
+                当前语音疑似 AI 合成 · 置信度 {((lastVoiced?.score ?? 0) * 100).toFixed(1)}%
+                <span className="ml-auto font-normal text-red-400/80">
+                  勿转账 · 勿泄露验证码 · 回拨核实
+                </span>
+              </div>
             </div>
           )}
+
+          {/* 威胁热力时间线（逐窗落格战况带） */}
+          <ThreatRibbon windows={state.windows} running={state.running} />
 
           {/* 实时逐窗曲线 */}
           <div>

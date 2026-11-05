@@ -678,3 +678,25 @@ export async function synthesizeEspeak(
     void unlink(wavPath).catch(() => {});
   }
 }
+
+/* ══════════════════════ 系统自检探测（v1.3.5） ══════════════════════ */
+
+/**
+ * 系统自检：探测本地合成引擎（espeak-ng）可用性。
+ * 不产生合成音频，仅执行 `--version` 探活；探测结果写入模块缓存，
+ * 与真实合成路径完全同源（包内绝对路径优先、系统 PATH 兜底）。
+ */
+export async function probeLocalSynth(): Promise<{ ok: boolean; detail: string }> {
+  try {
+    const cmd = await resolveEspeak();
+    const bundled = !!cmd.env?.ESPEAK_DATA_PATH;
+    return {
+      ok: true,
+      detail: bundled
+        ? `espeak-ng 就绪（发行包内组件：${path.basename(path.dirname(cmd.env!.ESPEAK_DATA_PATH!))}）`
+        : "espeak-ng 就绪（系统 PATH）",
+    };
+  } catch (e) {
+    return { ok: false, detail: e instanceof Error ? e.message : String(e) };
+  }
+}

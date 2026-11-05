@@ -4,7 +4,7 @@
 import { create } from "zustand";
 import type { AnalysisResult } from "@/lib/engine/types";
 
-export type View = "workbench" | "cases" | "tech";
+export type View = "workbench" | "cases" | "tech" | "selfcheck";
 export type WorkMode = "live" | "file" | "challenge";
 
 /** 案例元信息（存证链） */

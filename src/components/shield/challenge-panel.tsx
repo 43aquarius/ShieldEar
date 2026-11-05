@@ -22,8 +22,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Zap, Loader2, ShieldAlert, AudioLines, History, CloudOff, CloudCog } from "lucide-react";
 import { b64ToBlobUrl, formatDuration } from "@/lib/client/audio-client";
+import { fetchJson } from "@/lib/client/safe-json";
 import type { AnalysisResult } from "@/lib/engine/types";
 import { useShield } from "@/lib/store";
+
+/** 纯离线发行版（编译期注入；发布包构建时 NEXT_PUBLIC_RELEASE_OFFLINE=1）*/
+const RELEASE_OFFLINE = process.env.NEXT_PUBLIC_RELEASE_OFFLINE === "1";
 
 const VOICES: { value: string; label: string }[] = [
   { value: "tongtong", label: "桐桐 · 温暖亲切" },
@@ -69,10 +73,15 @@ export function ChallengePanel() {
   const [offlineMode, setOfflineMode] = useState(false);
 
   useEffect(() => {
+    // 纯离线发行版：不请求配置接口，本地直接固定为离线态
+    if (RELEASE_OFFLINE) {
+      setCloudOn(false);
+      setOfflineMode(true);
+      return;
+    }
     let alive = true;
-    fetch("/api/config/cloud")
-      .then((r) => r.json())
-      .then((d: { cloudEnabled?: boolean; offlineMode?: boolean }) => {
+    fetchJson<{ cloudEnabled?: boolean; offlineMode?: boolean }>("/api/config/cloud")
+      .then((d) => {
         if (!alive) return;
         setCloudOn(!!d.cloudEnabled);
         setOfflineMode(!!d.offlineMode);
@@ -89,13 +98,14 @@ export function ChallengePanel() {
     const prev = cloudOn;
     setCloudOn(next); // 乐观更新
     try {
-      const r = await fetch("/api/config/cloud", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled: next }),
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? "切换失败");
+      const d = await fetchJson<{ cloudEnabled: boolean; offlineMode: boolean; error?: string }>(
+        "/api/config/cloud",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enabled: next }),
+        }
+      );
       setCloudOn(!!d.cloudEnabled);
       setOfflineMode(!!d.offlineMode);
       toast({
@@ -123,13 +133,24 @@ export function ChallengePanel() {
     setAudioUrl(null);
     setSynthInfo(null);
     try {
-      const resp = await fetch("/api/tts-challenge", {
+      const data = await fetchJson<{
+        caseNo: string;
+        createdAt: string;
+        audioHash: string;
+        sourceHash: string;
+        analysis: AnalysisResult;
+        mode: "live" | "fallback";
+        engine: string;
+        engineLabel: string;
+        sourceLabel?: string;
+        tts: { voice: string; sampleRate: number };
+        audio: { evidenceB64: string; durationSec: number };
+        error?: string;
+      }>("/api/tts-challenge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: text.trim(), voice }),
       });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error ?? "合成失败");
       const url = b64ToBlobUrl(data.audio.evidenceB64);
       setAudioUrl(url);
       setSynthInfo({
@@ -232,6 +253,16 @@ export function ChallengePanel() {
           </div>
         </div>
 
+        {/* 云端合成通道（发行版纯离线：仅显示徽章，无开关、无云端请求路径） */}
+        {RELEASE_OFFLINE ? (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-sky-500/30 bg-sky-500/5 px-3 py-2 text-xs text-muted-foreground">
+            <CloudOff className="h-4 w-4 text-sky-500" aria-hidden />
+            <span>
+              <span className="font-medium text-foreground">纯离线发行版</span>
+              　合成采用本地 espeak-ng，全程零联网；检测、鉴听、存证均为本地能力
+            </span>
+          </div>
+        ) : (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed px-3 py-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {cloudOn === false ? (
@@ -256,6 +287,7 @@ export function ChallengePanel() {
             aria-label="切换云端合成通道"
           />
         </div>
+        )}
 
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-1.5">
@@ -330,7 +362,7 @@ export function ChallengePanel() {
         <p className="text-xs leading-relaxed text-muted-foreground">
           说明：合成与检测均在服务端完成，原始合成音频与其 16kHz 分析副本分别计算 SHA-256
           并写入证据链（「这份音频确实由平台现场生成」与「检测对象即该音频」双向锚定）。
-          {cloudOn === false
+          {RELEASE_OFFLINE || cloudOn === false
             ? " 当前为纯离线模式：合成采用本地 espeak-ng（零联网零等待），实际使用的引擎在结果与存证中如实标注；演示闭环永不中断。"
             : " 合成通道：云端 TTS → Edge 神经 TTS → 本地 espeak-ng → 预置样本回放（四级自动降级），实际使用的引擎在结果与存证中如实标注；演示闭环永不中断。"}
         </p>

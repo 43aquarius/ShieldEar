@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * 声盾 — 检测结果面板
- * 判决卡 → 逐窗置信度曲线 → 可疑片段时间轴 → 可解释特征剖面 → 逐窗明细 → 证据链
+ * 声盾 — 检测结果面板（判决剧场版）
+ * 入场编排：判决卡上浮 → 环形仪表扫描 + 数字滚动 → 印章砸落
+ * → 频谱取证视图 → 逐窗置信度曲线 → 可疑片段时间轴 → 特征剖面 → 逐窗明细 → 证据链
  */
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,7 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { ConfidenceCurve } from "./confidence-curve";
 import { FeatureProfile } from "./feature-profile";
 import { HashText } from "./hash-text";
+import { IntegritySeal } from "./integrity-seal";
+import { RingGauge } from "./ring-gauge";
+import { VerdictStamp } from "./verdict-stamp";
+import { SpectrogramCard } from "./spectrogram";
 import { LabelBadge, RISK_META, RiskBadge, scoreColor } from "./risk-ui";
+import { useCountUp } from "./use-count-up";
 import { useShield } from "@/lib/store";
 import { formatDuration, formatTime } from "@/lib/client/audio-client";
 import type { AnalysisResult, Segment } from "@/lib/engine/types";
@@ -65,6 +71,37 @@ function TimelineBar({ segments, duration }: { segments: Segment[]; duration: nu
   );
 }
 
+/** 数字滚动统计块 */
+function StatAnim({
+  label,
+  value,
+  suffix = "",
+  delay = 420,
+  decimals = 1,
+  color,
+}: {
+  label: string;
+  value: number;
+  suffix?: string;
+  delay?: number;
+  decimals?: number;
+  color?: string;
+}) {
+  const v = useCountUp(value, { duration: 1150, delay });
+  return (
+    <div className="stat-pop">
+      <div
+        className="font-mono-data text-base font-semibold tabular-nums"
+        style={color ? { color } : undefined}
+      >
+        {v.toFixed(decimals)}
+        {suffix}
+      </div>
+      <div className="text-[11px] text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
 export function ResultPanel() {
   const { result, meta, audioUrl } = useShield();
   const { print } = useReport();
@@ -74,42 +111,72 @@ export function ResultPanel() {
   const { overall, audio, windows, segments, featureProfile, stats, channel } = result;
   const risk = RISK_META[overall.risk];
   const voiced = windows.filter((w) => w.voiced);
+  const dangerous = overall.risk === "HIGH" || overall.risk === "CRITICAL";
 
   return (
     <div className="space-y-4 print:hidden" id="result-root">
-      {/* 判决卡 */}
-      <Card className={cnRisk(overall.risk)}>
+      {/* ============ 判决剧场：判决卡 ============ */}
+      <Card className={`verdict-in relative overflow-hidden ${cnRisk(overall.risk)} ${dangerous ? "risk-breathe" : ""}`}>
         <CardContent className="space-y-4 pt-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="grid-bg flex h-12 w-12 items-center justify-center rounded-lg border bg-black/40">
-                {overall.risk === "LOW" ? (
-                  <FileCheck2 className="h-6 w-6 text-emerald-400" aria-hidden />
-                ) : (
-                  <ShieldAlert className={cnRiskIcon(overall.risk)} aria-hidden />
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className={`text-xl font-bold ${risk.color}`}>{overall.verdict}</h2>
-                  <RiskBadge risk={overall.risk} />
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* 左：环形置信度仪表（主角） */}
+            <div className="verdict-in-1 relative shrink-0">
+              <RingGauge
+                value={overall.syntheticRatio}
+                risk={overall.risk}
+                caption={risk.label}
+              />
+            </div>
+
+            {/* 右：判决文字 + 统计 */}
+            <div className="verdict-in-2 min-w-[280px] flex-1 space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className={`text-2xl font-bold ${risk.color}`}>{overall.verdict}</h2>
+                <RiskBadge risk={overall.risk} />
+                <span className="ml-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  {overall.risk === "LOW" ? (
+                    <FileCheck2 className="h-3.5 w-3.5 text-emerald-400" aria-hidden />
+                  ) : (
+                    <ShieldAlert className="h-3.5 w-3.5" aria-hidden />
+                  )}
+                  {formatDuration(audio.durationSec)} 音频 · {windows.length} 窗判决
+                </span>
+                {/* 印章砸落（错峰 900ms，预留位不遮数字） */}
+                <div className="relative ml-auto hidden h-[118px] w-[188px] shrink-0 sm:block">
+                  <VerdictStamp risk={overall.risk} delay={900} className="right-0 top-0" />
                 </div>
-                <p className="mt-0.5 text-sm text-muted-foreground">{risk.desc}</p>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-right sm:grid-cols-4">
-              <Stat label="合成置信度" value={`${(overall.syntheticRatio * 100).toFixed(1)}%`} />
-              <Stat label="峰值置信度" value={`${(overall.maxScore * 100).toFixed(1)}%`} />
-              <Stat label="有效语音窗" value={`${audio.voicedWindows}/${audio.totalWindows}`} />
-              <Stat label="分析耗时" value={`${stats.analyzeMs.toFixed(0)}ms · RTF ${stats.rtf.toFixed(3)}`} />
+              <p className="text-sm text-muted-foreground">{risk.desc} · {overall.advice}</p>
+
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 border-t pt-3 sm:grid-cols-4">
+                <StatAnim
+                  label="峰值置信度"
+                  value={overall.maxScore * 100}
+                  suffix="%"
+                  color={scoreColor(overall.maxScore)}
+                />
+                <StatAnim
+                  label="有效语音窗"
+                  value={audio.voicedWindows}
+                  decimals={0}
+                  suffix={`/${audio.totalWindows}`}
+                />
+                <StatAnim label="可疑片段" value={segments.length} decimals={0} suffix=" 段" />
+                <StatAnim
+                  label="分析耗时"
+                  value={stats.analyzeMs}
+                  decimals={0}
+                  suffix="ms"
+                />
+              </div>
+              <p className="font-mono-data text-[11px] text-muted-foreground">
+                RTF {stats.rtf.toFixed(3)}（&lt; 1 即满足实时）· {dangerous ? "多维度声学特征显著偏离自然分布" : "声学特征与自然人声相符"}
+              </p>
             </div>
           </div>
-          <div className="rounded-lg border border-dashed p-3 text-sm leading-relaxed text-muted-foreground">
-            <span className="font-medium text-foreground">处置建议：</span>
-            {overall.advice}
-          </div>
+
           {meta && (
-            <div className="flex flex-wrap items-center gap-2 text-xs">
+            <div className="verdict-in-3 flex flex-wrap items-center gap-2 text-xs">
               <Badge variant="outline" className="gap-1 font-mono-data">
                 <Fingerprint className="h-3 w-3" aria-hidden /> {meta.caseNo}
               </Badge>
@@ -157,11 +224,15 @@ export function ResultPanel() {
         </CardContent>
       </Card>
 
-      {/* 音频回放 */}
+      {/* ============ 时频取证视图（含播放器） ============ */}
       {audioUrl && (
-        <audio controls src={audioUrl} className="w-full" preload="metadata">
-          <track kind="captions" />
-        </audio>
+        <div className="verdict-in-4">
+          <SpectrogramCard
+            audioUrl={audioUrl}
+            durationSec={audio.durationSec}
+            segments={segments}
+          />
+        </div>
       )}
 
       {/* 置信度曲线 */}
@@ -324,6 +395,9 @@ export function ResultPanel() {
                 value={<span className="font-mono-data text-sm">{meta.rtf.toFixed(3)}（&lt; 1 即满足实时）</span>}
               />
             )}
+            <div className="pt-2">
+              <IntegritySeal caseNo={meta.caseNo} compact />
+            </div>
           </CardContent>
         </Card>
       )}
@@ -334,15 +408,6 @@ export function ResultPanel() {
         演示音频均为平台合成或公有领域样本，未使用任何他人真实通话。
         {voiced.length === 0 && " 本段音频未检出有效语音，结论不具参考性。"}
       </p>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="font-mono-data text-base font-semibold text-foreground">{value}</div>
-      <div className="text-[11px] text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -366,18 +431,5 @@ function cnRisk(risk: string): string {
       return "border-amber-800/70 bg-amber-950/20";
     default:
       return "border-emerald-800/70 bg-emerald-950/20";
-  }
-}
-
-function cnRiskIcon(risk: string): string {
-  switch (risk) {
-    case "CRITICAL":
-      return "h-6 w-6 text-red-400";
-    case "HIGH":
-      return "h-6 w-6 text-orange-400";
-    case "MEDIUM":
-      return "h-6 w-6 text-amber-400";
-    default:
-      return "h-6 w-6 text-emerald-400";
   }
 }

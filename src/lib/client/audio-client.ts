@@ -64,6 +64,31 @@ export function b64ToBlobUrl(b64: string, mime = "audio/wav"): string {
   return URL.createObjectURL(new Blob([u8], { type: mime }));
 }
 
+/** Float32 PCM → 16bit WAV blob URL（实时鉴听结果本地回放/时频分析用） */
+export function pcmToWavUrl(pcm: Float32Array, sampleRate = 16000): string {
+  const i16 = floatToInt16(pcm);
+  const u8 = new Uint8Array(i16.buffer, i16.byteOffset, i16.byteLength);
+  const header = new ArrayBuffer(44);
+  const dv = new DataView(header);
+  const writeStr = (off: number, s: string) => {
+    for (let i = 0; i < s.length; i++) dv.setUint8(off + i, s.charCodeAt(i));
+  };
+  writeStr(0, "RIFF");
+  dv.setUint32(4, 36 + u8.length, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  dv.setUint32(16, 16, true);
+  dv.setUint16(20, 1, true); // PCM
+  dv.setUint16(22, 1, true); // mono
+  dv.setUint32(24, sampleRate, true);
+  dv.setUint32(28, sampleRate * 2, true); // byte rate
+  dv.setUint16(32, 2, true); // block align
+  dv.setUint16(34, 16, true); // bits
+  writeStr(36, "data");
+  dv.setUint32(40, u8.length, true);
+  return URL.createObjectURL(new Blob([header, u8.slice().buffer as ArrayBuffer], { type: "audio/wav" }));
+}
+
 /** 触发下载 */
 export function downloadBlobUrl(url: string, filename: string) {
   const a = document.createElement("a");

@@ -29,6 +29,7 @@ import {
 } from "@/lib/client/audio-client";
 import type { AnalysisResult } from "@/lib/engine/types";
 import { useShield } from "@/lib/store";
+import { fetchJson } from "@/lib/client/safe-json";
 import { cn } from "@/lib/utils";
 
 type Stage = "idle" | "decoding" | "hashing" | "uploading" | "analyzing" | "done" | "error";
@@ -75,7 +76,8 @@ export function FilePanel() {
     setProgress(10);
     setFileName(name);
     setFileSize(size);
-    setPreviewUrl(URL.createObjectURL(file));
+    const blobUrl = URL.createObjectURL(file);
+    setPreviewUrl(blobUrl);
     try {
       const { pcm, durationSec } = await decodeFileTo16k(file);
       setDuration(durationSec);
@@ -95,7 +97,13 @@ export function FilePanel() {
 
       setStage("analyzing");
       setProgress(75);
-      const resp = await fetch("/api/analyze", {
+      const data = await fetchJson<{
+        caseNo: string;
+        createdAt: string;
+        audioHash: string;
+        analysis: AnalysisResult;
+        error?: string;
+      }>("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -108,8 +116,6 @@ export function FilePanel() {
           notes: "文件检测 · 服务端引擎复核",
         }),
       });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error ?? "服务端分析失败");
       setProgress(100);
       setStage("done");
       setResult(
@@ -126,7 +132,7 @@ export function FilePanel() {
           engineVersion: data.analysis.engine.version,
           rtf: data.analysis.stats.rtf,
         },
-        null
+        blobUrl
       );
       toast({
         title: "检测完成，已存证",
