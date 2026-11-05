@@ -36,3 +36,11 @@ Thumbs.db
 # 便携包产物不入库（发布于 GitHub Release）
 download/*.zip
 repo-stage/
+
+# 沙箱会话环境（本地工具与临时产物，不入库）
+/skills/
+/tool-results/
+/scripts/api-push/
+tsconfig.tsbuildinfo
+espeak.msi
+.gh_pat
