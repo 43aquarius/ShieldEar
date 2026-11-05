@@ -1,13 +1,33 @@
 #!/usr/bin/env bash
 # ============================================================
-# test-offline-portable.sh — v1.3.3 便携包断网实测
+# test-offline-portable.sh — v1.3.6 便携包断网实测
 # 在无任何外网接口的网络命名空间中启动 standalone 服务端，
 # 验证纯离线模式全功能可用（铁证零联网）。
+# v1.3.6 关键改进：测试对象 = 解压后的交付 zip（「测什么，交付什么」）。
+#   v1.3.5 事故教训：只测 stage 目录时，目录软链在 Linux 上可解析、
+#   全部通过；而 zip(os.walk) 丢弃软链后的真实交付物在 Windows 上启动即崩。
 # ============================================================
 set -u
 
-STAGE=/tmp/package-build/ShieldEar
+ZIP=/home/z/my-project/download/ShieldEar-v1.3.6-portable.zip
+STAGE=/tmp/zip-verify/ShieldEar
 NODE=$(which node)
+
+# ── 解压交付 zip 到干净目录（模拟评审机解压动作） ──
+rm -rf /tmp/zip-verify
+mkdir -p /tmp/zip-verify
+python3 - "$ZIP" << 'PYEOF'
+import sys, zipfile
+z = zipfile.ZipFile(sys.argv[1])
+z.extractall("/tmp/zip-verify")
+print(f"[verify] zip 解压完成（{len(z.namelist())} 个成员）")
+PYEOF
+[ -f "$STAGE/server/boot.js" ] || { echo "✗ 解压后缺少 server/boot.js"; exit 1; }
+[ -f "$STAGE/node.exe" ] || { echo "✗ 解压后缺少 node.exe"; exit 1; }
+# v1.3.6 核心断言：Turbopack 哈希外部依赖必须是实体目录（而非被 zip 丢失的软链）
+HASHDIRS=$(ls -d "$STAGE/server/.next/node_modules/@prisma/"client-* 2>/dev/null || true)
+[ -n "$HASHDIRS" ] || { echo "✗ 解压后缺少 server/.next/node_modules/@prisma/client-<hash> 实体目录（v1.3.5 事故特征）"; exit 1; }
+echo "[verify] 哈希外部依赖实体目录存在: $(basename $HASHDIRS)"
 
 # 回归脚本副本（netns 内 BASE 一致，走 localhost）
 # 注意：必须用主脚本（动态最新案号，8a61d31 修复）；

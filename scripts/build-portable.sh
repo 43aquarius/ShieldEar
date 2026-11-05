@@ -57,6 +57,25 @@ rm -f query_engine_bg.postgresql* query_engine_bg.cockroachdb* \
       query_compiler_bg.postgresql* query_compiler_bg.cockroachdb* \
       query_compiler_bg.sqlserver* query_compiler_bg.mysql* 2>/dev/null || true
 
+echo "── [2b/8] 解引用全部软链（Windows 交付零软链 · v1.3.6 关键修复） ──"
+# Next.js 16 Turbopack 会把 serverExternalPackages 默认清单里的包（如 @prisma/client）
+# 外部化为 <包名>-<内容哈希> 形态（如 @prisma/client-2c3a283f134fdcb6）：实体包在顶层
+# node_modules，而 .next/node_modules/ 下只放一个【目录软链】指回实体包。
+# 构建机上软链可解析（离线自检/回归全绿），但 zip 的 os.walk 会【静默丢弃目录软链】，
+# Windows 解压后 require 哈希名失败 → 所有走数据库的 API 500（v1.3.5 线上事故根因）。
+# 此步把全部软链替换为实体拷贝，确保「包内内容 = 构建机验证过的内容」。
+# 注意：必须在 [2/8] 精简之后执行，让拷贝继承精简后的体积。
+SLINK_N=0
+while IFS= read -r -d '' lnk; do
+  tgt=$(readlink -f "$lnk" 2>/dev/null) || { echo "✗ 断链: $lnk"; exit 1; }
+  if [ ! -e "$tgt" ]; then echo "✗ 软链目标缺失: $lnk → $tgt"; exit 1; fi
+  rm -f "$lnk"
+  cp -a "$tgt" "$lnk"
+  echo "  · 已解引用: ${lnk#"$STAGE"/}"
+  SLINK_N=$((SLINK_N + 1))
+done < <(find "$STAGE" -type l -print0)
+echo "✓ 软链解引用完成（共 $SLINK_N 个；0 亦正常）"
+
 echo "── [3/8] 精简校准音频（引擎用编译进 JS 的常量，96MB 音频仅开发期使用） ──"
 rm -rf "$STAGE/server/calibration/audio" \
        "$STAGE/server/calibration/testsuite_results.json" \
@@ -255,7 +274,30 @@ if [ ! -f "$STAGE/server/boot.js" ]; then
   echo "✗ 校验失败：boot.js 未生成"
   exit 1
 fi
-echo "✓ Windows 引擎 / boot.js / 数据库 / 校准数据 全部就位"
+
+# v1.3.6 fail-fast：chunk 引用的所有外部依赖必须能从包内真实解析。
+# （防患于未然：即使解引用步骤失效，只要 Turbopack 外部化的任何一个包名
+#   在包内找不到，此处直接终止构建，绝不带病打包。）
+if ! (cd "$STAGE/server" && node -e '
+const fs = require("fs"), path = require("path"), { createRequire } = require("module");
+const chunksDir = path.resolve(".next/server/chunks");
+const rq = createRequire(path.join(chunksDir, "_.js"));
+const names = new Set();
+for (const f of fs.readdirSync(chunksDir)) {
+  if (!f.endsWith(".js")) continue;
+  const s = fs.readFileSync(path.join(chunksDir, f), "utf8");
+  for (const m of s.matchAll(/e\.x\("([^"]+)",\s*\(\)\s*=>\s*require\("([^"]+)"\)/g)) names.add(m[2]);
+  for (const m of s.matchAll(/__turbopack_external_require__\("([^"]+)"\)/g)) names.add(m[1]);
+}
+const bad = [...names].filter((n) => { try { rq.resolve(n); return false; } catch { return true; } });
+if (bad.length) { console.error("✗ 以下外部依赖无法从包内解析: " + bad.join(", ")); process.exit(1); }
+console.log("✓ 外部依赖解析校验通过（" + names.size + " 个）");
+'); then
+  echo "✗ 外部依赖完整性校验失败（详见上方）"
+  exit 1
+fi
+
+echo "✓ Windows 引擎 / boot.js / 数据库 / 校准数据 / 外部依赖 全部就位"
 du -sh "$STAGE"/* | sort -rh
 echo "── 总计 ──"
 du -sh "$STAGE"

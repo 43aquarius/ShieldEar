@@ -51,3 +51,35 @@ unshare -rn 无外网接口命名空间中：合成挑战(espeak)/实时鉴听/�
 - 断网实测（unshare 仅 lo）8/8 全绿；便携包 64.7MB / 1891 文件；SHA-256 `961b2e09…1c7`
 - 仓库卫生：剔除误入库的沙箱环境目录（skills/ 等 54.4MB）与 espeak.msi 404 错误桩，补 .gitignore
 - 历史修复：本地开发线与 v1.3.4 发布线（fde5b7d）因环境重置分叉，发布前 merge 合并恢复
+
+## Task 13 · v1.3.6 热修复：Windows 便携包启动失败（2026-11-05）
+
+**事故（用户实测反馈）**
+- v1.3.5 便携包在 Windows 启动后所有走库 API 500：`Cannot find module '@prisma/client-2c3a283f134fdcb6'`
+- 根因：Next.js 16 Turbopack 把 serverExternalPackages（@prisma/client）外部化为
+  `<包名>-<内容哈希>` 名：实体包在顶层 node_modules，`.next/node_modules/` 下仅一个
+  【目录软链】指回。构建机上软链可解析（离线回归全绿），但 make-portable-zip 的
+  os.walk 会静默丢弃目录软链 → Windows 解压后模块解析失败
+- 复盘：v1.3.5 的断网实测跑在 stage 目录而非解压后的 zip 上——「测的不是交付物」
+
+**修复（三重防线）**
+- build-portable.sh [2b/8]：组装期把全部软链解引用为实体拷贝（继承精简后体积）
+- build-portable.sh [8/8]：fail-fast 扫描 chunks 的全部外部依赖名逐一 require.resolve
+  实测解析（本次 18 个全过，缺任何一个直接终止构建）
+- make-portable-zip.py：交付树含软链即拒绝打包；test-offline-portable.sh 改为
+  「解压交付 zip → 补 Linux 引擎 → unshare -rn 断网回归」+ 哈希外部依赖实体目录断言
+
+**组件抢救与数据重建（沙箱重置后）**
+- /tmp/node.exe 与 espeak 组件丢失：以 zip Range 分段下载（parallel_fetch 12 线程 +
+  zip-range-plan/zip-extract-prefix 中央目录索引提取）从 v1.3.5 Release 资产原样取回
+  node.exe（v20.18.1 官方）与 espeak-ng 全套 443 文件，零版本漂移
+- prisma generate 需 `--no-network-family-autoselection`（Node 24 undici 在本沙箱的
+  happy-eyeballs 缺陷，fetch 全挂而 curl 正常）
+- 种子数据重播：4 案例（真人 LOW×2 / 合成 CRITICAL+HIGH）+ 证据 WAV SHA-256 锚定复核
+
+**验证与交付**
+- 解压后交付物断网实测 8/8 全绿（合成挑战/鉴听/文件检测/案例库/存证包/云端锁403/
+  自检5绿/证据核验）+ UI 冒烟（标题/静态资源/案例 API）
+- 便携包 69.8MB / 1917 文件 · SHA-256 `3d47b336fdd1756e18ffd02c1d21f3f48e9efe1f09771b1a6ca79659c2b08c1d`
+- 遗留：calibration/audio 49 个 WAV 有未提交改动（疑似上一会话重新生成，与本版
+  交付无关，未随本版提交）
