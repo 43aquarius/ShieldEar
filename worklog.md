@@ -83,3 +83,9 @@ unshare -rn 无外网接口命名空间中：合成挑战(espeak)/实时鉴听/�
 - 便携包 69.8MB / 1917 文件 · SHA-256 `3d47b336fdd1756e18ffd02c1d21f3f48e9efe1f09771b1a6ca79659c2b08c1d`
 - 遗留：calibration/audio 49 个 WAV 有未提交改动（疑似上一会话重新生成，与本版
   交付无关，未随本版提交）
+
+**发布**
+- v1.3.6 Release：https://github.com/43aquarius/ShieldEar/releases/tag/v1.3.6（资产 15s 传完）
+- v1.3.5 Release 说明已加修复指引横幅
+- 辅助：gh-connect-proxy.py（github.com 主站 DNS 路由损坏时经可用边缘 IP 的
+  CONNECT 代理推送）、patch-v135-release.py（旧版说明补横幅）
