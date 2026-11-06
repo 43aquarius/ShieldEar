@@ -9,7 +9,7 @@
 # ============================================================
 set -u
 
-ZIP=/home/z/my-project/download/ShieldEar-v1.3.6-portable.zip
+ZIP=/home/z/my-project/download/ShieldEar-v1.3.7-portable.zip
 STAGE=/tmp/zip-verify/ShieldEar
 NODE=$(which node)
 
