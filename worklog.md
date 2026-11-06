@@ -170,3 +170,30 @@ unshare -rn 无外网接口命名空间中：合成挑战(espeak)/实时鉴听/�
 **发布**
 - v1.3.7 Release：https://github.com/43aquaris/ShieldEar/releases/tag/v1.3.7
 - 新 PAT（2026-11-23 过期）发布后仍建议撤销：聊天明文已暴露
+
+## Task 16 · 答辩演示手册 v1.3.7 重制 + 沙箱第五次重置恢复（2026-11-06）
+
+**沙箱第五次重置恢复（dev 环境）**
+- db/custom.db 与 ~/.cache/prisma 引擎全失；prisma generate 的 Node fetch 在本沙箱
+  无限挂起（happy-eyeballs 缺陷），selfheal.sh 卡死导致 dev 起不来
+- **restore-prisma-engines.sh**：读 @prisma/fetch-engine 源码破译 URL 规则
+  （`binaries.prisma.sh/all_commits/{enginesVersion}/{target}/{napi名}.gz`，注意
+  channel 是下划线 all_commits），curl 下载 4 引擎 gunzip 就位到三处：
+  @prisma/engines（CLI）/ node_modules/prisma（generate 校验，debug 日志实测）/
+  .prisma/client（运行时）；原生引擎 require() 版本探针自验通过，generate/db push 离线全通
+
+**手册重制（Task 14 遗留的「待重截图后再生」）**
+- take-handbook-shots.sh 单命令流水线：setsid 起 dev → 播种 → agent-browser 截图 → 关服
+- 踩坑三连（已写进脚本头注释）：就绪探测 `|| echo 000` 与 curl -w 的 000 拼成 000000
+  假就绪；agent-browser close 无守护进程时挂死须 timeout 包裹；非交互 shell 后台任务
+  与脚本同进程组须 setsid 隔离再组杀
+- 4 张实拍截图（VLM 逐张验收）：首页 Hero / 判决剧场（espeak 桐桐话术确定性复现
+  HIGH 56.7%，同 v1.3.4 时代数值）/ 时频取证瀑布图 / 案例库 4 条种子案例
+- 滚动定位教训：querySelectorAll 文档序先命中外层容器 → 限 h3/叶子节点 + 印章居中后
+  固定 scrollBy；HIGH 档印章文本是「疑似合成」非「深伪检出」（四档文本须全枚举）
+- gen-demo-handbook.js 全面对齐 v1.3.7：检查清单加自检页与 70.0MB、速查卡 8/8 断网 +
+  0.23s + 跨引擎 81.3% + 证据核验行、应急预案去云端开关话术、附录重写为 v1.3.7 交付
+  摘要（VC++ app-local/诊断增强/启动韧性）、图注重排为 1-4 连号、判决话术改为
+  「琥珀色疑似合成章」（如实反映 espeak 演示档位）
+- 交付：声盾-答辩演示手册.docx（12 页，724KB）+ docs/handbook-shots/ 四图随库；
+  渲染 PDF 后 VLM 抽查 7 个关键页全部通过；README 徽章/下载链接/常见问题同步 v1.3.7

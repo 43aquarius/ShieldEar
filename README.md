@@ -4,7 +4,7 @@
 
 > 接到可疑来电，如何在转账之前知道对方的声音是不是 AI 合成的？声盾把这道反诈治理中最直接的问题，变成一次可以随身携带的浏览器操作：**边通话、边检测、边存证**。
 
-![version](https://img.shields.io/badge/version-v1.3.5--calibrated-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9)
+![version](https://img.shields.io/badge/version-v1.3.7-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9)
 
 ---
 
@@ -51,12 +51,12 @@
 
 ### 方式一：可执行程序包（免安装，推荐评审使用）
 
-从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.5-portable.zip`（约 65MB）并解压：
+从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.7-portable.zip`（约 70MB）并解压：
 
-- **Windows**：双击 `START-ShieldEar.bat`——包内含便携 Node.js 运行时与 espeak-ng 离线合成组件，无需任何预装环境；启动时自动完成启动自检（数据引擎/数据库/校准数据/合成组件），异常会在启动窗口给出中文提示并写入 `STARTUP-ERROR.txt`，不再出现含义不明的页面报错；
+- **Windows**：双击 `START-ShieldEar.bat`——包内含便携 Node.js 运行时、espeak-ng 离线合成组件与 VC++ 2015-2022 运行库三 DLL（app-local，v1.3.7 起），无需任何预装环境；启动时自动完成启动自检（数据引擎/数据库/校准数据/合成组件），异常会在启动窗口给出中文提示并写入 `STARTUP-ERROR.txt`，不再出现含义不明的页面报错；
 - 等待数秒浏览器自动打开 `http://127.0.0.1:3000`，包内已含 4 件演示案件与对应证据 WAV 存档，全部功能开箱即用；
 - **v1.3.5 起 Release 包为「纯离线发行版」**：云端合成通道已从发行包中整体移除（界面无开关、接口 403 锁死），现场合成仅用包内 espeak-ng，零联网依赖，断网开箱即用。源码开发版（`npm run dev`）仍保留四级合成链与云端通道开关用于对比实验；
-- **常见问题**：若启动自检提示 DLL/模块加载失败，多为系统缺少微软 VC++ 2015-2022 运行库 x64，安装后重启即可（boot.js 自检提示中附官方下载链接）。
+- **常见问题**：v1.3.7 起 VC++ 运行库已随包分发，Win10/11 解压即用免安装；若杀毒软件误删包内组件，启动自检会降级为警告并以预置样本兜底，详见 Release 页说明。
 
 ### 方式二：源码运行
 
@@ -123,6 +123,7 @@ python3 scripts/gen-test-figures.py   # 输出 download/assets/test_*.png
 | `声盾-作品简介.docx` | 两页速览：定位、功能、指标、创新点 |
 | `声盾-参赛作品声明.docx` | 版权、原创性、开源组件、技术公开与数据合规声明 |
 | `声盾-答辩演示.pptx` | 13 页答辩演示（含讲者备注）+ PDF 预览版 |
+| `声盾-答辩演示手册.docx` | 队内彩排资料：演示前检查清单、五幕演示剧本、关键数字速查卡、应急预案、评委八问（2026-11 实拍截图） |
 | `figures/` | 全部图表原图（架构图、流程图、混淆矩阵、实时性等） |
 
 ## 数据来源与合规
