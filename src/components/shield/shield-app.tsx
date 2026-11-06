@@ -14,7 +14,6 @@ import { ENGINE_VERSION } from "@/lib/engine/types";
 import { LivePanel } from "./live-panel";
 import { FilePanel } from "./file-panel";
 import { ChallengePanel } from "./challenge-panel";
-import { AbCompareCard } from "./ab-compare";
 import { ResultPanel } from "./result-panel";
 import { CasesView } from "./cases-view";
 import { TechView } from "./tech-view";
@@ -140,9 +139,8 @@ export function ShieldApp() {
                 <TabsContent value="file" className="mt-4">
                   <FilePanel />
                 </TabsContent>
-                <TabsContent value="challenge" className="mt-4 space-y-4">
+                <TabsContent value="challenge" className="mt-4">
                   <ChallengePanel />
-                  <AbCompareCard />
                 </TabsContent>
               </Tabs>
 

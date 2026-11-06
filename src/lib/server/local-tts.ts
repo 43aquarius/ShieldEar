@@ -15,7 +15,15 @@
  *   Tier 2 · Edge TTS：微软 Edge 朗读服务的公开神经语音（8 个中文音色），
  *            需联网；MP3 流式返回后经 ffmpeg 转 16kHz 单声道 WAV。
  *   Tier 3 · espeak-ng：本地共振峰合成器，完全离线、零网络依赖，
- *            发行包内置 Windows 版组件，永远可用，作为离线兜底。
+ *            发行包内置 Windows 版组件（v1.3.7 起含 VC++ 2015-2022
+ *            运行库三 DLL，app-local 随包分发，目标机无需预装），
+ *            作为离线兜底永远可用。
+ *
+ * v1.3.7（2026-11-06）：修复用户 Windows 机 espeak 探测全失败——
+ *   espeak-ng.exe / libespeak_ng.dll 为 MSVC 构建，依赖 msvcp140 /
+ *   vcruntime140 / vcruntime140_1；未装 VC++ 运行库的机器上进程以
+ *   0xC0000135 拒绝启动，旧报错「包内组件缺失」误导排障方向。
+ *   修复：三 DLL 随包分发 + 探测失败如实携带逐候选真实原因。
  *
  * 全部子进程调用使用 execFile 参数数组（不经 shell），杜绝命令注入；
  * 合成产物统一封装为 SynthResult，路由层无需感知引擎差异。
@@ -506,11 +514,34 @@ interface EspeakCmd {
   env?: NodeJS.ProcessEnv;
 }
 let espeakCache: EspeakCmd | null | undefined;
+let espeakFailDetail: string | null = null;
+
+/** 把子进程失败翻译成人话（v1.3.7：旧报错「包内组件缺失」误导过排障方向） */
+function describeSpawnError(e: unknown): string {
+  const err = e as { code?: string; message?: string; killed?: boolean };
+  if (err?.killed) return "探测超时（10s）";
+  const m = err?.message ?? String(e);
+  if (err?.code === "ENOENT") return "可执行文件不存在（ENOENT）";
+  const exitMatch = m.match(/exit code (-?\d+)/i);
+  if (exitMatch) {
+    const code = Number(exitMatch[1]);
+    const hex = (code >>> 0).toString(16).toUpperCase();
+    if (code === -1073741515 || hex === "C0000135")
+      return `启动失败 0x${hex}（DLL 依赖缺失：系统无 VC++ 2015-2022 运行库且包内运行库 DLL 被杀毒软件误删）`;
+    if (code === -1073741511 || hex === "C0000139")
+      return `启动失败 0x${hex}（入口点未找到：DLL 版本过旧）`;
+    if (code === -1073741819 || hex === "C0000005")
+      return `启动崩溃 0x${hex}（访问违例）`;
+    return `退出码 ${code}（0x${hex}）`;
+  }
+  return m.slice(0, 140);
+}
 
 /** 探测 espeak-ng：包内绝对路径优先（显式注入数据目录），系统 PATH 兜底 */
 async function resolveEspeak(): Promise<EspeakCmd> {
   if (espeakCache !== undefined) {
-    if (espeakCache === null) throw new Error("未找到可用的 espeak-ng（包内组件缺失且系统 PATH 无 espeak-ng）");
+    if (espeakCache === null)
+      throw new Error(`未找到可用的 espeak-ng（${espeakFailDetail ?? "未知原因"}）`);
     return espeakCache;
   }
   const exe = IS_WIN ? "espeak-ng.exe" : "espeak-ng";
@@ -523,17 +554,21 @@ async function resolveEspeak(): Promise<EspeakCmd> {
   candidates.push({ cmd: exe });
   if (IS_WIN) candidates.push({ cmd: "espeak-ng" });
   candidates.push({ cmd: "espeak" });
+  const failures: string[] = [];
   for (const cand of candidates) {
     try {
       await execFileAsync(cand.cmd, ["--version"], { timeout: 10_000, env: cand.env });
       espeakCache = cand;
       return cand;
-    } catch {
-      // 该候选不可用：尝试下一个
+    } catch (e) {
+      failures.push(`${path.basename(cand.cmd)}: ${describeSpawnError(e)}`);
     }
   }
   espeakCache = null;
-  throw new Error("未找到可用的 espeak-ng（包内组件缺失且系统 PATH 无 espeak-ng）");
+  espeakFailDetail = failures.join("；");
+  throw new Error(
+    `未找到可用的 espeak-ng（逐个候选探测均失败 → ${espeakFailDetail.slice(0, 300)}）`
+  );
 }
 
 let ffmpegCache: string | null | undefined;

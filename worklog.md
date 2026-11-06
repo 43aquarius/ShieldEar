@@ -89,3 +89,50 @@ unshare -rn 无外网接口命名空间中：合成挑战(espeak)/实时鉴听/�
 - v1.3.5 Release 说明已加修复指引横幅
 - 辅助：gh-connect-proxy.py（github.com 主站 DNS 路由损坏时经可用边缘 IP 的
   CONNECT 代理推送）、patch-v135-release.py（旧版说明补横幅）
+
+## Task 14 · v1.3.7 热修复：espeak-ng VC++ 运行库缺失 + 移除 A/B 对比（2026-11-06）
+
+**事故（用户实测反馈）**
+- v1.3.6 便携包在用户 Windows 上：系统自检提示「[api/tts-challenge] Tier3(espeak) 失败:
+  未找到可用的 espeak-ng（包内组件缺失且系统 PATH 无 espeak-ng）」
+- **根因确诊（PE 导入表分析）**：包内 espeak-ng.exe(27KB) / libespeak_ng.dll(477KB) 为
+  MSVC 构建，导入 VCRUNTIME140 / VCRUNTIME140_1 / MSVCP140；用户机器未装 VC++ 2015-2022
+  x64 运行库 → 进程 0xC0000135 拒绝启动 → 逐候选探测全败。旧报错文案「包内组件缺失」
+  严重误导（文件其实都在，是系统运行库缺失）。Prisma Windows 引擎为 Rust 静态链接构建
+  （仅依赖系统 DLL），故数据引擎在同一台机器上正常——两个组件行为差异由此解释。
+- 诊断方法：zip Range 分段下载 v1.3.6 Release 资产的中央目录（fetch-zip-members/
+  list-zip-entries 改 curl 版）→ 提取 exe/dll → 纯 Python 解析 PE 导入表
+
+**修复**
+- **VC++ 三 DLL app-local 随包分发**：微软官方 VCLibs.x64 appx（aka.ms 直链，本质 zip）
+  提取 msvcp140(563KB) / vcruntime140(109KB) / vcruntime140_1(39KB)，存档
+  scripts/package-files/vcredist/（保构建可复现），打包进 espeak-ng/ 目录；
+  **导出表全量核对**：两个 espeak 二进制导入的每个函数均在随包 DLL 导出表中命中
+  （系统 DLL + UCRT 由 Win10+ 内置覆盖）→ 任何 Win10/11 解压即用，免装运行库
+- **诊断增强**：resolveEspeak 探测失败如实携带逐候选原因；退出码翻译人话
+  （0xC0000135=DLL 缺失/杀毒误删、0xC0000139=入口点、0xC0000005=违例），缓存复用
+- **启动韧性**：boot.js 的 espeak 组件检查从致命退出降级为警告继续（有 Tier4 预置
+  样本兜底，杀毒误删单一组件不再导致整包不可用）；VC DLL 一并纳入缺失检查清单
+- **移除「真伪 A/B 对比试听」**（用户要求）：删 ab-compare.tsx + shield-app.tsx 引用；
+  样本 WAV 保留（文件检测预置与种子案例共用）；gen-demo-handbook.js 删第 4 幕并重排
+  五幕、速查卡/应急预案/附录同步去 A/B 化（截图随沙箱重置丢失，手册文档待重截图后再生）
+
+**沙箱重置恢复（第三次）**
+- /tmp 全失（node.exe / msi-out / package-build）：写 recover-build-assets.py ——
+  解析 zip 中央目录 → 444 目标成员（node.exe + espeak 全套）恰好连续 [3142, 39514406)
+  → 16 路 curl 并行分段下载 37.7MB（143s）→ 逐成员 CRC32 校验提取，零版本漂移
+- VC_redist.x64.exe 的 WiX Burn 容器手工解析未走通（cFolders=0 流式 CAB 头 + 无 7z/
+  msitools/root），改走 VCLibs appx 官方渠道（zip 直开），更简更稳
+- 种子数据重播（第二次）：seed-and-stop.sh 单命令内起 dev → 播 4 案例 → 关服务
+  （后台进程跨工具调用会被收割）；实测真人 LOW 25.4%/15.6% · 合成 CRITICAL 76.0%/HIGH 67.8%
+
+**验证与交付**
+- npm run build:offline → build-portable.sh（软链解引用 1 个 + 外部依赖 18 个全过 +
+  VC DLL 695KB 就位）→ make-portable-zip.py
+- 断网回归（解压后 zip + unshare 仅 lo）8/8 全绿：合成挑战(espeak live 0.23s)/鉴听/
+  文件检测/案例库/存证包/云端锁 403/自检 5 绿/证据核验；预渲染页面 A/B 残留 0
+- 便携包 70.1MB / 1921 文件 · SHA-256 b0193b68bec9090281eb36afa34f74f17ff1e0df8a15058035054bcb1382a4cd
+- Linux 断网测试走系统 espeak-ng（1.52），Windows espeak.exe+VC DLL 路径以 PE 导入/
+  导出表全量核对代替（沙箱无法运行 Windows 二进制）
+- 发布：push-v137.sh（PAT 到位后一键：推 main/tag → Release 幂等创建 → 资产重试上传
+  → v1.3.6 说明加横幅）；上一枚 PAT 已在聊天明文暴露，用户须撤销换新后执行

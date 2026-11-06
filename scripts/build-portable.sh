@@ -183,12 +183,29 @@ async function main() {
     problems.push("检测引擎校准数据缺失（server/calibration/features.json）— 检测功能将不可用");
   }
 
-  // 3e. espeak-ng 本地合成组件（Windows 发行包内建）
+  // 3e. espeak-ng 本地合成组件（Windows 发行包内建；缺失仅降级到 Tier4 预置样本回放，
+  //     不阻断启动 — v1.3.7：避免杀毒误删单一组件导致整包不可用）
+  const bootWarnings = [];
   if (process.platform === "win32") {
-    const espeakExe = path.join(__dirname, "..", "espeak-ng", "espeak-ng.exe");
-    if (!fs.existsSync(espeakExe)) {
-      problems.push("本地合成引擎缺失（espeak-ng/espeak-ng.exe）— 现场合成挑战将不可用");
+    const espeakDir = path.join(__dirname, "..", "espeak-ng");
+    const espeakFiles = [
+      "espeak-ng.exe",
+      "espeak-ng-data",
+      "msvcp140.dll",
+      "vcruntime140.dll",
+      "vcruntime140_1.dll",
+    ];
+    const missing = espeakFiles.filter((f) => !fs.existsSync(path.join(espeakDir, f)));
+    if (missing.length > 0) {
+      bootWarnings.push(
+        "本地合成组件不完整（espeak-ng/ 缺少: " + missing.join(", ") +
+          "）— 现场合成挑战将降级为预置样本回放；常见原因：解压不完整或杀毒软件误删，" +
+          "可将本文件夹加入杀毒白名单后重新解压"
+      );
     }
+  }
+  for (const w of bootWarnings) {
+    console.warn("  [ShieldEar] 警告: " + w);
   }
 
   if (problems.length > 0) startupFail(problems);
@@ -237,7 +254,7 @@ if [ "$SEED_COUNT" -lt 1 ] 2>/dev/null; then
 fi
 echo "✓ 案例库含 $SEED_COUNT 条种子案例"
 
-echo "── [6/8] espeak-ng Windows 组件 ──"
+echo "── [6/8] espeak-ng Windows 组件（含 VC++ 运行库三 DLL）──"
 mkdir -p "$STAGE/espeak-ng"
 cp /tmp/msi-out/espeak-ng.exe "$STAGE/espeak-ng/espeak-ng.exe"
 cp /tmp/msi-out/libespeak_ng.dll "$STAGE/espeak-ng/" 2>/dev/null || echo "（无 dll，exe 或为静态链接）"
@@ -257,6 +274,20 @@ else
 fi
 [ -f "$STAGE/espeak-ng/espeak-ng.exe" ] || { echo "✗ espeak-ng.exe 缺失"; exit 1; }
 [ -d "$STAGE/espeak-ng/espeak-ng-data" ] || { echo "✗ espeak-ng-data 缺失"; exit 1; }
+
+# v1.3.7 关键修复：espeak-ng.exe / libespeak_ng.dll 为 MSVC 构建，
+# 依赖 msvcp140 / vcruntime140 / vcruntime140_1（VC++ 2015-2022 运行库）。
+# 未装运行库的目标机上进程以 0xC0000135 拒绝启动（v1.3.6 用户机实锤）。
+# 修复：三 DLL 以 app-local 方式随包分发（微软官方 VCLibs 包提取，
+# 仓库 scripts/package-files/vcredist/ 存档），放在 exe 同目录即生效，
+# 已装运行库的机器不受影响。UCRT（api-ms-win-crt-*）Win10+ 系统内置，无需随包。
+for vc in msvcp140.dll vcruntime140.dll vcruntime140_1.dll; do
+  src="$PROJ/scripts/package-files/vcredist/$vc"
+  [ -f "$src" ] || { echo "✗ VC++ 运行库 DLL 缺失：$src（仓库不完整）"; exit 1; }
+  cp "$src" "$STAGE/espeak-ng/$vc"
+done
+VC_SIZE=$(du -cb "$STAGE/espeak-ng/"{msvcp140,vcruntime140,vcruntime140_1}.dll | tail -1 | cut -f1)
+echo "✓ VC++ 运行库三 DLL 就位（$((VC_SIZE/1024))KB，app-local）"
 echo "✓ espeak-ng 组件就位（$(du -sh "$STAGE/espeak-ng" | cut -f1)）"
 
 echo "── [7/8] Node 运行时与启动脚本 ──"
@@ -297,7 +328,7 @@ console.log("✓ 外部依赖解析校验通过（" + names.size + " 个）");
   exit 1
 fi
 
-echo "✓ Windows 引擎 / boot.js / 数据库 / 校准数据 / 外部依赖 全部就位"
+echo "✓ Windows 引擎 / boot.js / 数据库 / 校准数据 / 外部依赖 / VC++ 运行库 全部就位"
 du -sh "$STAGE"/* | sort -rh
 echo "── 总计 ──"
 du -sh "$STAGE"
