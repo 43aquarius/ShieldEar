@@ -17,13 +17,23 @@ BRANCH_TIP="$(git rev-parse main)"
 ZIP="/home/z/my-project/download/ShieldEar-v1.3.7-portable.zip"
 SHA256="$(sha256sum "$ZIP" | cut -d' ' -f1)"
 
+push_retry() {
+  # $@ = git push 参数；最多 4 次（应对 TLS/路由抖动）
+  local n=0
+  until [ $n -ge 4 ]; do
+    if git -c http.version=HTTP/1.1 push "https://x-access-token:${TOKEN}@github.com/${REPO}.git" "$@"; then
+      return 0
+    fi
+    n=$((n + 1)); echo "[push] 第 ${n} 次失败，重试…"; sleep 5
+  done
+  return 1
+}
+
 echo "── [1/5] 推送 main（$BRANCH_TIP）──"
-git -c http.version=HTTP/1.1 push "https://x-access-token:${TOKEN}@github.com/${REPO}.git" \
-  "refs/heads/main:refs/heads/main"
+push_retry "refs/heads/main:refs/heads/main"
 
 echo "── [2/5] 推送 tag v1.3.7 ──"
-git -c http.version=HTTP/1.1 push "https://x-access-token:${TOKEN}@github.com/${REPO}.git" \
-  "refs/tags/v1.3.7"
+push_retry "refs/tags/v1.3.7"
 
 echo "── [3/5] 创建 Release（幂等）──"
 RELEASE_JSON=$(python3 - "$SHA256" <<'PY'
@@ -44,7 +54,7 @@ body = """## 声盾 ShieldEar v1.3.7 — 本地合成引擎热修复 + 界面精
 按演示反馈移除「真伪 A/B 对比试听」卡片，合成挑战页签聚焦现场合成主线（预置样本仍保留在文件检测中）。
 
 ### 交付
-- 纯离线便携包 70.1MB（1921 文件，含 VC++ 运行库 DLL 695KB）
+- 纯离线便携包 70.0MB（1920 文件，含 VC++ 运行库 DLL 695KB）
 - 断网 netns 实测 8/8 全绿（解压后交付物 · 仅 lo 接口 · 零联网零等待）
 - SHA-256: `%s`
 
@@ -61,26 +71,45 @@ print(json.dumps({
 }))
 PY
 )
-# 幂等：先查是否已存在
-EXIST_ID=$(curl -s -H "Authorization: Bearer ${TOKEN}" \
-  "https://api.github.com/repos/${REPO}/releases/tags/v1.3.7" \
-  | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id') or '')")
+# 幂等：先查是否已存在（抖动鲁棒：404 需连续 5 次才判定「不存在」；200 即得 id）
+EXIST_ID=""
+for probe in 1 2 3 4 5; do
+  GOT=$(curl -s -m 30 -H "Authorization: Bearer ${TOKEN}" \
+    "https://api.github.com/repos/${REPO}/releases/tags/v1.3.7" \
+    | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id') or ('NOTFOUND' if d.get('status')=='404' else 'FLAKE'))" 2>/dev/null || echo FLAKE)
+  if [ "$GOT" != "FLAKE" ] && [ "$GOT" != "" ]; then
+    [ "$GOT" != "NOTFOUND" ] && EXIST_ID="$GOT"
+    break
+  fi
+  echo "[release] 探测抖动（${probe}/5），重试…"; sleep 4
+done
 if [ -n "$EXIST_ID" ]; then
   echo "[release] 已存在 id=$EXIST_ID，复用"
   RELEASE_ID="$EXIST_ID"
 else
-  RELEASE_ID=$(curl -s -X POST \
+  RESP=$(curl -s -m 60 -X POST \
     -H "Authorization: Bearer ${TOKEN}" \
     -H "Accept: application/vnd.github+json" \
     "https://api.github.com/repos/${REPO}/releases" \
-    -d "$RELEASE_JSON" \
-    | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id') or d)")
-  echo "[release] 创建成功 id=$RELEASE_ID"
+    -d "$RELEASE_JSON")
+  RELEASE_ID=$(echo "$RESP" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id') or '')" 2>/dev/null || true)
+  if [ -z "$RELEASE_ID" ]; then
+    # 已存在（422 already_exists）或抖动 → 重探 id
+    echo "[release] 创建未直返 id（$(echo "$RESP" | head -c 120)），重探…"
+    for probe in 1 2 3 4 5; do
+      RELEASE_ID=$(curl -s -m 30 -H "Authorization: Bearer ${TOKEN}" \
+        "https://api.github.com/repos/${REPO}/releases/tags/v1.3.7" \
+        | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id') or '')" 2>/dev/null || true)
+      [ -n "$RELEASE_ID" ] && break
+      sleep 4
+    done
+  fi
+  [ -n "$RELEASE_ID" ] && echo "[release] 创建成功 id=$RELEASE_ID" || { echo "✗ Release 创建/探测均失败"; exit 1; }
 fi
 
-echo "── [4/5] 上传便携包资产（70.1MB，重试 3 次）──"
+echo "── [4/5] 上传便携包资产（70.0MB，重试 5 次）──"
 UPLOADED=0
-for attempt in 1 2 3; do
+for attempt in 1 2 3 4 5; do
   echo "[upload] 第 ${attempt} 次上传..."
   RESP=$(curl -s -X POST \
     -H "Authorization: Bearer ${TOKEN}" \
@@ -94,7 +123,7 @@ for attempt in 1 2 3; do
     break
   fi
   echo "[upload] ✗ $(echo "$RESP" | head -c 200)"
-  sleep 5
+  sleep 8
 done
 [ "$UPLOADED" = "1" ] || { echo "✗ 资产上传失败"; exit 1; }
 
@@ -104,14 +133,22 @@ import json, os, subprocess, sys
 TOKEN = sys.argv[1]
 REPO = "43aquarius/ShieldEar"
 
-def api(path, data=None, method=None):
-    cmd = ["curl", "-s", "-H", f"Authorization: Bearer {TOKEN}",
-           "-H", "Accept: application/vnd.github+json"]
-    if data is not None:
-        cmd += ["-X", method or "PATCH", "-d", json.dumps(data)]
-    cmd.append(f"https://api.github.com/repos/{REPO}/{path}")
-    out = subprocess.run(cmd, capture_output=True, text=True).stdout
-    return json.loads(out)
+def api(path, data=None, method=None, tries=6):
+    import time as _t
+    out = None
+    for i in range(tries):
+        cmd = ["curl", "-s", "--max-time", "60", "-H", f"Authorization: Bearer {TOKEN}",
+               "-H", "Accept: application/vnd.github+json"]
+        if data is not None:
+            cmd += ["-X", method or "PATCH", "-d", json.dumps(data)]
+        cmd.append(f"https://api.github.com/repos/{REPO}/{path}")
+        out = json.loads(subprocess.run(cmd, capture_output=True, text=True).stdout or "{}")
+        if isinstance(out, dict) and "id" in out:
+            return out
+        if data is None:  # 读探测：可能抖动假 404
+            _t.sleep(4); continue
+        _t.sleep(4)
+    return out or {}
 
 rel = api("releases/tags/v1.3.6")
 if "id" not in rel:
@@ -124,8 +161,8 @@ banner = ("> ⚠️ **本版在未安装微软 VC++ 2015-2022 运行库的 Windo
 if "v1.3.7" in old:
     print("[patch] 已含横幅，跳过")
 else:
-    api(f"releases/{rel['id']}", data={"body": banner + old})
-    print("[patch] ✓ v1.3.6 说明已加横幅")
+    patched = api(f"releases/{rel['id']}", data={"body": banner + old})
+    print("[patch] ✓ v1.3.6 说明已加横幅" if "id" in patched else f"[patch] ✗ 失败: {str(patched)[:150]}")
 PY
 
 echo

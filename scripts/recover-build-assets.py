@@ -34,10 +34,17 @@ hi = max(e["lho"] + 30 + len(n.encode()) + e["csize"] for n, e in targets.items(
 span = hi - lo
 print(f"目标 {len(targets)} 成员 · 区间 [{lo:,}, {hi:,}) · {span/1048576:.1f} MB")
 
-# ── 1. 解析签名直链（aka 302 → CDN）──
-direct = subprocess.run(["curl", "-s", "--max-time", "60", "-o", "/dev/null",
-                         "-w", "%{redirect_url}", URL_PAGE],
-                        capture_output=True, text=True).stdout.strip()
+# ── 1. 解析签名直链（aka 302 → CDN；带重试，主站路由抖动鲁棒）──
+import os
+direct = os.environ.get("ASSET_DIRECT_URL", "")
+if not direct:
+    for _ in range(10):
+        direct = subprocess.run(["curl", "-s", "--max-time", "60", "-o", "/dev/null",
+                                 "-w", "%{redirect_url}", URL_PAGE],
+                                capture_output=True, text=True).stdout.strip()
+        if direct.startswith("https://"):
+            break
+        time.sleep(3)
 assert direct.startswith("https://"), f"直链解析失败: {direct[:200]}"
 print(f"CDN 直链就绪（{direct[:80]}…）")
 

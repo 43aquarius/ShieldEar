@@ -136,3 +136,37 @@ unshare -rn 无外网接口命名空间中：合成挑战(espeak)/实时鉴听/�
   导出表全量核对代替（沙箱无法运行 Windows 二进制）
 - 发布：push-v137.sh（PAT 到位后一键：推 main/tag → Release 幂等创建 → 资产重试上传
   → v1.3.6 说明加横幅）；上一枚 PAT 已在聊天明文暴露，用户须撤销换新后执行
+
+## Task 15 · v1.3.7 发布实录（2026-11-06 · 第四次沙箱重置后重建）
+
+**第四次沙箱重置恢复**
+- /tmp 全失（node.exe / msi-out / .next / 已建 zip）且 download/ 回退旧快照：源码与
+  提交完好，交付物需整体重建
+- 资产恢复走 API 资产端点签名直链（fetch-tail.py + poll-redirect.sh 双通道轮询 302，
+  避开 github.com 主站抖动）→ recover-build-assets.py 16 路分段 37.7MB（195s）
+  → 444 成员 CRC32 全对（node.exe v20.18.1 + espeak 全套，零版本漂移）
+- prisma generate（~/.cache 引擎缓存命中，无需联网）→ seed 重播（4 案例
+  25.4%/15.6%/76.0%/67.8%，与首播逐位一致 —— 引擎确定性再证）→ build:offline
+  → build-portable（软链解引用 1 + 外部依赖 18 全过 + VC DLL 695KB）→ zip
+- 结构对照：新包 = v1.3.6 中央目录 + 3 个 VC DLL，目录级零差异（-1 文件为
+  Turbopack chunk 哈希正常波动）；A/B 残留 0；断网回归（解压后 zip + unshare
+  仅 lo）8/8 全绿
+- **最终交付：70.0MB / 1920 文件 · SHA-256 `16bd15f7916892e301255c2ea269bd7f2e98f1e245c30b56f46ff650a8bedf05`**
+  （替代沙箱重置丢失的 b0193b68… 构建，功能等价）
+
+**GitHub 通道抖动档案（2026-11-06 实况，供后世会话参考）**
+- 症状：api.github.com 对仓库级 GET（/repos /releases /tags /commits）间歇性
+  假 404（好/坏窗口以分钟级交替）；/user /rate_limit 恒正常；早先的成功响应
+  可能是中间层缓存，勿据单次 200/404 下结论。git 智能协议（Basic 认证）与
+  Fastly CDN（release-assets.githubusercontent.com）稳定
+- 判别法：缓存穿透参数 + 换认证头各试一次；git ls-remote 为 ground truth
+- 应对：双通道轮询拿 302（github.com 直链 / api 资产端点）→ CDN 直链分段下载；
+  push-v137.sh 全面加固（push 4 次重试、Release 探测「404×5 才判不存在」防
+  双建、422 already_exists 兜底重探、上传 5 次重试、横幅 PATCH 重试）
+- 新工具入库：fetch-tail.py（API 端点取签名直链 + 尾部下载）、poll-redirect.sh
+  （双通道 302 轮询）、probe-gh-edges.sh（边缘 IP 探测）；recover-build-assets.py
+  增 ASSET_DIRECT_URL 环境变量与直链重试
+
+**发布**
+- v1.3.7 Release：https://github.com/43aquaris/ShieldEar/releases/tag/v1.3.7
+- 新 PAT（2026-11-23 过期）发布后仍建议撤销：聊天明文已暴露
