@@ -1,0 +1,42 @@
+name: release-v138
+
+# 用途：REST API 对本仓库仓库级路由假 404 期间的备援发布通道。
+# 工作流运行在 GitHub 内网，gh 调用的 API 不经过沙箱侧的坏路径。
+# 触发：推送到 release-v138 分支，或手动 workflow_dispatch。
+on:
+  push:
+    branches: [release-v138]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Create or update v1.3.8 release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: "ShieldEar v1.3.8 — 本地合成引擎根因修正（DLL 文件名 · 双名随包 + 三层自愈 + 打包硬闸）"
+        run: |
+          set -eux
+          if gh release view v1.3.8 --repo "$GITHUB_REPOSITORY"; then
+            echo "release exists, updating notes"
+            gh release edit v1.3.8 \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --notes-file .github/release-v138-notes.md
+          else
+            gh release create v1.3.8 \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --notes-file .github/release-v138-notes.md \
+              --verify-tag \
+              --latest
+          fi
+          gh release view v1.3.8 --repo "$GITHUB_REPOSITORY" --json url,tagName,isDraft

@@ -257,3 +257,49 @@ unshare -rn 无外网接口命名空间中：合成挑战(espeak)/实时鉴听/�
 - push-v138.sh 就绪；等 GitHub 通道恢复 + 新 PAT 后推送发布（老提醒：撤第 2 枚 PAT）
 - 真机复验：windows-smoke.cmd 应 PASS；合成挑战在 Windows 上应 mode=live
   （espeak 共振峰合成判 HIGH/琥珀章 ~56%，非 CRITICAL —— 物理边界，讲清即可）
+
+## Task 18 · v1.3.8 发布实录（2026-11-07 · 第七次重置恢复 + GitHub 名字索引事故）
+
+**第七次沙箱重置恢复（05:50 回收）**
+- 丢失：/tmp 资产（node.exe/msi-out/package-build）、.next、已建 zip；download/ 回退
+  旧快照（手册/上下文摘要失）；db 空库。git 完好（85e2674 + 上轮已提交全部修复）
+- 重建全流程一次通过：prisma generate（binaries.prisma.sh 通道，三引擎齐）→
+  seed（25.4%/15.6%/76.0%/67.8% 与前逐位一致，引擎确定性四连证；注意
+  seed-and-stop.sh 收尾阶段可能卡住被超时收割，数据已入库无碍）→ node.exe
+  ← nodejs.org（SHA 对 SHASUMS256.txt 一致）→ MSI 12,765,862B ← parallel_fetch
+  12 线程（单线程仅 ~230KB/s）→ rebuild-espeak-from-msi.py 全自洽 → build:offline
+  → build-portable（PE 硬闸 8 文件全过）→ zip → 断网回归 8/8 全绿
+- **最终交付：70.2MB / 1921 文件（较上轮 -1 为 Turbopack chunk 哈希波动，同
+  v1.3.7 重建先例）· SHA-256 `36d579020090880f245f177044b557cd6cff146e9fb8426465f6c02ab5eb71ee`**
+
+**GitHub 名字索引事故（本日主线剧情，档案级教训）**
+- 症状：PAT 到位后，`/repos/43aquaris/ShieldEar` REST（GET+POST）、github.com 网页
+  全边缘假 404；git 智能协议分钟级抖动（main 曾推上 1 次，其后 25+ 次失败）；
+  其他仓库一切正常。空 body POST 探针 422 证明写通路在校验层之后才断
+- 判别法（沉淀）：GraphQL `repository(owner,name)` 恒正常 = 仓库记录健康；
+  **REST 数字 ID 路由 `/repositories/{databaseId}/...` 恒正常**（GraphQL
+  repository.databaseId 取 1435969436）→ 定位为**名字→ID 索引故障**，
+  与 Task 15/17 的「假 404 窗口」同源但更彻底
+- 突破路径：GraphQL `createRef` 建轻量 tag v1.3.8 → 85e2674（GraphQL 无
+  release mutation，268 个 mutation 零相关，内省证实）→ REST 数字 ID 路由
+  POST `/repositories/1435969436/releases` 建 Release（201，id=437417512）→
+  `uploads.github.com/repositories/{id}/releases/{rid}/assets` 传资产
+  （201，73,659,543B state=uploaded；数字 ID 上传接受、下载不接受）
+- main 于窗口期 force-with-lease 推上（6f3497b→bcc6303，本地 06232f1 与远端
+  6f3497b 为同树异 SHA 兄弟提交，树内容零差异仅 3 个脚本执行位）
+- Actions 备援通道（.github/workflows/release-v138.yml，push 触发 gh release
+  create）已备但因分支推不上而未启用——REST 数字 ID 路由先成功；工作流
+  与 notes 留库作档案
+- v1.3.7 说明页已 PATCH「根因更正」横幅（数字 ID 路由，保留原文全部内容）
+
+**验证与收尾**
+- Release v1.3.8：https://github.com/43aquaris/ShieldEar/releases/tag/v1.3.8
+  说明含 SHA-256；资产 state=uploaded、字节数与本地一致（API 确认）
+- 名字路由恢复前，网页与 releases/download 直链可能 404（资产本体在 CDN）
+- 演示手册 v1.3.8 重制（70.2MB/1921/新 SHA 对齐，13 页；VLM 抽查 p1/2/5/8/
+  11/12/13 通过，p11「溢出」为 VLM 误读两端对齐）
+- 技术/测试报告经全文检索**不含**「0xC0000135=VC++」表述（成稿早于事故），
+  误诊文案仅存在于 Release 说明（已横幅）/README/包内说明/代码（均已修）
+- download/ 交付：手册 docx + 上下文摘要（本文件姊妹篇，含通道档案）
+- 待办移交：撤本枚 PAT（第 3 枚聊天明文暴露）；真机复验 windows-smoke.cmd；
+  HIGH ~56% 答辩话术；GitHub 名字路由恢复后复验网页/直链可达
