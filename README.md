@@ -4,7 +4,7 @@
 
 > 接到可疑来电，如何在转账之前知道对方的声音是不是 AI 合成的？声盾把这道反诈治理中最直接的问题，变成一次可以随身携带的浏览器操作：**边通话、边检测、边存证**。
 
-![version](https://img.shields.io/badge/version-v1.3.7-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9)
+![version](https://img.shields.io/badge/version-v1.3.8-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9)
 
 ---
 
@@ -51,12 +51,13 @@
 
 ### 方式一：可执行程序包（免安装，推荐评审使用）
 
-从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.7-portable.zip`（约 70MB）并解压：
+从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.8-portable.zip`（约 70MB）并解压：
 
-- **Windows**：双击 `START-ShieldEar.bat`——包内含便携 Node.js 运行时、espeak-ng 离线合成组件与 VC++ 2015-2022 运行库三 DLL（app-local，v1.3.7 起），无需任何预装环境；启动时自动完成启动自检（数据引擎/数据库/校准数据/合成组件），异常会在启动窗口给出中文提示并写入 `STARTUP-ERROR.txt`，不再出现含义不明的页面报错；
+- **Windows**：双击 `START-ShieldEar.bat`——包内含便携 Node.js 运行时、espeak-ng 离线合成组件与 VC++ 2015-2022 运行库三 DLL（app-local），无需任何预装环境；启动时自动完成启动自检（数据引擎/数据库/校准数据/合成组件），异常会在启动窗口给出中文提示并写入 `STARTUP-ERROR.txt`，不再出现含义不明的页面报错；
 - 等待数秒浏览器自动打开 `http://127.0.0.1:3000`，包内已含 4 件演示案件与对应证据 WAV 存档，全部功能开箱即用；
 - **v1.3.5 起 Release 包为「纯离线发行版」**：云端合成通道已从发行包中整体移除（界面无开关、接口 403 锁死），现场合成仅用包内 espeak-ng，零联网依赖，断网开箱即用。源码开发版（`npm run dev`）仍保留四级合成链与云端通道开关用于对比实验；
-- **常见问题**：v1.3.7 起 VC++ 运行库已随包分发，Win10/11 解压即用免安装；若杀毒软件误删包内组件，启动自检会降级为警告并以预置样本兜底，详见 Release 页说明。
+- **本地合成组件验证**：双击包根目录 `windows-smoke.cmd`，10 秒完成 espeak 版本探测 + 中文合成 + 产物校验，全绿即健康（v1.3.8 新增，对 v1.3.7 旧包还能就地修复 DLL 文件名）；
+- **常见问题**：v1.3.7 曾把 0xC0000135 误诊为「缺 VC++ 运行库」；真因是包内 DLL 文件名不匹配（exe 导入表要求 `libespeak-ng.dll` 连字符，旧包只放下划线名），v1.3.8 已双文件名随包 + 三层自愈。若自检报红，请优先运行 `windows-smoke.cmd` 定位，**无需安装任何运行库**。
 
 ### 方式二：源码运行
 

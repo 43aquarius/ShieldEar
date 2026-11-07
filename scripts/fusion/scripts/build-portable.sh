@@ -78,7 +78,10 @@ mkdir -p "$STAGE/server/evidence"
 echo "── [6/8] espeak-ng Windows 组件 ──"
 mkdir -p "$STAGE/espeak-ng/espeak-ng-data"
 cp /tmp/msi-out/espeak_ng.exe "$STAGE/espeak-ng/espeak-ng.exe"
-cp /tmp/msi-out/libespeak_ng.dll "$STAGE/espeak-ng/" 2>/dev/null || echo "（无 dll，exe 或为静态链接）"
+# v1.3.8 根因修正回移：exe 导入表要求 libespeak-ng.dll（连字符），
+# 双文件名随包，防下划线名单发导致 0xC0000135（详见主仓库 build-portable.sh）
+cp /tmp/msi-out/libespeak_ng.dll "$STAGE/espeak-ng/libespeak_ng.dll" 2>/dev/null || true
+[ -f "$STAGE/espeak-ng/libespeak_ng.dll" ] && cp "$STAGE/espeak-ng/libespeak_ng.dll" "$STAGE/espeak-ng/libespeak-ng.dll"
 cd /tmp/msi-out
 for f in *; do
   case "$f" in

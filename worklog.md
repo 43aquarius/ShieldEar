@@ -197,3 +197,63 @@ unshare -rn 无外网接口命名空间中：合成挑战(espeak)/实时鉴听/�
   「琥珀色疑似合成章」（如实反映 espeak 演示档位）
 - 交付：声盾-答辩演示手册.docx（12 页，724KB）+ docs/handbook-shots/ 四图随库；
   渲染 PDF 后 VLM 抽查 7 个关键页全部通过；README 徽章/下载链接/常见问题同步 v1.3.7
+
+## Task 17 · v1.3.8 根因修正热修复（2026-11-07 · 用户真机实测定案）
+
+**根因确诊（用户 dsh 真机实测 + 仓库侧物证双确认）**
+- v1.3.7 误诊坐实：包内 espeak-ng.exe（官方 CI 构建）PE 导入表要求
+  **libespeak-ng.dll（连字符）**，而包内文件名为 libespeak_ng.dll（下划线）
+  → 任何 Windows 上 0xC0000135；复制一份连字符名 + ESPEAK_DATA_PATH 即
+  exit 0 且中文合成正常（434KB WAV）。VC++ 运行库三 DLL 仍是必要依赖
+  （dll 导入 msvcp140/vcruntime140/vcruntime140_1），但非本故障根因
+- 仓库侧漏检链复盘：verify-vc-dlls.py 第 80-83 行明知导入表要连字符名，
+  却注释「包内同目录提供（已确认存在）」直接放行未按名核实；构建机 Linux
+  走系统 espeak 验证，天然测不到 Windows PE —— 「导入表按名可解析」这一层
+  校验当时不存在，一字之差漏网
+
+**修复（四层防线，全部落地）**
+1. 打包：espeak-ng/ 双文件名随包（libespeak-ng.dll + libespeak_ng.dll 互为拷贝）
+2. 运行时三层自愈：boot.js 启动补齐别名 / local-tts.ts 探测前补齐 /
+   windows-smoke.cmd 随包（10 秒冒烟：版本探测→中文合成→产物校验，
+   对 v1.3.7 旧包可就地修复）
+3. 打包硬闸 verify-package-imports.py：包内每个 .exe/.dll/.node 的全部被导入
+   DLL（含延迟导入表）必须同目录/包根按名存在或属系统白名单，缺一即拒打包；
+   正负例双验：现包全过，移除连字符名立即拦截 —— 此闸在 v1.3.7 当时即可拦住事故
+4. 文案修正：0xC0000135 → 「包内 DLL 缺失或文件名不匹配」（local-tts.ts /
+   boot.js / README / 包内 README.txt / 演示手册全线更新），不再误导装 VC++
+
+**第六次 /tmp 重置恢复（含 GitHub 通道极端抖动应对）**
+- /tmp 全失（node.exe/msi-out/.next）；恢复期 github.com 对**本仓库**web/api/codeload
+  全边缘假 404（其他仓库 200，git 智能协议正常 —— 与 Task 15 档案一致但窗口更长）
+- **零漂移替代通道（本轮关键突破）**：
+  - node.exe ← nodejs.org 官方 dist v20.18.1 win-x64，SHA-256 与官方
+    SHASUMS256.txt 完全一致（06c1dec1…72cf5）
+  - espeak 全套 ← 上游 espeak-ng/espeak-ng 1.52.0 官方 MSI（其仓库 API 可达，
+    资产端点 302 → CDN 断点续传；12,765,862 B 与 API 报告分毫不差）
+- **rebuild-espeak-from-msi.py**（新工具，纯 Python 零依赖）：MSI(OLE)→最大流 CAB→
+  MSZIP 解压→按系统 1.52.0 数据树重建布局。踩坑二连：
+  ① 该 WiX 变体 CAB 头部 cFiles/cFolders 字段不可靠（报 44/0，实际 443 文件/1 文件夹），
+    以「表区恰填满 + start 累积校验 + 解压总量对齐」三重自洽破译（文件表 @44 起，
+    16 字节头 {cbFile, start 累积偏移, 保留 8}）
+  ② MSZIP 块间共享 32KB 滑窗，zlib.decompress 逐块独立解压报
+    「invalid distance too far back」→ decompressobj(-15, zdict=前块尾部 32KB) 续窗解决
+- 自验：exe 27,136 B / dll 477,184 B 与 v1.3.7 包内记录分毫不差；exe 导入表
+  实锤含连字符 libespeak-ng.dll（根因物证）；440 数据文件入树，103 个与系统
+  1.52.0 同名文件逐字节相同；数据区消费至流长精确对齐
+
+**构建与验证**
+- prisma 引擎恢复（restore-prisma-engines.sh，binaries.prisma.sh 通道稳定）→
+  generate → seed 重播（4 案例 syntheticRatio 25.4%/15.6%/76.0%/67.8% 与
+  Task 15 逐位一致，引擎确定性三连证）→ build:offline → build-portable
+  （软链解引用 1 + 外部依赖 18 + PE 硬闸 8 文件全过）→ zip
+- **v1.3.8 交付：70.3MB / 1922 文件（恰 +2：连字符 DLL + windows-smoke.cmd）**
+  SHA-256 `8a67d786396e7a56301d63e93cf54c18a703d3bc4dfe10619b3395f40b896faa`
+- 断网 netns 回归（解压交付 zip · 仅 lo）：8/8 全绿，合成挑战 mode=live 真合成
+  （HIGH 55.9%），自检 5/5，云端锁 403，证据核验 SHA-256 一致
+- 演示手册 v1.3.8 重制（17 处更新：检查清单加 windows-smoke.cmd 行、附录根因
+  修正、体积/SHA 更新），13 页文本验证零残留
+
+**待办**
+- push-v138.sh 就绪；等 GitHub 通道恢复 + 新 PAT 后推送发布（老提醒：撤第 2 枚 PAT）
+- 真机复验：windows-smoke.cmd 应 PASS；合成挑战在 Windows 上应 mode=live
+  （espeak 共振峰合成判 HIGH/琥珀章 ~56%，非 CRITICAL —— 物理边界，讲清即可）

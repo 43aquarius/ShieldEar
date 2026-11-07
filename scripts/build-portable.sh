@@ -11,6 +11,17 @@
 #   · 组装前后双重 fail-fast 校验（引擎文件必须进包）；
 #   · 数据库必须含种子案例（空库直接报错，防"案例库空白"）。
 #
+# v1.3.8 变更（根因修正热修复）：
+#   · espeak-ng DLL 双文件名随包（libespeak-ng.dll 连字符 +
+#     libespeak_ng.dll 下划线）——v1.3.7 及之前只放下划线名，
+#     而 exe 导入表要求连字符名 → 全平台 0xC0000135（真机实测坐实，
+#     v1.3.7 曾误诊为 VC++ 运行库缺失）；
+#   · boot.js / local-tts.ts / windows-smoke.cmd 三层运行时自愈；
+#   · 新增 PE 导入表硬闸（verify-package-imports.py）：包内任何
+#     二进制引用的每个 DLL 必须按名可解析，否则拒绝打包；
+#   · windows-smoke.cmd 随包分发（真机 10 秒冒烟，构建机为 Linux
+#     无法执行 PE，以「导入表硬闸 + 随包冒烟脚本」组合替代）。
+#
 # 注意：最终包只含 Windows Prisma 引擎；Linux 断网测试由
 #       test-offline-portable.sh 临时补 debian 引擎后自行清理
 # ============================================================
@@ -120,8 +131,11 @@ function startupFail(items) {
     items.map((s) => "  ✗ " + s).join("\n") +
     "\n\n  处理建议：\n" +
     "  · 重新解压完整发行包（可能解压不完整或文件被杀毒软件误删，请将本文件夹加入杀毒白名单）\n" +
-    "  · 若提示 DLL/模块加载失败：安装微软 VC++ 2015-2022 运行库 x64\n" +
-    "    （https://aka.ms/vs/17/release/vc_redist.x64.exe ）\n" +
+    "  · 若提示 0xC0000135 / DLL 缺失（espeak 合成组件）：包内 espeak-ng\\ 目录的\n" +
+    "    DLL 缺失或文件名不匹配 —— 请重新解压完整包，或运行包根目录\n" +
+    "    windows-smoke.cmd 自动定位/修复（安装 VC++ 运行库无效，v1.3.7 曾误诊）\n" +
+    "  · 若数据引擎（Prisma）加载失败且提示 DLL/模块：可安装微软 VC++ 2015-2022\n" +
+    "    运行库 x64（https://aka.ms/vs/17/release/vc_redist.x64.exe ）\n" +
     "  · 从 GitHub Releases 重新下载：https://github.com/43aquarius/ShieldEar\n" +
     "  · 本提示已写入 STARTUP-ERROR.txt（位于本文件夹根目录）\n" + line + "\n";
   console.error(msg);
@@ -185,12 +199,24 @@ async function main() {
 
   // 3e. espeak-ng 本地合成组件（Windows 发行包内建；缺失仅降级到 Tier4 预置样本回放，
   //     不阻断启动 — v1.3.7：避免杀毒误删单一组件导致整包不可用）
+  //     v1.3.8：先自愈 DLL 别名 —— espeak-ng.exe 导入表要求 libespeak-ng.dll
+  //     （连字符），历史包内为下划线名导致全平台 0xC0000135（真机实测根因，
+  //     v1.3.7 曾误诊为 VC++ 运行库缺失）。
   const bootWarnings = [];
   if (process.platform === "win32") {
     const espeakDir = path.join(__dirname, "..", "espeak-ng");
+    try {
+      const hyph = path.join(espeakDir, "libespeak-ng.dll");
+      const under = path.join(espeakDir, "libespeak_ng.dll");
+      if (!fs.existsSync(hyph) && fs.existsSync(under)) {
+        fs.copyFileSync(under, hyph);
+        console.warn("  [ShieldEar] 已自动补齐 espeak-ng\\libespeak-ng.dll（连字符别名 · v1.3.8 自愈）");
+      }
+    } catch {}
     const espeakFiles = [
       "espeak-ng.exe",
       "espeak-ng-data",
+      "libespeak-ng.dll",
       "msvcp140.dll",
       "vcruntime140.dll",
       "vcruntime140_1.dll",
@@ -200,7 +226,7 @@ async function main() {
       bootWarnings.push(
         "本地合成组件不完整（espeak-ng/ 缺少: " + missing.join(", ") +
           "）— 现场合成挑战将降级为预置样本回放；常见原因：解压不完整或杀毒软件误删，" +
-          "可将本文件夹加入杀毒白名单后重新解压"
+          "可将本文件夹加入杀毒白名单后重新解压；也可运行包根目录 windows-smoke.cmd 自动定位"
       );
     }
   }
@@ -254,10 +280,18 @@ if [ "$SEED_COUNT" -lt 1 ] 2>/dev/null; then
 fi
 echo "✓ 案例库含 $SEED_COUNT 条种子案例"
 
-echo "── [6/8] espeak-ng Windows 组件（含 VC++ 运行库三 DLL）──"
+echo "── [6/8] espeak-ng Windows 组件（含 VC++ 运行库三 DLL · v1.3.8 双文件名）──"
 mkdir -p "$STAGE/espeak-ng"
 cp /tmp/msi-out/espeak-ng.exe "$STAGE/espeak-ng/espeak-ng.exe"
-cp /tmp/msi-out/libespeak_ng.dll "$STAGE/espeak-ng/" 2>/dev/null || echo "（无 dll，exe 或为静态链接）"
+# v1.3.8 关键修复（根因修正）：espeak-ng.exe（官方 CI 构建）导入表要求
+# libespeak-ng.dll（连字符），而 MSI 解包产物为 libespeak_ng.dll（下划线）。
+# v1.3.7 及之前只放入下划线名 → 任何 Windows 上合成器 0xC0000135 拒绝启动
+# （曾被误诊为 VC++ 运行库缺失，真机实测坐实为文件名不匹配）。
+# 现两个文件名同时随包（互为拷贝）；另有三层运行时自愈兜底：
+#   boot.js 启动别名补齐 / local-tts.ts 探测前补齐 / windows-smoke.cmd 就地修复。
+[ -f /tmp/msi-out/libespeak_ng.dll ] || { echo "✗ libespeak_ng.dll 缺失（MSI 解包不完整）"; exit 1; }
+cp /tmp/msi-out/libespeak_ng.dll "$STAGE/espeak-ng/libespeak_ng.dll"
+cp /tmp/msi-out/libespeak_ng.dll "$STAGE/espeak-ng/libespeak-ng.dll"
 if [ -d /tmp/msi-out/espeak-ng-data ]; then
   # 预提取布局（MSI 已解包形态）：直接整目录复制
   cp -r /tmp/msi-out/espeak-ng-data "$STAGE/espeak-ng/espeak-ng-data"
@@ -288,12 +322,15 @@ for vc in msvcp140.dll vcruntime140.dll vcruntime140_1.dll; do
 done
 VC_SIZE=$(du -cb "$STAGE/espeak-ng/"{msvcp140,vcruntime140,vcruntime140_1}.dll | tail -1 | cut -f1)
 echo "✓ VC++ 运行库三 DLL 就位（$((VC_SIZE/1024))KB，app-local）"
-echo "✓ espeak-ng 组件就位（$(du -sh "$STAGE/espeak-ng" | cut -f1)）"
+echo "✓ espeak-ng 组件就位（$(du -sh "$STAGE/espeak-ng" | cut -f1)，libespeak-ng.dll 双文件名随包）"
 
 echo "── [7/8] Node 运行时与启动脚本 ──"
 cp /tmp/node.exe "$STAGE/node.exe"
 cp "$PROJ/scripts/package-files/START-ShieldEar.bat" "$STAGE/"
 cp "$PROJ/scripts/package-files/README.txt" "$STAGE/"
+# v1.3.8：Windows 冒烟脚本随包（真机 10 秒验证 espeak 组件；可就地修复 v1.3.7 旧包）
+cp "$PROJ/scripts/package-files/windows-smoke.cmd" "$STAGE/windows-smoke.cmd"
+[ -f "$STAGE/windows-smoke.cmd" ] || { echo "✗ windows-smoke.cmd 复制失败"; exit 1; }
 
 echo "── [8/8] 组装后校验与体积统计 ──"
 # fail-fast：Windows 引擎必须真的在包里（防构建机状态异常导致静默缺失）
@@ -325,6 +362,16 @@ if (bad.length) { console.error("✗ 以下外部依赖无法从包内解析: " 
 console.log("✓ 外部依赖解析校验通过（" + names.size + " 个）");
 '); then
   echo "✗ 外部依赖完整性校验失败（详见上方）"
+  exit 1
+fi
+
+# v1.3.8 硬闸：PE 导入表完整性 —— 包内每个 .exe/.dll/.node 引用的每个 DLL
+# 必须同目录按名存在（app-local）或属系统白名单，缺一即拒打包。
+# v1.3.7 事故（espeak-ng.exe 要连字符 libespeak-ng.dll、包内只有下划线名
+# → 全平台 0xC0000135）当时若有此闸即被拦截。构建机为 Linux 无法执行 PE，
+# 此闸是「打包期静态等效」的 Windows 冒烟。
+if ! python3 "$PROJ/scripts/verify-package-imports.py" "$STAGE"; then
+  echo "✗ PE 导入表完整性校验失败（详见上方）—— 拒绝带病打包"
   exit 1
 fi
 

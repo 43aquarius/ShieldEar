@@ -19,11 +19,20 @@
  *            运行库三 DLL，app-local 随包分发，目标机无需预装），
  *            作为离线兜底永远可用。
  *
+ * v1.3.8（2026-11-07）：修正 v1.3.7 误诊 —— 用户真机实测坐实：
+ *   espeak-ng.exe（官方 CI 构建）导入表要求 libespeak-ng.dll（连字符），
+ *   而包内文件名为 libespeak_ng.dll（下划线）→ 任何 Windows 上均 0xC0000135，
+ *   与是否安装 VC++ 运行库无关（VC++ 三 DLL 随包仍是必要依赖，非本故障根因）。
+ *   修复：包内两个文件名同时分发 + 探测前自动补齐别名（自愈）+
+ *   0xC0000135 文案改为「包内 DLL 缺失或文件名不匹配」。
+ *
  * v1.3.7（2026-11-06）：修复用户 Windows 机 espeak 探测全失败——
  *   espeak-ng.exe / libespeak_ng.dll 为 MSVC 构建，依赖 msvcp140 /
  *   vcruntime140 / vcruntime140_1；未装 VC++ 运行库的机器上进程以
  *   0xC0000135 拒绝启动，旧报错「包内组件缺失」误导排障方向。
  *   修复：三 DLL 随包分发 + 探测失败如实携带逐候选真实原因。
+ *   （事后复盘：当时 PE 核对只验了 VC++ 三 DLL 的导入/导出匹配，
+ *     未做「全部被导入 DLL 按名可解析」检查，故漏检本名不匹配。）
  *
  * 全部子进程调用使用 execFile 参数数组（不经 shell），杜绝命令注入；
  * 合成产物统一封装为 SynthResult，路由层无需感知引擎差异。
@@ -34,7 +43,7 @@ import { tmpdir } from "os";
 import path from "path";
 import { randomUUID, randomBytes } from "crypto";
 import { readFile, writeFile, unlink } from "fs/promises";
-import { existsSync } from "fs";
+import { existsSync, copyFileSync } from "fs";
 import tls from "tls";
 import https from "https";
 
@@ -516,7 +525,8 @@ interface EspeakCmd {
 let espeakCache: EspeakCmd | null | undefined;
 let espeakFailDetail: string | null = null;
 
-/** 把子进程失败翻译成人话（v1.3.7：旧报错「包内组件缺失」误导过排障方向） */
+/** 把子进程失败翻译成人话（v1.3.8：0xC0000135 实测真因是包内 DLL 文件名不匹配，
+ *  v1.3.7 版本曾误归因于 VC++ 运行库缺失 / 杀毒误删） */
 function describeSpawnError(e: unknown): string {
   const err = e as { code?: string; message?: string; killed?: boolean };
   if (err?.killed) return "探测超时（10s）";
@@ -527,7 +537,7 @@ function describeSpawnError(e: unknown): string {
     const code = Number(exitMatch[1]);
     const hex = (code >>> 0).toString(16).toUpperCase();
     if (code === -1073741515 || hex === "C0000135")
-      return `启动失败 0x${hex}（DLL 依赖缺失：系统无 VC++ 2015-2022 运行库且包内运行库 DLL 被杀毒软件误删）`;
+      return `启动失败 0x${hex}（DLL 依赖缺失：包内 DLL 缺失或文件名不匹配 —— espeak-ng.exe 导入表要求 libespeak-ng.dll（连字符），请重新下载完整发行包或运行包根目录 windows-smoke.cmd 定位）`;
     if (code === -1073741511 || hex === "C0000139")
       return `启动失败 0x${hex}（入口点未找到：DLL 版本过旧）`;
     if (code === -1073741819 || hex === "C0000005")
@@ -535,6 +545,19 @@ function describeSpawnError(e: unknown): string {
     return `退出码 ${code}（0x${hex}）`;
   }
   return m.slice(0, 140);
+}
+
+/** v1.3.8 自愈：espeak-ng.exe 导入表要求 libespeak-ng.dll（连字符），
+ * 历史包内为下划线名 → 任何 Windows 上 0xC0000135。探测前自动补齐别名；
+ * 目录只读等失败场景静默跳过，由后续探测给出真实原因。 */
+function ensureEspeakDllAlias(dir: string): void {
+  try {
+    const hyph = path.join(dir, "libespeak-ng.dll");
+    const under = path.join(dir, "libespeak_ng.dll");
+    if (existsSync(under) && !existsSync(hyph)) copyFileSync(under, hyph);
+  } catch {
+    // 自愈失败不阻断探测（探测会常真实原因）
+  }
 }
 
 /** 探测 espeak-ng：包内绝对路径优先（显式注入数据目录），系统 PATH 兜底 */
@@ -549,6 +572,7 @@ async function resolveEspeak(): Promise<EspeakCmd> {
   const bundled = bundledToolPath(path.join("..", "espeak-ng", exe), path.join("espeak-ng", exe));
   if (bundled) {
     // 包内布局：espeak-ng 可执行文件与 espeak-ng-data 目录同级
+    ensureEspeakDllAlias(path.dirname(bundled)); // v1.3.8 自愈
     candidates.push({ cmd: bundled, env: { ...process.env, ESPEAK_DATA_PATH: path.dirname(bundled) } });
   }
   candidates.push({ cmd: exe });

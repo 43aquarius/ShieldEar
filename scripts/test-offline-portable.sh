@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# test-offline-portable.sh — v1.3.6 便携包断网实测
+# test-offline-portable.sh — v1.3.8 便携包断网实测
 # 在无任何外网接口的网络命名空间中启动 standalone 服务端，
 # 验证纯离线模式全功能可用（铁证零联网）。
 # v1.3.6 关键改进：测试对象 = 解压后的交付 zip（「测什么，交付什么」）。
@@ -9,7 +9,7 @@
 # ============================================================
 set -u
 
-ZIP=/home/z/my-project/download/ShieldEar-v1.3.7-portable.zip
+ZIP=/home/z/my-project/download/ShieldEar-v1.3.8-portable.zip
 STAGE=/tmp/zip-verify/ShieldEar
 NODE=$(which node)
 
