@@ -22,6 +22,19 @@
 #   · windows-smoke.cmd 随包分发（真机 10 秒冒烟，构建机为 Linux
 #     无法执行 PE，以「导入表硬闸 + 随包冒烟脚本」组合替代）。
 #
+# v1.3.9 变更（Turbopack 平台折叠根因修复 + 存证强化）：
+#   · 根因：Turbopack 服务端打包把 process.platform === "win32"
+#     按构建机（Linux）折叠为 false 并 DCE 裁掉 win32 分支
+#     → 产物中 espeak-ng.exe 候选名退化为裸名 → 合成挑战
+#     恒走预置回放（v1.3.1 起全部 Windows 包中招，与
+#     v1.3.7 真机 4/5 红项同源）；
+#   · 修复：local-tts.ts 候选探测平台无关化（espeak-ng.exe /
+#     espeak-ng 按名探测）+ boot.js 全局注入 ESPEAK_DATA_PATH；
+#   · 新增打包硬闸 verify-bundled-platform.py：产物 chunk 必须
+#     含 "espeak-ng.exe" 字面量（被折叠即消失），缺失拒绝打包；
+#   · VC++ 三 DLL 增至包根与 .prisma/client/（Prisma 引擎 DLL
+#     依赖 msvcp140 等，未装运行库的机器上 app-local 就位）。
+#
 # 注意：最终包只含 Windows Prisma 引擎；Linux 断网测试由
 #       test-offline-portable.sh 临时补 debian 引擎后自行清理
 # ============================================================
@@ -33,6 +46,12 @@ rm -rf /tmp/package-build
 mkdir -p "$STAGE"
 
 echo "── [0/8] fail-fast：构建机前置校验 ──"
+# v1.3.9 硬闸：平台折叠检查（产物必须含 espeak-ng.exe 字面量，
+# 被 Turbopack 折叠掉即拒绝继续 —— 这是 v1.3.8 发布后真机审计坐实的根因）
+if ! python3 "$PROJ/scripts/verify-bundled-platform.py" "$PROJ/.next/standalone"; then
+  echo "✗ 平台折叠硬闸未通过 —— 拒绝组装（请先修复源码后重新构建）"
+  exit 1
+fi
 # 构建机必须已生成 Prisma 客户端（含 Windows 引擎），否则 standalone 里没有引擎
 if ! ls "$PROJ/node_modules/.prisma/client/"query_engine-windows.dll.node >/dev/null 2>&1; then
   echo "✗ 构建机缺少 Windows Prisma 引擎（node_modules/.prisma/client/query_engine-windows.dll.node）"
@@ -95,16 +114,19 @@ rm -rf "$STAGE/server/calibration/audio" \
 echo "── [4/8] 启动包装器 boot.js（自检 + 纯离线发行锁 + DATABASE_URL 绝对化） ──"
 cat > "$STAGE/server/boot.js" << 'BOOTEOF'
 /**
- * boot.js — 声盾便携包启动包装器（v1.3.5）
+ * boot.js — 声盾便携包启动包装器（v1.3.5；v1.3.9 增强）
  * 职责：
  *   1. 纯离线发行锁：SHIELD_RELEASE_OFFLINE=1（云端通道在本包中永久关闭，
  *      切换接口 403，前端编译期已徽章化，不存在任何可触发的联网路径）；
- *   2. 启动自检：实际加载 Prisma 引擎 + 数据库连通 + 校准数据 + espeak 组件，
+ *   2. ESPEAK_DATA_PATH 全局注入（v1.3.9）：包内 espeak-ng-data 存在且
+ *      环境变量未设时指向包内目录 —— 官方 CI 构建的 espeak-ng.exe 找不到
+ *      数据目录时会直接崩溃（0xC0000005），无论以何种方式被解析；
+ *   3. 启动自检：实际加载 Prisma 引擎 + 数据库连通 + 校准数据 + espeak 组件，
  *      任何一项失败都打印明确提示并写 STARTUP-ERROR.txt 后退出 ——
  *      杜绝"带病启动 → 页面 Internal Server Error"；
- *   3. 把相对形态的 DATABASE_URL 转为基于本目录的绝对路径；
- *   4. 固定 cwd 到本目录，保证 espeak-ng 等包内组件的相对定位；
- *   5. 加载 Next.js standalone 服务端。
+ *   4. 把相对形态的 DATABASE_URL 转为基于本目录的绝对路径；
+ *   5. 固定 cwd 到本目录，保证 espeak-ng 等包内组件的相对定位；
+ *   6. 加载 Next.js standalone 服务端。
  */
 const path = require("path");
 const fs = require("fs");
@@ -112,6 +134,19 @@ process.chdir(__dirname);
 
 // ── 1. 纯离线发行锁 ──
 process.env.SHIELD_RELEASE_OFFLINE = "1";
+
+// ── 1b. ESPEAK_DATA_PATH 全局注入（v1.3.9）──
+// 官方 CI 构建的 espeak-ng.exe 在无数据目录时直接 0xC0000005 崩溃；
+// 提前注入可覆盖「包内 espeak-ng 目录被加入 PATH 后经裸名解析」的边缘场景。
+// 仅当包内数据目录真实存在且用户未显式设置时注入，不影响系统安装的 espeak。
+(function () {
+  const dataDir = path.join(__dirname, "..", "espeak-ng", "espeak-ng-data");
+  try {
+    if (!process.env.ESPEAK_DATA_PATH && fs.existsSync(dataDir)) {
+      process.env.ESPEAK_DATA_PATH = path.join(__dirname, "..", "espeak-ng");
+    }
+  } catch {}
+})();
 
 // ── 2. DATABASE_URL 相对→绝对（自检的 Prisma 探针需要正确路径） ──
 let url = process.env.DATABASE_URL || "file:./db/custom.db";
@@ -134,8 +169,11 @@ function startupFail(items) {
     "  · 若提示 0xC0000135 / DLL 缺失（espeak 合成组件）：包内 espeak-ng\\ 目录的\n" +
     "    DLL 缺失或文件名不匹配 —— 请重新解压完整包，或运行包根目录\n" +
     "    windows-smoke.cmd 自动定位/修复（安装 VC++ 运行库无效，v1.3.7 曾误诊）\n" +
-    "  · 若数据引擎（Prisma）加载失败且提示 DLL/模块：可安装微软 VC++ 2015-2022\n" +
-    "    运行库 x64（https://aka.ms/vs/17/release/vc_redist.x64.exe ）\n" +
+    "  · 若数据引擎（Prisma）加载失败：本包已随附全部所需 DLL（msvcp140 等，\n" +
+    "    v1.3.9 起包内三处就位）；如仍失败，多为解压不完整或杀毒误删 \u2014\u2014 \n" +
+    "    请重新解压完整包\n" +
+    "  · 数据库（server/db/custom.db）不会自动重建：若缺失或损坏，请从\n" +
+    "    发行包重新解压恢复，勿手动删除该文件\n" +
     "  · 从 GitHub Releases 重新下载：https://github.com/43aquarius/ShieldEar\n" +
     "  · 本提示已写入 STARTUP-ERROR.txt（位于本文件夹根目录）\n" + line + "\n";
   console.error(msg);
@@ -147,6 +185,19 @@ function startupFail(items) {
 
 async function main() {
   const problems = [];
+
+  // 3a-bis. VC++ 运行库 DLL 预置校验（v1.3.9）：Prisma 的 query_engine-windows.dll.node
+  // 依赖 msvcp140/vcruntime140；包根（node.exe 同目录，DLL 搜索首选路径）与
+  // .prisma/client/（LOAD_WITH_ALTERED_SEARCH_PATH 目录）都应有三 DLL。
+  for (const vcDir of [path.join(__dirname, ".."), path.join(__dirname, "node_modules", ".prisma", "client")]) {
+    for (const vc of ["msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll"]) {
+      try {
+        const src = path.join(__dirname, "..", "espeak-ng", vc);
+        const dst = path.join(vcDir, vc);
+        if (fs.existsSync(src) && !fs.existsSync(dst)) fs.copyFileSync(src, dst);
+      } catch {}
+    }
+  }
 
   // 3a. Prisma 查询引擎：文件存在性（平台对应的引擎文件）
   const prismaClientDir = path.join(__dirname, "node_modules", ".prisma", "client");
@@ -179,7 +230,7 @@ async function main() {
     } catch (e) {
       const msg = String(e && e.message ? e.message : e);
       const hint = /dll|DLL|module|动态链接|找不到指定的模块|was not found/i.test(msg)
-        ? "（疑似系统缺少微软 VC++ 2015-2022 运行库 x64：https://aka.ms/vs/17/release/vc_redist.x64.exe ）"
+        ? "（疑似包内 VC++ 运行库 DLL 缺失：请重新解压完整发行包；本包已随附所需 DLL，无需另装运行库）"
         : "";
       problems.push("数据引擎加载失败：" + msg.slice(0, 300) + hint);
     }
@@ -188,7 +239,10 @@ async function main() {
   // 3c. 数据库文件
   const dbFile = path.join(__dirname, "db", "custom.db");
   if (!fs.existsSync(dbFile) || fs.statSync(dbFile).size < 4096) {
-    problems.push("案例数据库缺失或损坏（server/db/custom.db）— 案例库与存证功能将不可用");
+    problems.push(
+      "案例数据库缺失或损坏（server/db/custom.db）— 本包不自动重建数据库：" +
+        "请从发行包重新解压恢复该文件（请勿手动删除 custom.db）"
+    );
   }
 
   // 3d. 引擎校准数据
@@ -258,9 +312,11 @@ rm -rf "$STAGE/server/evidence"
 mkdir -p "$STAGE/server/evidence"
 if [ -d "$PROJ/evidence" ]; then
   cp "$PROJ"/evidence/*.wav "$STAGE/server/evidence/" 2>/dev/null || true
+  cp "$PROJ"/evidence/*.bin "$STAGE/server/evidence/" 2>/dev/null || true
 fi
 EV_COUNT=$(ls "$STAGE/server/evidence"/*.wav 2>/dev/null | wc -l)
-echo "✓ 证据音频 $EV_COUNT 份（与种子案例一一对应）"
+SRC_COUNT=$(ls "$STAGE/server/evidence"/*.bin 2>/dev/null | wc -l)
+echo "✓ 证据音频 $EV_COUNT 份 + 原始来源 $SRC_COUNT 份（与种子案例一一对应）"
 
 # v1.3.5：空库防线 — 发行包的案例库必须带种子演示数据
 SEED_COUNT=$(python3 - "$STAGE/server/db/custom.db" << 'PYEOF'
@@ -320,8 +376,16 @@ for vc in msvcp140.dll vcruntime140.dll vcruntime140_1.dll; do
   [ -f "$src" ] || { echo "✗ VC++ 运行库 DLL 缺失：$src（仓库不完整）"; exit 1; }
   cp "$src" "$STAGE/espeak-ng/$vc"
 done
+# v1.3.9：三 DLL 同步放到包根（node.exe 同目录，DLL 搜索首选路径）
+# 与 .prisma/client/（Prisma 引擎加载目录）—— 未装 VC++ 运行库的机器上
+# query_engine-windows.dll.node 也能正常加载（app-local 就位，boot.js 亦有运行时自愈兑底）。
+mkdir -p "$STAGE/server/node_modules/.prisma/client"
+for vc in msvcp140.dll vcruntime140.dll vcruntime140_1.dll; do
+  cp "$STAGE/espeak-ng/$vc" "$STAGE/$vc"
+  cp "$STAGE/espeak-ng/$vc" "$STAGE/server/node_modules/.prisma/client/$vc"
+done
 VC_SIZE=$(du -cb "$STAGE/espeak-ng/"{msvcp140,vcruntime140,vcruntime140_1}.dll | tail -1 | cut -f1)
-echo "✓ VC++ 运行库三 DLL 就位（$((VC_SIZE/1024))KB，app-local）"
+echo "✓ VC++ 运行库三 DLL 就位（$((VC_SIZE/1024))KB × espeak-ng/ 包根 .prisma/client 三处）"
 echo "✓ espeak-ng 组件就位（$(du -sh "$STAGE/espeak-ng" | cut -f1)，libespeak-ng.dll 双文件名随包）"
 
 echo "── [7/8] Node 运行时与启动脚本 ──"
@@ -370,6 +434,12 @@ fi
 # v1.3.7 事故（espeak-ng.exe 要连字符 libespeak-ng.dll、包内只有下划线名
 # → 全平台 0xC0000135）当时若有此闸即被拦截。构建机为 Linux 无法执行 PE，
 # 此闸是「打包期静态等效」的 Windows 冒烟。
+# v1.3.9 硬闸：对最终包再跑一次平台折叠检查（双保险）
+if ! python3 "$PROJ/scripts/verify-bundled-platform.py" "$STAGE/server"; then
+  echo "✗ 最终包平台折叠硬闸未通过 —— 拒绝打包"
+  exit 1
+fi
+
 if ! python3 "$PROJ/scripts/verify-package-imports.py" "$STAGE"; then
   echo "✗ PE 导入表完整性校验失败（详见上方）—— 拒绝带病打包"
   exit 1

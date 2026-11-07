@@ -161,49 +161,91 @@ function corrAt(
 }
 
 /**
- * 简易抗混叠整数抽取（[0.25,0.5,0.25] 平滑 + 抽取）
+ * 0 阶修正贝塞尔 I0（Kaiser 窗，级数展开）
  */
-function decimate(x: Float32Array, factor: number): Float32Array {
-  if (factor <= 1) return x;
-  const outLen = Math.floor(x.length / factor);
-  const out = new Float32Array(outLen);
-  for (let i = 0; i < outLen; i++) {
-    const c = i * factor;
-    const i0 = Math.floor(c) === c ? c : Math.floor(c);
-    const prev = i0 > 0 ? x[i0 - 1] : x[0];
-    const cur = x[i0];
-    const next = i0 + 1 < x.length ? x[i0 + 1] : cur;
-    // 三点平滑滤波
-    out[i] = 0.25 * prev + 0.5 * cur + 0.25 * next;
+function besselI0(x: number): number {
+  const h2 = (x / 2) * (x / 2);
+  let sum = 1;
+  let term = 1;
+  for (let n = 1; n < 32; n++) {
+    term *= h2 / (n * n);
+    sum += term;
+    if (term < 1e-12 * sum) break;
   }
-  return out;
+  return sum;
 }
 
 /**
- * 重采样到 16 kHz 单声道（分析标准采样率）
- * 策略：先整数抽取到 ≥16k 的最低倍率，再线性插值到 16k；任何重采样前先平滑抑制混叠
+ * 重采样到 16 kHz 单声道（分析标准采样率）· v1.3.9 重写
+ *
+ * v1.3.5～v1.3.8 实现（逐级对半抽取 + 三点平滑 + 末段线性插值）
+ * 抗混叠严重不足：同一段音频若以 44.1/48 kHz 容器提供
+ * （如从手机/微信导出），经浏览器解码 → 本函数降采样后
+ * 分数会跨档降级（真机审计实测：彤彤 CRITICAL 0.759 →
+ * HIGH 0.702）。本段末端线性插值（如 24k→16k、22.05k→16k）
+ * 完全无抗混叠，高频成分折叠进低频带污染谱包络。
+ *
+ * v1.3.9 改为 Kaiser(β≈8.6, ≈80dB 阻带) 窗 sinc 低通 + 多相查表：
+ *   · 截止 = min(源奈奎斯特, 8kHz) × 0.98（留 2% 过渡带；实测与 scipy 参考实现分差 ≤ 0.007）
+ *   · 单侧 32 抽头（64 taps）× 1024 相位预查表，逐相位增益归一
+ *   · 任意比率统一处理（升采样同样适用，通带平坦）
+ *   · 16kHz 源恒等返回（零开销；校准集与 v1.3.5-calibrated
+ *     引擎判决对 16k 输入完全不受影响）
  */
 export function resampleTo16k(input: Float32Array, srcRate: number): Float32Array {
   if (srcRate === 16000) return input;
-  let x = input;
-  let rate = srcRate;
-  // 逐级减半抽取（带平滑），直至 rate/2 < 16000 或不能再整除
-  while (rate % 2 === 0 && rate / 2 >= 16000) {
-    x = decimate(x, 2);
-    rate /= 2;
-  }
-  if (rate === 16000) return x;
-  // 线性插值到 16k
-  const ratio = rate / 16000;
-  const outLen = Math.max(1, Math.floor(x.length / ratio));
+  if (input.length === 0) return input;
+
+  const step = srcRate / 16000; // 每输出样本的输入域步长
+  const outLen = Math.max(1, Math.floor(input.length / step));
   const out = new Float32Array(outLen);
+
+  // 低通截止（归一化到输入采样率，周期/样本）
+  const fc = Math.min(0.5, 0.5 / step) * 0.98;
+  const TAPS = 32; // 单侧抽头数（总 64 taps）
+  const PHASES = 1024; // 相位查表分辨率（相位误差 < 1/1024 样本）
+  const BETA = 8.6; // Kaiser β ≈ 80dB 阻带
+
+  // 预生成相位核表：bank[p * K2 + kk]，p∈[0,PHASES)，kk∈[0,2TAPS)
+  // 抽头 k ∈ [-TAPS+1, TAPS]，对应输入索引 floor(pos)+k，偏移 t = k - frac
+  const K2 = 2 * TAPS;
+  const bank = new Float32Array(PHASES * K2);
+  const i0Beta = besselI0(BETA);
+  for (let p = 0; p < PHASES; p++) {
+    const frac = p / PHASES;
+    let rowSum = 0;
+    for (let k = -TAPS + 1; k <= TAPS; k++) {
+      const t = k - frac;
+      const x = Math.PI * 2 * fc * t;
+      const sinc = x === 0 ? 2 * fc : (2 * fc * Math.sin(x)) / x;
+      const r = t / TAPS;
+      const w = r <= -1 || r >= 1 ? 0 : besselI0(BETA * Math.sqrt(1 - r * r)) / i0Beta;
+      const v = sinc * w;
+      bank[p * K2 + (k + TAPS - 1)] = v;
+      rowSum += v;
+    }
+    // 逐相位 DC 增益归一（消除分数相位增益纹波）
+    if (rowSum > 1e-9) {
+      const g = 1 / rowSum;
+      const row = p * K2;
+      for (let kk = 0; kk < K2; kk++) bank[row + kk] *= g;
+    }
+  }
+
+  // 多相插值：out[i] = Σ input[j] · h(j - pos)
+  const n = input.length;
   for (let i = 0; i < outLen; i++) {
-    const pos = i * ratio;
-    const i0 = Math.floor(pos);
-    const frac = pos - i0;
-    const a = x[i0] ?? 0;
-    const b = x[i0 + 1] ?? a;
-    out[i] = a + (b - a) * frac;
+    const pos = i * step;
+    const base = Math.floor(pos);
+    const phase = Math.min(PHASES - 1, ((pos - base) * PHASES) | 0);
+    const row = phase * K2;
+    const jLo = base - TAPS + 1 < 0 ? 0 : base - TAPS + 1;
+    const jHi = base + TAPS > n - 1 ? n - 1 : base + TAPS;
+    let acc = 0;
+    for (let j = jLo; j <= jHi; j++) {
+      acc += input[j] * bank[row + (j - base + TAPS - 1)];
+    }
+    out[i] = acc;
   }
   return out;
 }

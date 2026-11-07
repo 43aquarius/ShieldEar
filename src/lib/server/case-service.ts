@@ -1,5 +1,11 @@
 /**
  * 声盾 — 服务端共用：案例编号生成与证据文件管理
+ * v1.3.9：修复并发存证竞态 —— 旧实现「count+1 先查后插 + 先写文件后插库」，
+ * 两个并发请求会拿到同一编号并先后写同一证据文件，后写者覆盖先写者；
+ * 插库时一个撞唯一约束报 500（且泄漏 Prisma 原始栈），但存活案例的
+ * 证据音频已是另一个案子的内容（真机审计 6/6 复现）。
+ * 新实现：当日最大序号 + 进程内单调计数 + 唯一约束撞号重试 + 先插库后写文件
+ * （案例行插入成功即独占编号，之后再写文件无竞态；写文件失败则补偿删除）。
  */
 import { createHash } from "crypto";
 import fs from "fs";
@@ -12,30 +18,61 @@ export function sha256Hex(data: Uint8Array | Buffer): string {
   return createHash("sha256").update(data).digest("hex");
 }
 
-/** 生成案件编号：SS-YYYYMMDD-XXXX（当日序号） */
+/** 进程内当日已发最大序号（单进程便携包内足以消除并发撞号） */
+const inProcessSeq = new Map<string, number>();
+
+/**
+ * 生成案件编号：SS-YYYYMMDD-XXXX（当日序号）
+ * v1.3.9：改为「当日库内最大序号 + 1」，并用进程内单调计数兼防同 tick 并发；
+ * 同时解决旧 count+1 方案「删除末尾案例后编号被重用」的问题（max+1 只在
+ * 删除当日最大案例且重启进程后才可能重用，已属可接受边界）。
+ * 注意：编号只表示「意向」，真正占用由唯一索引 + createCaseAtomic 的重试保证。
+ */
 export async function nextCaseNo(): Promise<string> {
   const now = new Date();
   const dateStr =
     now.getFullYear().toString() +
     String(now.getMonth() + 1).padStart(2, "0") +
     String(now.getDate()).padStart(2, "0");
-  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const countToday = await db.detectionCase.count({
-    where: { createdAt: { gte: dayStart } },
+  const prefix = `SS-${dateStr}-`;
+  // 当日库内最大编号（同前缀下字典序最大 = 数值最大，4 位零填充）
+  const last = await db.detectionCase.findFirst({
+    where: { caseNo: { startsWith: prefix } },
+    orderBy: { caseNo: "desc" },
+    select: { caseNo: true },
   });
-  let seq = countToday + 1;
-  // 极小概率并发冲突时递增重试
-  for (let i = 0; i < 50; i++) {
-    const caseNo = `SS-${dateStr}-${String(seq).padStart(4, "0")}`;
-    const exists = await db.detectionCase.findUnique({ where: { caseNo } });
-    if (!exists) return caseNo;
-    seq++;
+  const dbSeq = last ? Number(last.caseNo.slice(prefix.length)) || 0 : 0;
+  const seq = Math.max(dbSeq, inProcessSeq.get(dateStr) ?? 0) + 1;
+  inProcessSeq.set(dateStr, seq);
+  return `${prefix}${String(seq).padStart(4, "0")}`;
+}
+
+/** Prisma 唯一约束冲突（P2002）判定 —— 用于撞号重试 */
+export function isUniqueConstraintError(e: unknown): boolean {
+  const err = e as { code?: string; message?: string };
+  return err?.code === "P2002" || /Unique constraint failed/i.test(String(err?.message ?? ""));
+}
+
+/**
+ * API 错误清洗（v1.3.9）：Prisma / 内部堆栈不外泄给前端。
+ * 旧实现 500 响应体直接携带 `Invalid prisma.detectionCase.create() invocation…`
+ * 原文（含字段名与栈片段），既不友好也暴露内部结构。
+ */
+export function safeApiMessage(err: unknown, fallback: string): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (
+    /prisma|Invalid `|invocation|Unique constraint|WHERE parameters|stack|\n\s*at /i.test(msg)
+  ) {
+    return fallback;
   }
-  return `SS-${dateStr}-${Date.now() % 10000}`;
+  return msg.slice(0, 300);
 }
 
 export function evidencePath(caseNo: string, kind: "evidence" | "source" = "evidence"): string {
-  return path.join(EVIDENCE_DIR, `${caseNo}_${kind}.wav`);
+  // v1.3.9：原始来源文件（可能是 mp3/m4a/webm 等任意格式）落盘为 .bin，
+  // 由 /api/evidence 按案例记录的原始文件名下发；证据音频恒为 16kHz WAV。
+  const ext = kind === "evidence" ? "wav" : "bin";
+  return path.join(EVIDENCE_DIR, `${caseNo}_${kind}.${ext}`);
 }
 
 export function saveEvidence(caseNo: string, wav: Uint8Array, kind: "evidence" | "source" = "evidence"): void {

@@ -27,7 +27,7 @@ import { useShield } from "@/lib/store";
 import { formatDuration, formatTime } from "@/lib/client/audio-client";
 import { fetchJson } from "@/lib/client/safe-json";
 import type { AnalysisResult } from "@/lib/engine/types";
-import { RefreshCw, Trash2, Eye, Printer, Download, Inbox } from "lucide-react";
+import { RefreshCw, Trash2, Eye, Printer, Download, FileArchive, Inbox } from "lucide-react";
 
 interface CaseRow {
   caseNo: string;
@@ -277,6 +277,16 @@ export function CasesView() {
                 </div>
                 <IntegritySeal caseNo={detail.row.caseNo} />
                 <div className="flex justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() =>
+                      window.open(`/api/evidence-package/${detail.row.caseNo}`, "_blank")
+                    }
+                  >
+                    <FileArchive className="h-3.5 w-3.5" aria-hidden /> 下载存证包 (ZIP)
+                  </Button>
                   <Button size="sm" variant="outline" className="gap-1.5" onClick={openInWorkbench}>
                     <Printer className="h-3.5 w-3.5" aria-hidden /> 在工作台打开并导出核验报告
                   </Button>

@@ -1,13 +1,19 @@
 @echo off
 rem ============================================================
-rem  windows-smoke.cmd - ShieldEar v1.3.8 espeak-ng smoke test
+rem  windows-smoke.cmd - ShieldEar v1.3.9 espeak-ng smoke test
 rem  Verifies the bundled local synthesis engine in ~10 seconds
 rem  WITHOUT starting the full application.
+rem
+rem  Scope note (v1.3.9, per field audit feedback):
+rem    This script proves the BUNDLED ENGINE is healthy (DLLs,
+rem    data path, synthesis). It does NOT prove the app can call
+rem    it - for end-to-end status open the app and check the
+rem    "System Self-Check" page (item 4) or run a live challenge.
 rem
 rem  Background: v1.3.7 shipped libespeak_ng.dll (underscore)
 rem  while espeak-ng.exe imports libespeak-ng.dll (hyphen),
 rem  which made the engine fail with 0xC0000135 on EVERY
-rem  Windows machine. v1.3.8 ships both names. This script
+rem  Windows machine. v1.3.8+ ships both names. This script
 rem  also auto-repairs v1.3.7 packages in place (step 0).
 rem ============================================================
 setlocal EnableExtensions
@@ -63,7 +69,11 @@ echo.
 
 echo ============================================================
 echo   PASS  -  the local synthesis engine is HEALTHY.
-echo   The "live synthesis" challenge will run for real.
+echo.
+echo   Next: start the app (START-ShieldEar.bat) and verify
+echo   end-to-end on the "System Self-Check" page - all 5
+echo   items should be green, and the live synthesis
+echo   challenge should report "espeak-ng" as its engine.
 echo.
 echo   If the in-app self-check page still shows a red item,
 echo   the folder was extracted incompletely or antivirus

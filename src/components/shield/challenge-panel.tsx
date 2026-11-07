@@ -184,8 +184,8 @@ export function ChallengePanel() {
       const isFallback = (data.mode as string) === "fallback";
       if (isFallback) {
         toast({
-          title: "四级合成通道均不可用 — 已回放预置合成样本",
-          description: `${data.analysis.overall.verdict} · 同一 TTS 引擎预生成的诈骗话术样本，检测判决同样实时完成`,
+          title: "本地合成引擎不可用 — 已回放预置合成样本",
+          description: `${data.analysis.overall.verdict} · 预置的云端神经 TTS 合成样本（与现场输入文本无关），检测判决同样实时完成；存证已如实标注回放模式`,
         });
       } else if (risk === "HIGH" || risk === "CRITICAL") {
         toast({
@@ -327,8 +327,8 @@ export function ChallengePanel() {
                   <span className="rounded bg-amber-400/15 px-1.5 py-0.5 font-medium text-amber-500">
                     预置样本回放
                   </span>
-                  四级合成通道均不可用，以下为同一 TTS 引擎预先生成的「{synthInfo.voice}」音色诈骗话术样本 —
-                  下方检测结果即声盾对该音频的实时判决（存证中已如实标注回放模式）
+                  本地合成引擎暂不可用，以下为预置的「{synthInfo.voice}」音色合成样本（云端神经
+                  TTS 预生成，非现场文本）— 下方检测结果即声盾对该音频的实时判决（存证中已如实标注回放模式）
                 </>
               ) : (
                 <>
@@ -364,7 +364,7 @@ export function ChallengePanel() {
           并写入证据链（「这份音频确实由平台现场生成」与「检测对象即该音频」双向锚定）。
           {RELEASE_OFFLINE || cloudOn === false
             ? " 当前为纯离线模式：合成采用本地 espeak-ng（零联网零等待），实际使用的引擎在结果与存证中如实标注；演示闭环永不中断。"
-            : " 合成通道：云端 TTS → Edge 神经 TTS → 本地 espeak-ng → 预置样本回放（四级自动降级），实际使用的引擎在结果与存证中如实标注；演示闭环永不中断。"}
+            : " 合成通道：云端 TTS → Edge 神经 TTS → 本地 espeak-ng → 预置样本回放（自动降级），实际使用的引擎在结果与存证中如实标注；演示闭环永不中断。"}
         </p>
       </CardContent>
     </Card>

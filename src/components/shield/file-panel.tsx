@@ -23,6 +23,7 @@ import {
   decodeFileTo16k,
   sha256OfBlob,
   pcmToB64,
+  arrayBufferToB64,
   b64ToBlobUrl,
   formatDuration,
   MAX_UPLOAD_SEC,
@@ -91,6 +92,18 @@ export function FilePanel() {
       setProgress(30);
       const sourceHash = await sha256OfBlob(file);
 
+      // v1.3.9：≤12MiB 的原始文件随请求携带，服务端落盘 + 自算哈希，
+      // 使「原始来源文件」核验真正可执行；超大文件自动降级为仅 PCM 证据。
+      let sourceB64: string | undefined;
+      if (size <= 12 * 1024 * 1024) {
+        try {
+          const srcBuf = await file.arrayBuffer();
+          sourceB64 = arrayBufferToB64(srcBuf);
+        } catch {
+          sourceB64 = undefined; // 读不出来则跳过，不阻断主流程
+        }
+      }
+
       setStage("uploading");
       setProgress(50);
       const pcmB64 = pcmToB64(pcm);
@@ -101,6 +114,7 @@ export function FilePanel() {
         caseNo: string;
         createdAt: string;
         audioHash: string;
+        sourceHash?: string;
         analysis: AnalysisResult;
         error?: string;
       }>("/api/analyze", {
@@ -108,6 +122,7 @@ export function FilePanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pcmB64,
+          sourceB64,
           sourceType: "UPLOAD",
           sourceLabel: name,
           fileName: name,

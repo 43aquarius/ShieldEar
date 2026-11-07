@@ -23,7 +23,7 @@ import { isCloudEnabled, cloudChannelSummary } from "@/lib/server/cloud-config";
 import { decodeWav, mixToMono, encodeWav16, floatToInt16 } from "@/lib/audio/wav";
 import { resampleTo16k } from "@/lib/engine/dsp";
 import { analyzeAndPersist } from "@/lib/server/analysis-service";
-import { sha256Hex } from "@/lib/server/case-service";
+import { sha256Hex, safeApiMessage } from "@/lib/server/case-service";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -145,10 +145,13 @@ export async function POST(req: NextRequest) {
         };
         mode = "fallback";
       } catch {
+        // v1.3.9：实际尝试的通道数与云端开关一致（离线包只有两级），不再笼统说四级
+        const tierCount = cloudOn ? 4 : 2;
         return NextResponse.json(
           {
             error:
-              "语音合成通道暂时不可用（已自动尝试 4 级通道），请稍候片刻再试；亦可改用「文件检测」中的预置合成样本",
+              `语音合成通道暂时不可用（已自动尝试 ${tierCount} 级通道），请稍候片刻再试；` +
+              `可运行包根目录 windows-smoke.cmd 排查本地合成引擎，或改用「文件检测」中的预置合成样本`,
           },
           { status: 503 }
         );
@@ -172,13 +175,15 @@ export async function POST(req: NextRequest) {
       ? `合成挑战(预置样本回放) · ${voice}`
       : `现场合成挑战 · ${voice}（${synth.engineLabel}）`;
 
-    // 服务端分析并存证（sourceType=TTS）
+    // 服务端分析并存证（sourceType=TTS；v1.3.9：原始合成产物随证落盘为
+    // {caseNo}_source.bin，使 sourceHash 可被端到端核验）
     const result = await analyzeAndPersist(pcm16k, {
       sourceType: "TTS",
       sourceLabel,
       fileName: isFallback ? `tts_${voice}.wav` : `tts_${voice}.${synth.originalExt}`,
       fileSize: synth.originalBuffer.length,
       sourceHash,
+      sourceBuffer: new Uint8Array(synth.originalBuffer),
       notes: isFallback
         ? `本地合成通道亦不可用，回放预置合成样本；通道错误摘要：${tierErrors.join(" | ").slice(0, 300)}`
         : `该音频由「${synth.engineLabel}」现场合成用户输入文本，用于鉴伪能力演示` +
@@ -230,7 +235,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[api/tts-challenge] error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "合成挑战失败，请重试" },
+      { error: safeApiMessage(err, "合成挑战失败，请重试") },
       { status: 500 }
     );
   }

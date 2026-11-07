@@ -25,6 +25,7 @@ import {
   FileCheck2,
   Printer,
   Download,
+  FileArchive,
   ShieldAlert,
   Fingerprint,
   Activity,
@@ -192,6 +193,22 @@ export function ResultPanel() {
                 {formatTime(meta.createdAt)}
               </span>
               <div className="ml-auto flex gap-2">
+                {meta.caseNo && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => {
+                      toast({
+                        title: "正在生成存证包",
+                        description: "ZIP 含证据音频、原始来源、案例记录与 SHA-256 清单，即将开始下载",
+                      });
+                      window.open(`/api/evidence-package/${meta.caseNo}`, "_blank");
+                    }}
+                  >
+                    <FileArchive className="h-3.5 w-3.5" aria-hidden /> 存证包 (ZIP)
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="outline"

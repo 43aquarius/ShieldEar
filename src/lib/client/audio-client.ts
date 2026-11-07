@@ -9,20 +9,34 @@ export interface DecodedAudio {
   durationSec: number;
 }
 
-/** 解码任意浏览器支持的音频文件 → 16kHz 单声道 PCM */
+/** 解码任意浏览器支持的音频文件 → 16kHz 单声道 PCM
+ *  v1.3.9：优先创建 16kHz AudioContext —— decodeAudioData 会把任意源重采样到
+ *  上下文采样率（浏览器内置高质量重采样器），全程只重采样一次；
+ *  旧实现用默认采样率（设备相关，常见 44.1/48k）解码后再由引擎降回 16k，
+ *  两次重采样叠加将同一音频的判决拉低跨档（真机审计实测）。
+ *  16k 上下文构造失败或解码失败时回退默认采样率 + Kaiser sinc 重采样。 */
 export async function decodeFileTo16k(file: File | Blob): Promise<DecodedAudio> {
   const arrayBuffer = await file.arrayBuffer();
   const Ctx =
     window.AudioContext ??
     (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-  // 用临时上下文解码（挂起状态亦可解码）
-  const ctx = new Ctx();
+
+  const decodeWith = async (sampleRate?: number): Promise<AudioBuffer> => {
+    const ctx = sampleRate ? new Ctx({ sampleRate }) : new Ctx();
+    try {
+      return await ctx.decodeAudioData(arrayBuffer.slice(0));
+    } finally {
+      void ctx.close();
+    }
+  };
+
   let audioBuf: AudioBuffer;
   try {
-    audioBuf = await ctx.decodeAudioData(arrayBuffer.slice(0));
-  } finally {
-    void ctx.close();
+    audioBuf = await decodeWith(16000); // 主路径：单次重采样到 16k
+  } catch {
+    audioBuf = await decodeWith(); // 兼容回退：默认采样率 + 引擎 sinc 降采样
   }
+
   const chs = audioBuf.numberOfChannels;
   const len = audioBuf.length;
   // 混合为单声道
@@ -31,6 +45,7 @@ export async function decodeFileTo16k(file: File | Blob): Promise<DecodedAudio> 
     const data = audioBuf.getChannelData(c);
     for (let i = 0; i < len; i++) mono[i] += data[i] / chs;
   }
+  // 16k 上下文时为恒等返回；回退路径时为 Kaiser sinc 抗混叠重采样
   const pcm = resampleTo16k(mono, audioBuf.sampleRate);
   return { pcm, durationSec: pcm.length / 16000 };
 }
@@ -48,6 +63,17 @@ export async function sha256OfBlob(file: File | Blob): Promise<string> {
 export function pcmToB64(pcm: Float32Array): string {
   const i16 = floatToInt16(pcm);
   const u8 = new Uint8Array(i16.buffer, i16.byteOffset, i16.byteLength);
+  let s = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < u8.length; i += CHUNK) {
+    s += String.fromCharCode.apply(null, Array.from(u8.subarray(i, i + CHUNK)) as unknown as number[]);
+  }
+  return btoa(s);
+}
+
+/** ArrayBuffer → base64（v1.3.9：原始上传文件随行携带，服务端落盘核验） */
+export function arrayBufferToB64(buf: ArrayBuffer): string {
+  const u8 = new Uint8Array(buf);
   let s = "";
   const CHUNK = 0x8000;
   for (let i = 0; i < u8.length; i += CHUNK) {

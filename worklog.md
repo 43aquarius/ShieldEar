@@ -303,3 +303,82 @@ unshare -rn 无外网接口命名空间中：合成挑战(espeak)/实时鉴听/�
 - download/ 交付：手册 docx + 上下文摘要（本文件姊妹篇，含通道档案）
 - 待办移交：撤本枚 PAT（第 3 枚聊天明文暴露）；真机复验 windows-smoke.cmd；
   HIGH ~56% 答辩话术；GitHub 名字路由恢复后复验网页/直链可达
+
+---
+
+## 2026-11-07（二）· v1.3.9 热修 —— 应用内合成通道真正的根因 + 存证强化
+
+**触发**：用户真机审计 v1.3.8（Se138 副本，6 轮实测）——「v1.3.8 修好了 DLL 文件名，
+但应用里的合成挑战仍然 100% 回放预置样本」+ 7 项新发现（并发污染证据/重采样跨档/
+README Q4 失实/存证包不存在/请求体无上限/预置音频重复/来源文件从不落盘）。
+
+**根因（本次终于挖到床底）**：Next.js 16 Turbopack 服务端打包把
+`process.platform === "win32"` 按【构建机】（Linux）常量折叠为 false，
+随后 DCE 整段裁掉 win32 分支 —— 源码正确的 `IS_WIN ? "espeak-ng.exe" : "espeak-ng"`
+候选在产物里退化为裸名 `espeak-ng`；existsSync 不自动补 .exe → 包内候选
+自 v1.3.1 起从未命中过 → ENOENT → 合成挑战恒走 Tier4 回放（v1.3.7 真机
+4/5 红项、v1.3.6 用户现象全部同源）。v1.3.8 修的 DLL 文件名也是真实缺陷，
+但被本根因完全遮蔽，故界面无感。复现：本地构建产物 `__eebd306e` chunk 中
+`let e="espeak-ng"` 与用户解包所见逐字一致；`ffmpeg.exe` 分支同样被裁
+（离线包未暴露）。
+
+**修复（审计优先级逐项）**：
+- P0 espeak 通道：候选探测平台无关化（espeak-ng.exe / espeak-ng 按名都试，
+  existsSync 自然裁决，local-tts.ts 全面禁用平台常量分支）+ boot.js 全局
+  ESPEAK_DATA_PATH 注入（包内数据目录存在且未显式设置时）+ 0xC0000005
+  文案补数据目录提示
+- P0 打包硬闸 verify-bundled-platform.py：产物 chunk 必须含 "espeak-ng.exe"
+  字面量（被折叠即全局消失）+ 探测标记同 chunk 配对 + platform 比较残留检查；
+  挂 build-portable.sh [0/8] 与 [8/8] 双卡点；对照实验确认对旧折叠形态必拦
+- P0 并发存证竞态：nextCaseNo 改「当日 max+1 + 进程内单调」，analyzeAndPersist
+  改「先插库（P2002 撞号重试）后写盘（失败补偿删除）」；max-based 兼治
+  删号重用；safeApiMessage 清洗 500（Prisma 原始栈不再外泄）
+- P1 前端重采样：resampleTo16k 重写为 Kaiser(β8.6) 窗 sinc 多相（64 taps ×
+  1024 相位，截止 0.98×min(奈奎斯特)，逐相位增益归一）+ decodeFileTo16k
+  优先 16kHz AudioContext（浏览器原生单次重采样，sinc 路径仅兜底）；
+  回归：同音频 32/44.1/48k 容器 vs 原生基线 Δ≤0.003、无跨档（旧实现
+  CRITICAL 0.761→HIGH 0.731 跨档复现）；对 scipy 参考差 ≤0.007
+- P1 README Q4：「删库自动重建」改「请勿删除 + 从发行包恢复」；boot.js 同步
+  （含撤 VC++ 建议行，与 Q1b 对齐消除自相矛盾）；smoke.cmd 补范围说明
+  （只测引擎自身健康，端到端看自检页/合成挑战——审计「假绿灯」意见）
+- P2 来源落盘：/api/analyze 收 sourceB64（≤12MiB，超限 413 明示），
+  服务端自算 sourceHash 不再信任客户端声明；file-panel 随行上传原件；
+  tts-challenge 原始合成产物落盘 {caseNo}_source.bin；核验页「原始来源」
+  从恒 skipped 变真实可执行；/api/evidence?kind=source 按原始文件名+MIME 下发
+- P2 存证包：/api/evidence-package/[caseNo] 真 ZIP（零依赖手写 STORE + CRC32；
+  修了一个 `0o100644<<16` int32 溢出负值 bug）—— 证据 WAV + 原始来源 +
+  case-record.json + integrity-report.json + SHA256SUMS.txt + README 核验指引；
+  结果页与案例库详情双入口按钮；README「存证包可离线导出」由失实变真实
+- P3 预置去重：tts_tongtong/tts_luodo 不再复制 demo_scam 同文件（改用校准集
+  text-1 同音色样本），7 预置全唯一；「四级合成通道」文案按云端开关动态
+  （离线包如实显示两级 + 预置为云端神经预生成的说明）
+- 附带：请求体 Content-Length 早期闸 16MiB（413，实测早期响应不进解码）；
+  VC++ 三 DLL 增放包根与 .prisma/client（未装运行库机器 Prisma 引擎亦可加载）
+
+**种子库重建**（沙箱回收后 db/evidence 丢失，顺带升级）：5 案例 = 真人×2(LOW)
++ 神经×2(HIGH 0.712/0.670) + **本地引擎现场合成×1（mode=live 入库）**；
+全部走新管线（先插库后写盘 + sourceB64 随行 + scipy 等价重采样）。
+v1.3.8 出厂库那条「espeak ENOENT 回放」事故现场记录随之清除。
+
+**判决分数诚实化说明**：旧管线 24k→16k 末段为裸线性插值（混叠），
+混叠噪声把合成样本分数推高 ~0.05（彤彤 demo 0.759→干净 0.712）；
+修复后同一音频任意容器速率判决一致（这是审计要的性质），
+预置挑战音色 tongtong 换 text-1 样本后 CRITICAL 0.789。
+ENGINE_VERSION 仍为 v1.3.5-calibrated，16k 输入路径逐位不变。
+
+**回归证据**（全部对解压后交付 zip 运行，netns 仅 lo）：
+- v1.3.5 基线 8/8 全绿（合成挑战 mode=live engine=espeak 0.2s）
+- v1.3.9 专项 6/6：自检第4项「发行包内组件」/ live 模式 / 并发 6 路
+  （编号唯一 + srcHash 逐一比对零污染 + 无 Prisma 泄漏）/ 核验含原始来源 ok /
+  存证包 ZIP（6 成员 + 清单自洽 + 记录锚定）/ 413 早期闸
+- 重采样质量回归 PASS（3 样本 × 3 容器速率 + scipy 参考）
+- 平台折叠硬闸双向验证：新产物通过 / 旧折叠形态拦截
+- 打包全闸：PE 导入 14 文件 / 外部依赖 18 / 软链 0 / 折叠闸 ×2
+
+**测试替身坑（记录）**：Linux 上验证 Windows 探测路径需把系统 espeak 复制为
+espeak-ng.exe —— cp 覆盖已存在文件保留目标权限（zip 解压 664 无执行位），
+必须 chmod 755，否则 execFile EACCES 探测回落 PATH、live 验证失真。
+
+**遗留（不修，说明）**：电话窄带下合成样本仍判宽带（引擎校准已锁定，
+答辩定位为已知边界）；技术/测试报告 docx 成稿早于本事故不含误诊表述，
+但亦不含 v1.3.9 变更——下轮统一重制。

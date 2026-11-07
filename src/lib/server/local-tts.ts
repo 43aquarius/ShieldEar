@@ -19,6 +19,18 @@
  *            运行库三 DLL，app-local 随包分发，目标机无需预装），
  *            作为离线兜底永远可用。
  *
+ * v1.3.9（2026-11-07）：坐实「应用调不到 espeak」的真正根因 ——
+ *   Next.js 16 Turbopack 在服务端打包时把 `process.platform === "win32"`
+ *   按构建机平台常量折叠为 false（构建机为 Linux），导致本文件里所有
+ *   IS_WIN 分支被 DCE 整段裁剪：源码正确的 "espeak-ng.exe" 候选在产物中
+ *   变成裸名 "espeak-ng"，existsSync 不自动补 .exe → 包内候选永远落空，
+ *   回退 PATH 又无此命令 → ENOENT → 合成挑战恒走预置回放（自 v1.3.1 起
+ *   所有 Linux 构建的 Windows 包均受影响；v1.3.7 真机 4/5 红项同源）。
+ *   修复：候选探测改为平台无关 —— 直接按名探测 espeak-ng.exe 与
+ *   espeak-ng 两个文件名（existsSync 自然裁决），不再依赖任何平台常量；
+ *   另增打包硬闸 scripts/verify-bundled-platform.py（产物必须含
+ *   "espeak-ng.exe" 字面量，被折叠即拒打包）。
+ *
  * v1.3.8（2026-11-07）：修正 v1.3.7 误诊 —— 用户真机实测坐实：
  *   espeak-ng.exe（官方 CI 构建）导入表要求 libespeak-ng.dll（连字符），
  *   而包内文件名为 libespeak_ng.dll（下划线）→ 任何 Windows 上均 0xC0000135，
@@ -48,7 +60,10 @@ import tls from "tls";
 import https from "https";
 
 const execFileAsync = promisify(execFile);
-const IS_WIN = process.platform === "win32";
+// v1.3.9 注意：本文件禁止使用 process.platform / IS_WIN 常量分支。
+// Turbopack 服务端打包会按构建机平台把它常量折叠（Linux 构建 → win32 分支
+// 全部被 DCE），而本包总是「Linux 构建、Windows 运行」。一切平台差异
+// 改由 existsSync 按名探测自然裁决（espeak-ng.exe / espeak-ng 都试）。
 
 /* ══════════════════════ Edge TTS 常量与协议参数 ══════════════════════ */
 
@@ -541,7 +556,7 @@ function describeSpawnError(e: unknown): string {
     if (code === -1073741511 || hex === "C0000139")
       return `启动失败 0x${hex}（入口点未找到：DLL 版本过旧）`;
     if (code === -1073741819 || hex === "C0000005")
-      return `启动崩溃 0x${hex}（访问违例）`;
+      return `启动崩溃 0x${hex}（访问违例：常见于 espeak-ng 找不到 espeak-ng-data 数据目录 —— 若使用发行包内组件，须设置环境变量 ESPEAK_DATA_PATH 指向 espeak-ng 目录）`;
     return `退出码 ${code}（0x${hex}）`;
   }
   return m.slice(0, 140);
@@ -560,24 +575,33 @@ function ensureEspeakDllAlias(dir: string): void {
   }
 }
 
-/** 探测 espeak-ng：包内绝对路径优先（显式注入数据目录），系统 PATH 兜底 */
+/** 探测 espeak-ng：包内绝对路径优先（显式注入数据目录），系统 PATH 兜底。
+ *  v1.3.9 平台无关化：不再用 IS_WIN 选文件名 —— Turbopack 会把
+ *  process.platform === "win32" 按构建机（Linux）折叠为 false，把 .exe
+ *  候选整段裁剪。现改为 espeak-ng.exe / espeak-ng 两个名字都探测，
+ *  existsSync 在真实运行平台上自然裁决。 */
 async function resolveEspeak(): Promise<EspeakCmd> {
   if (espeakCache !== undefined) {
     if (espeakCache === null)
       throw new Error(`未找到可用的 espeak-ng（${espeakFailDetail ?? "未知原因"}）`);
     return espeakCache;
   }
-  const exe = IS_WIN ? "espeak-ng.exe" : "espeak-ng";
   const candidates: EspeakCmd[] = [];
-  const bundled = bundledToolPath(path.join("..", "espeak-ng", exe), path.join("espeak-ng", exe));
-  if (bundled) {
-    // 包内布局：espeak-ng 可执行文件与 espeak-ng-data 目录同级
-    ensureEspeakDllAlias(path.dirname(bundled)); // v1.3.8 自愈
-    candidates.push({ cmd: bundled, env: { ...process.env, ESPEAK_DATA_PATH: path.dirname(bundled) } });
+  // 包内布局（Windows 便携包）：<包根>/espeak-ng/ 与 cwd（server/）同级
+  for (const name of ["espeak-ng.exe", "espeak-ng"]) {
+    const bundled = bundledToolPath(path.join("..", "espeak-ng", name), path.join("espeak-ng", name));
+    if (bundled) {
+      // espeak-ng 可执行文件与 espeak-ng-data 目录同级；显式注入数据路径，
+      // 否则官方 CI 构建的 exe 在找不到数据目录时会直接崩溃（0xC0000005）
+      ensureEspeakDllAlias(path.dirname(bundled)); // v1.3.8 自愈
+      candidates.push({ cmd: bundled, env: { ...process.env, ESPEAK_DATA_PATH: path.dirname(bundled) } });
+      break; // 同目录命中一个名字即可
+    }
   }
-  candidates.push({ cmd: exe });
-  if (IS_WIN) candidates.push({ cmd: "espeak-ng" });
-  candidates.push({ cmd: "espeak" });
+  // 系统 PATH 回退：三个名字都试（Windows 的 libuv 会为裸名自动补 .exe 搜索，
+  // 但显式带上 .exe 名以兼容严格场景）。环境继承自 process.env（含 boot.js
+  // 注入的全局 ESPEAK_DATA_PATH，覆盖「包内目录被加入 PATH」的边缘场景）。
+  candidates.push({ cmd: "espeak-ng.exe" }, { cmd: "espeak-ng" }, { cmd: "espeak" });
   const failures: string[] = [];
   for (const cand of candidates) {
     try {
@@ -597,19 +621,21 @@ async function resolveEspeak(): Promise<EspeakCmd> {
 
 let ffmpegCache: string | null | undefined;
 
-/** 探测 ffmpeg：包内 tools/ 绝对路径优先，系统 PATH 兜底 */
+/** 探测 ffmpeg：包内 tools/ 绝对路径优先，系统 PATH 兜底（v1.3.9 平台无关化，同上） */
 async function resolveFfmpeg(): Promise<string> {
   if (ffmpegCache !== undefined) {
     if (ffmpegCache === null) throw new Error("未找到可用的 ffmpeg 转码工具");
     return ffmpegCache;
   }
-  const exe = IS_WIN ? "ffmpeg.exe" : "ffmpeg";
   const candidates: string[] = [];
-  if (IS_WIN) {
-    const bundled = bundledToolPath(path.join("..", "tools", "ffmpeg.exe"), path.join("tools", "ffmpeg.exe"));
-    if (bundled) candidates.push(bundled);
+  for (const name of ["ffmpeg.exe", "ffmpeg"]) {
+    const bundled = bundledToolPath(path.join("..", "tools", name), path.join("tools", name));
+    if (bundled) {
+      candidates.push(bundled);
+      break;
+    }
   }
-  candidates.push(exe);
+  candidates.push("ffmpeg.exe", "ffmpeg");
   for (const cand of candidates) {
     try {
       await execFileAsync(cand, ["-version"], { timeout: 10_000 });
