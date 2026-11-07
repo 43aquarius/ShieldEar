@@ -132,9 +132,13 @@ def main():
     code, ref = gh("GET", f"{API}/git/ref/heads/main")
     remote_tip = ref["object"]["sha"]
     parent0 = git("rev-parse", f"{COMMITS[0]}^")
-    if remote_tip != parent0:
-        raise RuntimeError(f"远端 main={remote_tip[:10]} ≠ 本地期望父 {parent0[:10]}（非快进，中止）")
-    print(f"✓ 远端 main={remote_tip[:10]}，快进基座确认")
+    # 按【树】比对：远端提交可能是本地的同树异形孤儿（API 复刻产物），SHA 不同但内容一致
+    code, rc = gh("GET", f"{API}/git/commits/{remote_tip}")
+    remote_tree = rc.get("tree", {}).get("sha", "?")
+    local_tree = git("rev-parse", f"{parent0}^{{tree}}")
+    if remote_tree != local_tree:
+        raise RuntimeError(f"远端 main 树 {remote_tree[:10]} ≠ 本地父树 {local_tree[:10]}（非快进，中止）")
+    print(f"✓ 远端 main={remote_tip[:10]}（树 {remote_tree[:10]} 与本地一致），快进基座确认")
 
     tip = remote_tip
     for c in COMMITS:
