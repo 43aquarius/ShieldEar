@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""seed-demo-cases.py — 为演示便携包灌入代表性案例库数据（v1.3.9）
+"""seed-demo-cases.py — 为演示便携包灌入代表性案例库数据（v1.3.10）
 5 条案例：2 真人（低危）+ 2 神经合成（高危）+ 1 本地引擎现场合成（边界演示），
 全部经 /api/analyze 与 /api/tts-challenge 的正式管线入库（服务端复核 +
 先插库后写盘 + 原始来源随证落盘），标签面向答辩演示。
@@ -9,8 +9,9 @@ v1.3.9 变更：
     替代旧线性插值）；
   · 上传案例附带 sourceB64（原始 WAV 字节随行），使核验页「原始来源
     文件」检查在出厂库上即为 ok；
-  · 新增 1 条「本地 espeak-ng 现场合成」案例 —— 共振峰合成的诚实
-    边界行为（MEDIUM 档）演示。
+  · 新增 1 条「本地 espeak-ng 现场合成」案例 —— v1.3.10 起音色
+    真实生效（cmn+f2），检出 HIGH；7 音色实测分数带 0.538–0.788
+    （MEDIUM–CRITICAL），真人样本 LOW 0.16–0.25，梯度完整。
 
 用法: python3 scripts/seed-demo-cases.py  (需 server 运行在 :3000)
 """
@@ -72,7 +73,7 @@ for path, label, fname in UPLOAD_JOBS:
             "sourceType": "UPLOAD",
             "sourceLabel": label,
             "fileName": fname,
-            "notes": "v1.3.9 演示案例 · 断网便携包内置（含原始来源随证）",
+            "notes": "v1.3.10 演示案例 · 断网便携包内置（含原始来源随证）",
         })
         o = d["analysis"]["overall"]
         print(f"✓ {label} · caseNo={d.get('caseNo')} · risk={o.get('risk')} · "

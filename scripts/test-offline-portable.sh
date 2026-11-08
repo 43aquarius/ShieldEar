@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# test-offline-portable.sh — v1.3.9 便携包断网实测
+# test-offline-portable.sh — v1.3.10 便携包断网实测
 # 在无任何外网接口的网络命名空间中启动 standalone 服务端，
 # 验证纯离线模式全功能可用（铁证零联网）。
 # v1.3.6 关键改进：测试对象 = 解压后的交付 zip（「测什么，交付什么」）。
@@ -10,11 +10,11 @@
 #   · espeak Linux 替身注入 —— 把包内 espeak-ng.exe / espeak-ng-data
 #     临时替换为系统等价物（仅测试期，交付树由 zip 重新解压而来），
 #     使「应用内合成挑战 live 模式」在 Linux 断网环境可端到端验证；
-#   · regress-v139.py 专项回归（live 模式 / 并发竞态 / 存证包 / 体积闸）。
+#   · regress-v1310.py 专项回归（七音色互异 / live 模式 / 并发竞态 / 存证包 / 体积闸）。
 # ============================================================
 set -u
 
-ZIP=/home/z/my-project/download/ShieldEar-v1.3.9-portable.zip
+ZIP=/home/z/my-project/download/ShieldEar-v1.3.10-portable.zip
 STAGE=/tmp/zip-verify/ShieldEar
 NODE=$(which node)
 
@@ -41,7 +41,7 @@ python3 /home/z/my-project/scripts/verify-bundled-platform.py "$STAGE/server" ||
 
 # 回归脚本副本（netns 内 BASE 一致，走 localhost）
 cp /home/z/my-project/scripts/regress-all-apis.py /tmp/regress-offline.py
-cp /home/z/my-project/scripts/regress-v139.py /tmp/regress-v139.py
+cp /home/z/my-project/scripts/regress-v1310.py /tmp/regress-v1310.py
 
 # ── 临时补 Linux 引擎到包内（仅测试期；包交付 Windows 引擎） ──
 LINUX_ENGINE=$(ls /home/z/my-project/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node 2>/dev/null || true)
@@ -102,8 +102,8 @@ echo '════════ 断网环境全功能回归（v1.3.5 基线）═
 python3 /tmp/regress-offline.py
 RC1=\$?
 echo
-echo '════════ v1.3.9 专项回归（live 模式/并发/存证包/体积闸）════════'
-python3 /tmp/regress-v139.py
+echo '════════ v1.3.10 专项回归（七音色互异/live/并发/存证包/体积闸）════════'
+python3 /tmp/regress-v1310.py
 RC2=\$?
 echo
 echo '════════ offline 模式标志验证 ════════'

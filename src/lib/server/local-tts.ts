@@ -19,6 +19,18 @@
  *            运行库三 DLL，app-local 随包分发，目标机无需预装），
  *            作为离线兜底永远可用。
  *
+ * v1.3.10（2026-11-08）：修复真机复验 v1.3.9 后报告的两个 live 合成缺陷：
+ *   1. 音色被丢弃 —— synthesizeEspeak 收了 voice 参数却从未使用，
+ *      `-v` 硬编码 "cmn"，7 个音色合成出同一个声音；现按
+ *      ESPEAK_VOICE_MAP 映射到「变体 + 音高 + 基准语速」三维参数，
+ *      沙箱实测 7 音色输出两两互异（基频覆盖 80–253Hz）。
+ *   2. 中文乱读（“完全不是正常能听的语音”）—— 文本经 argv 传入时，
+ *      Windows 上 Node 以 CreateProcessW(UTF-16) 传参，espeak-ng.exe 的
+ *      CRT 将 argv 转为 ANSI 代码页（中文系统 = GBK）字节，而程序按
+ *      UTF-8 解读 → 乱码 → 读出不可懂的嗡嗡声。修复：文本改经 stdin
+ *      以 UTF-8 字节流直传（-b 1），绕开一切代码页转换；Linux 沙箱
+ *      实测 stdin 与 argv 两通道输出逐字节一致（行为不变，仅修 Windows）。
+ *
  * v1.3.9（2026-11-07）：坐实「应用调不到 espeak」的真正根因 ——
  *   Next.js 16 Turbopack 在服务端打包时把 `process.platform === "win32"`
  *   按构建机平台常量折叠为 false（构建机为 Linux），导致本文件里所有
@@ -49,7 +61,7 @@
  * 全部子进程调用使用 execFile 参数数组（不经 shell），杜绝命令注入；
  * 合成产物统一封装为 SynthResult，路由层无需感知引擎差异。
  */
-import { execFile } from "child_process";
+import { execFile, spawn } from "child_process";
 import { promisify } from "util";
 import { tmpdir } from "os";
 import path from "path";
@@ -87,6 +99,22 @@ const EDGE_VOICE_MAP: Record<string, string> = {
   douji: "zh-CN-YunxiaNeural", // 豆几 · 自然流畅 → 云夏
   luodo: "zh-CN-liaoning-XiaobeiNeural", // 罗多 · 富有感染力 → 小贝（东北）
 };
+
+/** z-ai 音色 → espeak-ng 声部参数映射（v1.3.10）
+ * espeak-ng 靠 `-v <voice>` 区分音色：中文基本声部 cmn + 性别/年龄变体
+ * （f=女 m=男，数字越大音色越亮/越年轻），再以 `-p` 音高（0–99，50 默认）
+ * 与每音色基准语速拉开差距。参数经沙箱实测调校：7 音色 WAV 两两互异，
+ * 女声组基频 ≈178–253Hz，男声组 ≈80–110Hz。 */
+const ESPEAK_VOICE_MAP: Record<string, { variant: string; pitch: number; wpm: number }> = {
+  tongtong: { variant: "cmn+f2", pitch: 55, wpm: 160 }, // 桐桐 · 温暖亲切
+  chuichui: { variant: "cmn+f5", pitch: 78, wpm: 180 }, // 吹吹 · 活泼可爱
+  xiaochen: { variant: "cmn+m3", pitch: 38, wpm: 140 }, // 小陈 · 沉稳专业
+  jam: { variant: "cmn+m1", pitch: 58, wpm: 150 }, // Jam · 英音绅士
+  kazi: { variant: "cmn+m5", pitch: 68, wpm: 165 }, // 卡兹 · 清晰标准
+  douji: { variant: "cmn+f4", pitch: 60, wpm: 150 }, // 豆几 · 自然流畅
+  luodo: { variant: "cmn+m6", pitch: 30, wpm: 135 }, // 罗多 · 富有感染力
+};
+const ESPEAK_FALLBACK_VOICE = ESPEAK_VOICE_MAP.tongtong;
 
 export interface SynthResult {
   /** 单声道 WAV（Edge=16kHz；espeak=22.05kHz，由路由统一重采样） */
@@ -729,7 +757,61 @@ export async function synthesizeEdge(
 }
 
 /**
+ * execFile + stdin 字节注入（execFile 异步版不支持 input 选项，用 spawn 封装）。
+ * v1.3.10 新增：合成文本经 stdin 以 UTF-8 直传 espeak-ng —— 绕开 Windows
+ * 上 argv 必须经 ANSI 代码页（中文系统为 GBK）往返的转换损失（详见文件头
+ * v1.3.10 条目 2）。stdin 是原始字节流，无任何代码页参与，跨平台行为一致。
+ * 参数数组不经 shell，命令注入面与 execFile 相同。
+ */
+function execFileStdin(
+  cmd: string,
+  args: string[],
+  input: Buffer,
+  opts: { timeout: number; maxBuffer: number; env?: NodeJS.ProcessEnv }
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, {
+      env: opts.env,
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
+    });
+    const stderrChunks: Buffer[] = [];
+    let stderrLen = 0;
+    let settled = false;
+    const finish = (err?: Error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (err) reject(err);
+      else resolve();
+    };
+    const timer = setTimeout(() => {
+      child.kill();
+      finish(new Error(`命令超时（${opts.timeout}ms）：${cmd}`));
+    }, opts.timeout);
+    child.stdout.resume(); // 防止 stdout 管道缓冲填满阻塞子进程
+    child.stderr.on("data", (d: Buffer) => {
+      stderrLen += d.length;
+      if (stderrLen <= opts.maxBuffer) stderrChunks.push(d);
+    });
+    child.on("error", finish);
+    child.on("close", (code) => {
+      if (code === 0) finish();
+      else {
+        const msg = Buffer.concat(stderrChunks).toString("utf8").slice(0, 200);
+        finish(new Error(`退出码 ${code}：${msg || "(无 stderr)"}`));
+      }
+    });
+    child.stdin.on("error", () => {}); // 子进程提前退出时 EPIPE，由 close 统一裁决
+    child.stdin.end(input);
+  });
+}
+
+/**
  * espeak-ng 本地合成（完全离线兜底）：text → 22.05kHz 单声道 WAV
+ * v1.3.10：音色真实生效（ESPEAK_VOICE_MAP 变体 + 音高 + 基准语速，
+ * 此前 `-v` 硬编码 "cmn" 导致 7 音色同声）；文本经 stdin UTF-8 直传
+ * （-b 1），修复 Windows argv ANSI 代码页乱码。
  * 发行包内置 Windows 版 espeak-ng 与中文声库；开发环境用系统 espeak-ng。
  */
 export async function synthesizeEspeak(
@@ -737,14 +819,23 @@ export async function synthesizeEspeak(
   voice: string,
   speed = 1.0
 ): Promise<SynthResult> {
-  const wpm = Math.round(160 * Math.min(2, Math.max(0.5, speed)));
+  const spec = ESPEAK_VOICE_MAP[voice] ?? ESPEAK_FALLBACK_VOICE;
+  const speedClamped = Math.min(2, Math.max(0.5, speed));
+  const wpm = Math.min(400, Math.max(80, Math.round(spec.wpm * speedClamped)));
   const id = randomUUID();
   const wavPath = path.join(tmpdir(), `shield-espeak-${id}.wav`);
   try {
     const espeak = await resolveEspeak();
-    await execFileAsync(
+    await execFileStdin(
       espeak.cmd,
-      ["-v", "cmn", "-s", String(wpm), "-w", wavPath, removeIncompatibleChars(text)],
+      [
+        "-v", spec.variant, // v1.3.10：音色变体（不再硬编码 cmn）
+        "-b", "1", // 输入文本按 UTF-8 解读（配合 stdin 字节流）
+        "-p", String(spec.pitch),
+        "-s", String(wpm),
+        "-w", wavPath,
+      ],
+      Buffer.from(removeIncompatibleChars(text), "utf8"),
       { timeout: 30_000, maxBuffer: 16 * 1024 * 1024, env: espeak.env }
     );
     const wav = await readFile(wavPath);
@@ -757,7 +848,7 @@ export async function synthesizeEspeak(
       originalMime: "audio/wav",
       originalExt: "wav",
       engine: "espeak",
-      engineLabel: "espeak-ng 本地合成",
+      engineLabel: `espeak-ng 本地合成 · ${spec.variant}`,
     };
   } finally {
     void unlink(wavPath).catch(() => {});

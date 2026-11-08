@@ -392,3 +392,50 @@ API 名字路由对本仓库仍假 404（边缘探测 7+6 IP 复核）；本轮�
 PATCH main（快进校验）→ 附注标签 v1.3.9（3e89de35）。Release id=437725055，
 资产 77,877,484B state=uploaded，SHA-256 6ccdc4e2…（本地=上传=登记三方一致）。
 名字路由恢复前，网页/直链可能间歇 404（资产本体在 CDN，数字 ID 路由恒通）。
+
+## v1.3.10（2026-11-08）· 合成挑战音色丢弃 + Windows 中文乱读（双症同修）
+
+**用户真机复验 v1.3.9 报告**：live 模式已通，但产物不合格——
+① 挑战面板 7 个音色合成出**同一个声音**；② 合成语音「完全不是正常能听的语音」。
+另发现出厂库留有两条「同声重复」案例化石（连选两个音色入库即成声学重复）。
+
+**根因 1（音色丢弃，源码层实锤）**：`synthesizeEspeak(text, voice, speed)`
+收了 voice 参数却从未使用，espeak 调用参数硬编码 `-v cmn`（单一中文男声部）。
+**根因 2（中文乱读，PE 导入表实证）**：合成文本经 argv 传入，Windows 上
+Node 以 CreateProcessW(UTF-16) 传参 → espeak-ng.exe 的 CRT 启动序列
+（_initialize_narrow_environment / __p___argv，无 GetCommandLineW /
+CommandLineToArgvW）将 argv 按 ANSI 代码页（中文系统=GBK）转换 →
+程序按 UTF-8 解读 → 乱码 → 不可懂的嗡嗡声。工具：scripts/pe-imports-functions.py。
+两症同源（都在合成命令构造处），v1.3.9 只修了「找到 espeak」，没修「怎么调」。
+
+**修复（src/lib/server/local-tts.ts）**：
+- 新增 ESPEAK_VOICE_MAP：7 音色 → 变体（cmn+f2/f5/f4/m1/m3/m5/m6）
+  + 音高 -p（30–78）+ 基准语速（135–180wpm）三维参数，沙箱实测调校；
+- 新增 execFileStdin（spawn 封装，execFile 异步版无 input 选项）：
+  文本经 stdin 以 UTF-8 字节流直传 + `-b 1`，绕开一切代码页转换；
+  Linux 上 stdin 与 argv 输出逐字节一致（行为不变，仅修 Windows）；
+- engineLabel 带变体（「espeak-ng 本地合成 · cmn+f2」），三处如实标注。
+排除项：decodeWav 逐 chunk 解析 / resampleTo16k Kaiser sinc 对 22050Hz
+处理正确（v1.3.9 已有跨容器 Δ≤0.003 验证），采样率错位非噪声来源。
+
+**验证**：
+- E2E 七音色（dev + 断网包内双环境）：live/espeak、变体精确匹配 7/7、
+  sourceHash 互异 7/7、基频分组（女 176–250Hz > 男 80–110Hz）、时长 7.4–10.4s；
+- 产物 chunk 字面量硬核：音色表/["-v",spec.variant/"-b","1"/spawn 封装在包，
+  旧硬编码 ["-v","cmn"] 已消失（engineLabel 的 · 被压缩为 \xb7 属正常）；
+- 断网 netns 全套：基线 8/8 + v1.3.10 专项 6/6 全绿
+  （scripts/regress-v1310.py = 七音色互异 + v139 四项防回归）；
+- 分数带如实记录：7 音色 0.538–0.788（MEDIUM–CRITICAL，kazi=MEDIUM 为
+  诚实边界），真人 LOW 0.16–0.25；种子 5 条重灌（tongtong 现场合成 HIGH 0.676，
+  v1.3.9 时的「MEDIUM 边界」表述已随实测更新）。
+
+**构建资产恢复（沙箱回收后）**：node.exe ← npmmirror v20.18.1（SHA-256
+06c1dec1…72cf5 与官方 SHASUMS256.txt 一致）；espeak 套件 ← 上游 MSI
+parallel_fetch 16 线程（196s）→ rebuild-espeak-from-msi.py 零漂移重建
+（exe 27,136B / dll 477,184B，导入表连字符名复核）。
+注意：GitHub 名字路由仍假 404，但**上游 espeak-ng 仓库**名字路由正常；
+本项目 Release 资产经数字 ID API + curl 解析签名直链可达。
+
+**产物**：ShieldEar-v1.3.10-portable.zip · 78,095,606B（74.5MiB）
+SHA-256 b6ee082c793c4bc9c2818ce6fcb152ccfe6e3afc9c98aa7ce3448d364c298fcb
+（本地登记；上传后以 CDN 回读复核为准）。
