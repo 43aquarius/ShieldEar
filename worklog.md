@@ -439,3 +439,13 @@ parallel_fetch 16 线程（196s）→ rebuild-espeak-from-msi.py 零漂移重建
 **产物**：ShieldEar-v1.3.10-portable.zip · 78,095,606B（74.5MiB）
 SHA-256 b6ee082c793c4bc9c2818ce6fcb152ccfe6e3afc9c98aa7ce3448d364c298fcb
 （本地登记；上传后以 CDN 回读复核为准）。
+
+**v1.3.10 补记（包内原始数据直接实证）**：发现 test-offline-portable.sh 会把
+整套 espeak-ng-data 替换为系统等价物——断网回归从未验过「MSI 原始数据 ×
+新音色表」组合。补验：以 ESPEAK_DATA_PATH=/tmp/msi-out/espeak-ng-data 驱动
+系统 espeak-ng 合成 7 音色 → 7/7 成功互异，且与系统数据同参数输出**逐字节
+一致**（MSI 与 Debian 系统数据的 lang/sit/cmn 有 36B 打包微调差异，不影响
+合成结果；zip 内数据与 MSI 逐字节一致已核）。另核 zip 内 voices/!v/ 的
+13 个标准变体文件（f1-f5/m1-m8）全部在位。注意：espeak-ng 语言声部位于
+espeak-ng-data/lang/<语系>/（cmn 在 lang/sit/cmn），voices/ 仅存变体与
+mbrola——核验路径勿再搞错。
