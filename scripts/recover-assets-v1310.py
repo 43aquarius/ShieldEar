@@ -109,6 +109,9 @@ print(f"[4] 抽取 {n_files} 个构建资产文件 → /tmp/node.exe + /tmp/msi-
 
 n_data = sum(len(fs) for _, _, fs in os.walk("/tmp/msi-out/espeak-ng-data"))
 print(f"[5] espeak-ng-data 数据文件 {n_data} 个")
-assert os.path.exists("/tmp/msi-out/espeak-ng-data/voices/sit/cmn"), "包内缺中文声库 cmn!"
+# 勘误（3e69b40 同口径）：语言声部位于 lang/<语系>/<语言>（cmn 在 lang/sit/cmn），
+# voices/ 仅存变体（!v/）与 mbrola —— 勿再写成 voices/sit/cmn。
+assert os.path.exists("/tmp/msi-out/espeak-ng-data/lang/sit/cmn"), "包内缺中文声库 lang/sit/cmn!"
+assert os.path.exists("/tmp/msi-out/espeak-ng-data/voices/!v/f2"), "包内缺变体 voices/!v/f2!"
 print("[6] ✓ 中文声库 sit/cmn 在位")
 print(f"    zip 完整副本保留于 {zip_path}（供 v1.3.9 产物实证）")

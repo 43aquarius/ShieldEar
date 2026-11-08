@@ -4,7 +4,7 @@
 
 > 接到可疑来电，如何在转账之前知道对方的声音是不是 AI 合成的？声盾把这道反诈治理中最直接的问题，变成一次可以随身携带的浏览器操作：**边通话、边检测、边存证**。
 
-![version](https://img.shields.io/badge/version-v1.3.9-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9)
+![version](https://img.shields.io/badge/version-v1.3.10-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9)
 
 ---
 
@@ -18,7 +18,7 @@
 |------|------|
 | **实时鉴听** | AudioWorklet 16kHz 采集，2s 滑动窗口 / 1s 步进流式分析，逐窗置信度曲线与告警脉冲同屏呈现 |
 | **文件检测** | 拖拽即测，输出判决卡、可疑片段时间轴与可解释的八维声学特征剖面 |
-| **现场合成挑战** | 发行包内置 espeak-ng 本地真合成，任意输入文本当场合成、当场检出，答辩现场可演示「合成 → 检测 → 告警 → 双哈希存证」完整闭环（v1.3.9 修复应用内合成通道后为真实闭环） |
+| **现场合成挑战** | 发行包内置 espeak-ng 本地真合成，七种音色真实互异（女声组基频 176–250Hz / 男声组 80–110Hz），任意输入文本当场合成、当场检出，答辩现场可演示「合成 → 检测 → 告警 → 双哈希存证」完整闭环（v1.3.9 修复应用内合成通道，v1.3.10 修复音色丢弃与中文乱读后为真实闭环） |
 | **案例库与证据链** | 检测案件入库、WAV 证据下载、音频与检测结果双 SHA-256 哈希校验；原始上传文件随证落盘，核验页「原始来源」检查真实可执行（v1.3.9） |
 | **存证包离线导出** | 任一案例一键导出 ZIP（证据音频 + 原始来源 + 案例全量记录 + 核验报告 + SHA-256 清单），解包后 `sha256sum -c` 可独立校验（v1.3.9） |
 | **证据完整性核验** | 一键重读证据 WAV 并重算 SHA-256 与入库值比对，绿色印章证明证据自存证以来未被篡改 —「存证 → 验真」闭环的验真端（v1.3.5；v1.3.9 起原始来源文件随证落盘，核验真正可执行） |

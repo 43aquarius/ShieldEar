@@ -449,3 +449,30 @@ SHA-256 b6ee082c793c4bc9c2818ce6fcb152ccfe6e3afc9c98aa7ce3448d364c298fcb
 13 个标准变体文件（f1-f5/m1-m8）全部在位。注意：espeak-ng 语言声部位于
 espeak-ng-data/lang/<语系>/（cmn 在 lang/sit/cmn），voices/ 仅存变体与
 mbrola——核验路径勿再搞错。
+
+**v1.3.10 重建补记（沙箱回收后重打包 · 本次发版实录）**：会话回收导致
+download/ 交付物与 /tmp 构建资产（node.exe、msi-out）全部丢失，.next/db/
+亦被清。恢复链全记录：Prisma 四平台引擎 ← restore-prisma-engines.sh
+（curl 直下 binaries.prisma.sh，commit c2990dca… 与 @prisma/engines-version
+锚定一致，require 探针自验通过）；构建资产 ← recover-assets-v1310.py 自
+v1.3.9 Release 数字 ID 路由回读整包（77,877,484B · SHA-256 6ccdc4e2…与
+登记一致）——78MB 单线程仅 ~9KB/s，parallel_fetch.py 16 线程分段续传
+116s 补完；勘误 recover-assets 断言路径 voices/sit/cmn → lang/sit/cmn
+（3e69b40 同口径），并补 voices/!v/f2 变体在位断言。重建完整管线：
+db:push → build:offline → 5 条种子重灌（tongtong live · cmn+f2 ·
+HIGH 0.670，梯度 LOW 0.156–0.254 / HIGH 0.670–0.712 与首发一致）→
+build-portable（平台折叠/软链/PE 导入/外部依赖四闸全过）→ zip →
+断网 netns 复测：基线 8/8 + v1.3.10 专项 6/6 全绿（七音色 live、
+变体 7/7 精确匹配、哈希互异 7/7、基频分组 176–250Hz > 80–110Hz、
+并发 6/6、存证包 ZIP、413 体积闸；离线锁 releaseOffline=true）。
+
+**新产物（发版依据，覆盖前述首发登记）**：ShieldEar-v1.3.10-portable.zip
+· 78,020,700B（74.4MiB）· 1,942 文件 · SHA-256
+7473f1c16b70735e76b8041fc869c863fabb1f37ac12ca6edd78ce75fed3412e。
+与首发包（78,095,606B · 1,943 文件）差异已逐项核明：构建 ID 目录名
+更换（Turbopack 产物正常现象）、种子案例编号日期随重灌更替
+（SS-20261108-XXXX）、tsconfig.tsbuildinfo 构建缓存不再随包
+（1,943 → 1,942；该文件 .gitignore 本就排除、零运行时作用，属净化）。
+README 版本徽章 v1.3.9 → v1.3.10（ccd255f 只更了包内 README.txt，
+主徽章漏更，本次补上）。发版走 push-v1310.sh 动态枚举
+835f293..HEAD 全部 7 个提交。
