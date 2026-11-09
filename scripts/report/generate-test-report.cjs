@@ -24,15 +24,15 @@ const coverConfig = {
   subtitle: "面向AI语音诈骗的实时鉴伪反诈平台 · 全国大学生信息安全竞赛作品赛",
   englishLabel: "SHIELDEAR SYSTEM TEST REPORT",
   metaLines: [
-    "被测版本：ShieldEar v1.3.0-calibrated",
+    "被测版本：ShieldEar v1.3.12（引擎 v2.0.0-calibrated）",
     "参赛队伍：你们说的对",
     "参赛单位：大连理工大学",
     "团队成员：43aquarius、谭畅（共 2 人）",
     "开源仓库：github.com/43aquarius/ShieldEar",
-    "测试日期：2026 年 10 月",
+    "测试日期：2026 年 11 月",
   ],
   footerLeft: "ShieldEar · Voice Anti-Fraud Platform",
-  footerRight: "TEST-SUITE V1.1 · 2026.10",
+  footerRight: "TEST-SUITE V1.2 · 2026.11",
   palette: {
     bg: "0A1410",
     titleColor: "E8F5EE",

@@ -28,10 +28,10 @@ const coverConfig = {
     "参赛单位：大连理工大学",
     "团队成员：43aquarius、谭畅（共 2 人）",
     "开源仓库：github.com/43aquarius/ShieldEar",
-    "完成日期：2026 年 10 月",
+    "完成日期：2026 年 11 月",
   ],
   footerLeft: "ShieldEar · Voice Anti-Fraud Platform",
-  footerRight: "V1.3 · 2026.10",
+  footerRight: "V1.3.12 · 2026.11",
   palette: {
     bg: "0A1410",
     titleColor: "E8F5EE",
@@ -102,6 +102,7 @@ const body = [
   ...part3.chapter7(),
   ...part3.chapter8(),
   ...part3.chapter9(),
+  ...part3.referencesSection(),
   ...part3.appendix(),
 ];
 
