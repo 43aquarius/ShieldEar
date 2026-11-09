@@ -64,6 +64,9 @@ export function LivePanel() {
   const ctxRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  // v1.3.13：AnalyserNode 同步入 state —— 渲染期读 ref.current 违反 React 规则
+  // （eslint react-hooks/refs），改为 state 驱动 WaveformCanvas 重绘；ref 仅用于清理
+  const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const scriptNodeRef = useRef<ScriptProcessorNode | null>(null);
   const timerRef = useRef<number>(0);
@@ -88,6 +91,7 @@ export function LivePanel() {
     streamRef.current = null;
     analyserRef.current?.disconnect();
     analyserRef.current = null;
+    setAnalyserNode(null);
     void ctxRef.current?.close();
     ctxRef.current = null;
   }, []);
@@ -135,6 +139,7 @@ export function LivePanel() {
       analyser.fftSize = 2048;
       source.connect(analyser);
       analyserRef.current = analyser;
+      setAnalyserNode(analyser);
 
       analyzerRef.current = new StreamingAnalyzer();
 
@@ -320,7 +325,7 @@ export function LivePanel() {
         <CardContent className="space-y-4">
           {/* 波形 */}
           <div className="grid-bg relative h-32 overflow-hidden rounded-lg border bg-black/40">
-            <WaveformCanvas analyser={analyserRef.current} active={state.running} className="h-full w-full" />
+            <WaveformCanvas analyser={analyserNode} active={state.running} className="h-full w-full" />
             {!state.running && (
               <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
                 待机中 — 点击「开始鉴听」接入麦克风（建议直接播放可疑通话外放）

@@ -38,10 +38,26 @@ export function decodeWav(data: ArrayBuffer | Uint8Array): DecodedWav {
     const size = view.getUint32(offset + 4, true);
     const body = offset + 8;
     if (id === "fmt ") {
+      // v1.3.13：fmt 块长度闸 —— 标准 PCM fmt 至少 16 字节，短于此说明文件损坏，
+      // 不再读取越界字段（旧版对截断 fmt 会抛晦涩的 DataView 越界错或读出垃圾值）
+      if (size < 16 || body + 16 > bytes.byteLength) {
+        throw new Error("WAV fmt 块损坏（长度不足 16 字节）");
+      }
       const format = view.getUint16(body, true);
       const channels = view.getUint16(body + 2, true);
       const rate = view.getUint32(body + 4, true);
       const bits = view.getUint16(body + 14, true);
+      // v1.3.13：头部合法性闸 —— channels=0 / rate=0 / 非正位宽会往下游
+      // 传播出 Infinity 帧数与 RangeError 等不可理解错误，在此拦截并给出可读信息
+      if (channels < 1 || channels > 64) {
+        throw new Error(`WAV 声道数非法: ${channels}`);
+      }
+      if (rate < 4000 || rate > 384000) {
+        throw new Error(`WAV 采样率非法: ${rate} Hz`);
+      }
+      if (bits < 8 || bits > 64 || bits % 8 !== 0) {
+        throw new Error(`WAV 位宽非法: ${bits}`);
+      }
       let realFormat = format;
       if (format === 0xfffe && size >= 40) {
         // Extensible：读取 SubFormat GUID 前两个字节
@@ -55,6 +71,8 @@ export function decodeWav(data: ArrayBuffer | Uint8Array): DecodedWav {
     offset = body + size + (size % 2); // chunk 按 2 字节对齐
   }
   if (!fmt || dataOffset < 0) throw new Error("WAV 缺少 fmt/data 块");
+  // v1.3.13：空 data 块（0 帧）明确拒绝，旧版会静默返回空 PCM 往下游报“音频过短”
+  if (dataLen === 0) throw new Error("WAV data 块为空（0 帧音频）");
 
   const { format, channels, rate, bits } = fmt;
   const bytesPerSample = bits / 8;

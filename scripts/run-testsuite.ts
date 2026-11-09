@@ -18,6 +18,8 @@ import { decodeWav, mixToMono } from '../src/lib/audio/wav';
 import { resampleTo16k } from '../src/lib/engine/dsp';
 import { analyzeBuffer, analyzeWindow } from '../src/lib/engine/engine';
 import { ENGINE_NAME, ENGINE_VERSION, ENGINE_PARAMS, SCORE_THRESHOLDS } from '../src/lib/engine/types';
+// v1.3.13：EER/AUC 抽取入引擎库（单一事实源，单元测试锚定数学契约）
+import { eerOf, aucOf } from '../src/lib/engine/metrics';
 
 const DIR = path.join(process.cwd(), 'calibration');
 const ADIR = path.join(DIR, 'audio');
@@ -137,26 +139,7 @@ function judgeOne(
   };
 }
 
-/** EER（等错误率）：误报率=漏报率交叉点的错误率，学术口径标准指标 */
-function eerOf(pos: number[], neg: number[]): number {
-  if (!pos.length || !neg.length) return NaN;
-  const ths = [...new Set([...pos, ...neg])].sort((a, b) => a - b);
-  let best = 1;
-  for (const th of ths) {
-    const far = neg.filter((s) => s >= th).length / neg.length; // 自然被误判为合成
-    const frr = pos.filter((s) => s < th).length / pos.length;  // 合成被漏判
-    best = Math.min(best, Math.max(far, frr));
-  }
-  return Math.round(best * 10000) / 10000;
-}
-
-/** AUC（排序区分度）：Mann-Whitney U 统计，P(合成分>自然分)+0.5P(相等) */
-function aucOf(pos: number[], neg: number[]): number {
-  if (!pos.length || !neg.length) return NaN;
-  let u = 0;
-  for (const p of pos) for (const n of neg) u += p > n ? 1 : p === n ? 0.5 : 0;
-  return Math.round((u / (pos.length * neg.length)) * 10000) / 10000;
-}
+/** EER/AUC：v1.3.13 起由 src/lib/engine/metrics.ts 提供（见顶部 import） */
 
 function pct(sorted: number[], q: number): number {
   if (!sorted.length) return 0;

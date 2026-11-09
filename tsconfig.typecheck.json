@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  // v1.3.13 质量门专用：只覆盖 src/（应用与引擎源码）。
+  // scripts/*.ts 由 bun 直接运行（Bun 全局类型不在本 tsconfig 范围），
+  // skills/ 为平台技能目录非本工程代码，均不纳入门禁。
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "vitest.config.mts"
+  ],
+  "exclude": ["node_modules"]
+}

@@ -768,3 +768,90 @@ VLM 抽查 4 页全过。
 管线，需 pptx 技能重建至 v1.3.12 口径）与答辩演示手册（gen-demo-
 handbook.js 仍为 v1.3.8 口径，含已移除的挑战演示幕）——已在交付清单
 中明确标注待重制。
+
+## v1.3.13 · 工程强化：测试护城河 + CI 质量门（2026-11-09 · 承「继续全面强化，重点放在项目本身」）
+
+**背景与定位**：上轮（v1.3.12）完成学术面强化后，本轮按用户指令转向
+项目本身。审计发现工程面最大的空白：引擎 1250 行纯 TS 数学代码零单元
+测试（仅 258 条集成判决兜底）、无 `npm test`、无 CI、`next build` 靠
+`ignoreBuildErrors: true` 蒙混、`tsc --noEmit` 全仓不可用（scripts 的
+Bun 全局类型 + Prisma 未生成的类型错误混杂）。本轮引入 vitest 单测
+体系（104 项）+ GitHub Actions CI，并修复审计发现的三处真实缺陷。
+
+**真实缺陷修复（三处）**：
+1. `live-panel.tsx` React 19 规则违例（eslint react-hooks/refs 报错）：
+   渲染期读 `analyserRef.current` 传给 WaveformCanvas —— AnalyserNode
+   同步入 state（`setAnalyserNode`），ref 仅用于清理；
+2. `wav.ts` 解码容错：channels=0/rate=0/非法位宽/fmt 块截断/空 data 块
+   等损坏头部旧版会抛晦涩 RangeError 或读越界字段，新增头部合法性闸
+   （v1.3.13 五条可读错误信息）；data 块声明超长仍按实际字节截断恢复
+   （取证容错语义保留）；
+3. `cases-view.tsx` 无用 eslint-disable 指令清理（src/ 现零 error 零
+   warning）。
+
+**EER/AUC 抽取入引擎库**：`src/lib/engine/metrics.ts`（自
+run-testsuite.ts 迁移，逻辑逐字保留），run-testsuite.ts 改为 import
+复用 —— 单一事实源，学术指标从此有单元测试锚定数学契约。迁移安全由
+regression.test.ts 直接证明：对基线 258 条 items 复算 EER/AUC 与抽取
+前记录值**逐位一致**（宽带 0.16/0.9381 · 窄带 0.20/0.9098 · 综合
+0.18/0.9245）。
+
+**单元测试体系（vitest 5.1 · 7 文件 104 项 · 1.7s 跑完）**：
+- `dsp.test.ts`（24 项）：FFT 数学契约（冲激→平坦谱 / 单频→N/2 双峰 /
+  Parseval / 线性性 / 引擎共轭技巧逆变换往返）、Hann、autocorrPeak
+  （正弦精化周期 / 白噪声低峰 / 静音除零保护）、median3/ema、
+  **resampleTo16k 抗混叠回归钉**（48k 12kHz 带外音调衰减 ≥40dB ——
+  v1.3.5–v1.3.8 旧实现栽过的坑，440Hz 通带保真）；
+- `features.test.ts`（14 项）：谐波声门脉冲合成器（逐周期注入扰动），
+  零扰动对照下 jitter/shimmer/f0Std **精确为零**，注入后定向响应；
+  基频扫频→f0Std、5Hz 调幅→envMod45、谐波延展→信道判定（wideband/
+  narrowband + forcedChannel）、静音窗、过短窗、有界性、确定性；
+- `calibration.test.ts`（11 项）：z 标准化/±3 限幅/双信道先验独立、
+  sigmoid(bias) 基线分、logit 可逆、逐特征单调性、**窄带零权重不变性**
+  （六特征极端值下窄带分逐位不变）、窄带恰五特征、FEATURE_META 与
+  SCORE_KEYS 同源一致；
+- `metrics.test.ts`（11 项）：EER/AUC 解析已知分布对拍（完美分离/
+  完全反向/打平计 0.5/空侧 NaN/4 位小数舍入）；
+- `engine.test.ts`（13 项）：analyzeBuffer 滑窗推进/结构/RTF<0.5/
+  确定性、StreamingAnalyzer 流式+尾窗、summarize 风险档映射
+  （0.9→CRITICAL…0.2→LOW）、片段聚合、静音除零保护、文案阈值常量；
+- `wav.test.ts`（18 项）：encode↔decode 往返（16bit 量化 ≤5e-5）、
+  PCM8/24/32/Float32/Float64/Extensible、截断 data 恢复、mixToMono、
+  九条容错路径（含 v1.3.13 新闸）、floatToInt16 限幅；
+- `regression.test.ts`（13 项）：**真实校准数据回归**——50 条特征
+  向量重放（拟合集内宽带 AUC 0.93/窄带 0.90，断言 ≥0.85 留安全余量；
+  类均值差 ≥0.35）、与 258 条基线逐文件方向一致率 ≥92%（观测 48/50）、
+  引擎版本/九参数/阈值与基线快照逐字段锚定（漂移即报警）、基线条数
+  258/50 防误改。
+
+**断言阈值诚实性**：先跑 `scripts/probe-regression-baseline.ts`（新
+增探针，确定性）取得真实分离度（宽带 AUC 0.930/tts 均值 0.765/nat
+0.232；窄带 0.900/0.698/0.302；逐文件方向一致 48/50 —— 2 处不一致即
+测试报告第八章的已知误报/漏报边界），再按观测值减安全余量设断言，
+不硬凑数字。首轮 11 处失败全部定位为测试自身问题（EMA 渐升语义、
+EER ≥ 口径、Float32 存储精度、PCM8 偏移编码、int16 量化容差、44 字节
+门槛与 fmt 闸的先后序），修正后 104/104 全绿。
+
+**质量门落地**：`npm run typecheck`（新 tsconfig.typecheck.json，
+范围 src/ + vitest.config —— scripts 走 bun 运行时类型不纳入；本地
+需先 `prisma generate`）、`npm run lint`（口径改为 `eslint src`：
+全仓 54 错全在冻结的历史脚本 scripts//docs/qa，产品代码干净）、
+`npm run test`。`.github/workflows/ci.yml`：quality（bun 1.3.14 冻结
+锁安装 → prisma generate → typecheck → lint → vitest）+ build-smoke
+（prisma db push → next build standalone）双 job，push main / PR 触发，
+README 顶部挂 CI 徽章。**构建冒烟本地实测通过**（全部 9 路由）。
+
+**端到端零影响证明**：重生成两组确定性变体（gen-natural-variants +
+gen-tts-variants，ffmpeg 在位，129 文件）后全量复跑
+run-testsuite.ts：258 判决、分组正确数、byChannel 汇总、EER/AUC 与
+v1.3.12 基线**逐位一致**（226/258 正确、宽带 F1 0.962、窄带 0.876、
+EER 0.18/AUC 0.9245），逐文件 diff 仅 analysisMs/rtf 机器时延噪声。
+testsuite_results.json 刷新入库作为本轮验证实录（引擎行为零变更的
+直接证据）。期间误跑过一次无变体集（98 判决覆写基线），git checkout
+恢复后重生成变体补齐 —— 无损。
+
+**版本与交付**：package.json 1.3.11→1.3.13（1.3.12 发版时漏 bump，
+本轮一并补正）；README 新增「开发与质量保障」章节（四层测试体系表）+
+CI 徽章 + 目录结构更新。**本轮不发 Release**（改动不触发行为与离线
+包内容，v1.3.12 portable zip 仍为最新发行版；发版管线留待下轮需要时
+执行）。vitest 为 devDependency，不进入 standalone 离线包产物。

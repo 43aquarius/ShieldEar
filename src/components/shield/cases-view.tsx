@@ -81,7 +81,6 @@ export function CasesView() {
 
   const openDetail = async (row: CaseRow) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = await fetchJson<{ case: any }>(`/api/cases/${row.caseNo}?full=1`);
       const c = data.case;
       const analysis: AnalysisResult = {

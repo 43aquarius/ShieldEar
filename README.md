@@ -4,7 +4,7 @@
 
 > 接到可疑来电，如何在转账之前知道对方的声音是不是 AI 合成的？声盾把这道反诈治理中最直接的问题，变成一次可以随身携带的浏览器操作：**边通话、边检测、边存证**。
 
-![version](https://img.shields.io/badge/version-v1.3.12-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9)
+![version](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-v1.3.12-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9) ![CI](https://github.com/43aquarius/ShieldEar/actions/workflows/ci.yml/badge.svg)
 
 ---
 
@@ -92,12 +92,34 @@ python3 scripts/gen-test-figures.py   # 输出 download/assets/test_*.png
 
 引擎权重拟合过程（`scripts/calibrate-engine.ts` + `scripts/fit-weights.ts`）与校准数据同样随库交付，全部结果可复现。
 
+## 开发与质量保障（v1.3.13）
+
+v1.3.13 为工程强化版：引入 **vitest 单元测试体系**（104 项，约 1.7s 跑完）与 **GitHub Actions CI**，为引擎装上持续质量门。
+
+```bash
+npm run typecheck   # TypeScript 严格类型检查（src/）
+npm run lint        # ESLint（src/，零告警）
+npm run test        # 单元测试套件（104 项）
+```
+
+测试体系四层结构：
+
+| 层 | 文件 | 锚定内容 |
+|----|------|----------|
+| **DSP 数学契约** | `src/lib/engine/__tests__/dsp.test.ts` | FFT（冲激/单频/Parseval/线性性/逆变换往返）、Kaiser sinc 重采样保真与抗混叠（v1.3.9 重写的回归钉） |
+| **特征注入响应** | `features.test.ts` | 合成信号逐维验证：零扰动下 jitter/shimmer/f0Std 精确为零，注入扰动后各特征定向响应；3.5kHz 功率占比信道判定（v2.0 修复的回归钉） |
+| **校准与指标契约** | `calibration.test.ts` · `metrics.test.ts` | z 标准化/限幅/逐特征单调性/窄带零权重不变性；EER/AUC 解析已知分布对拍 |
+| **真实数据回归** | `regression.test.ts` | 50 条真实特征向量重放（宽带 AUC 0.93 / 窄带 0.90）；引擎版本/参数/阈值与 258 条基线快照逐字段锚定；metrics 抽取前后 EER/AUC 逐位一致 |
+
+推送 main 即触发 CI（类型检查 → Lint → 单测 → standalone 构建冒烟），状态徽章见顶部。WAV 解码器同版加固：损坏头部（声道数/采样率/位宽非法、fmt 截断、空 data 块）从晦涩的 RangeError 变为可读错误信息；修复实时鉴听面板一处 React 19 渲染期 ref 访问违例。
+
 ## 目录结构
 
 ```
 ├── src/                    # 平台源码（Next.js 16 + React 19）
-│   ├── lib/engine/         # 同构检测引擎（DSP / 十一维特征 / 校准 / 流式分析器）
-│   ├── lib/audio/          # WAV 编解码
+│   ├── lib/engine/         # 同构检测引擎（DSP / 十一维特征 / 校准 / 流式分析器 / EER·AUC 指标）
+│   │   └── __tests__/      # 单元测试（DSP 契约 / 特征注入 / 校准 / 真实数据回归）
+│   ├── lib/audio/          # WAV 编解码（含头部合法性闸）
 │   ├── lib/server/         # 分析与存证服务
 │   ├── app/api/            # 检测复核 / 案例与证据 / 自检 API
 │   └── components/shield/  # 单页应用 UI（实时鉴听 / 文件检测 / 案例库 / 报告）

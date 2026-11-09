@@ -1,0 +1,71 @@
+name: CI
+
+# 声盾 ShieldEar 持续集成（v1.3.13 引入）
+# 质量门：类型检查 → Lint → 单元测试（104 项，含真实校准集回归）→ 构建冒烟。
+# 说明：lint 范围为 src/（产品代码）；scripts/ 为历版发版与报告生成工具链
+# （冻结实录，不参与构建产物），不纳入门禁。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: 质量门（typecheck · lint · unit tests）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 安装依赖（bun.lock 锁定）
+        run: bun install --frozen-lockfile
+
+      - name: 生成 Prisma 客户端（类型依赖）
+        run: bunx prisma generate
+
+      - name: 类型检查（src/，strict）
+        run: npm run typecheck
+
+      - name: Lint（src/）
+        run: npm run lint
+
+      - name: 单元测试（引擎数学契约 + 真实校准集回归）
+        run: npm run test
+
+  build-smoke:
+    name: 构建冒烟（next build · standalone）
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: file:./db/custom.db
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 安装依赖（bun.lock 锁定）
+        run: bun install --frozen-lockfile
+
+      - name: 初始化 SQLite（Prisma schema → db push）
+        run: bunx prisma db push --skip-generate
+
+      - name: 构建（standalone 输出）
+        run: npm run build
