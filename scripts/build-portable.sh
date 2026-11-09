@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # build-portable.sh — v1.3.5 纯离线便携包组装（完整流水线）
-# 前置：npm run build:offline 已完成；/tmp/{node.exe, msi-out} 就位
+# 前置：npm run build:offline 已完成；/tmp/node.exe（v20.18.1 win-x64）就位
 # 产物：/tmp/package-build/ShieldEar/（Windows 交付目录）
 #
 # v1.3.5 变更：
@@ -55,8 +55,8 @@ rm -rf /tmp/package-build
 mkdir -p "$STAGE"
 
 echo "── [0/8] fail-fast：构建机前置校验 ──"
-# v1.3.9 硬闸：平台折叠检查（产物必须含 espeak-ng.exe 字面量，
-# 被 Turbopack 折叠掉即拒绝继续 —— 这是 v1.3.8 发布后真机审计坐实的根因）
+# v1.3.9 引入平台折叠硬闸；v1.3.11 随合成挑战移除收敛为
+# 「chunk 无 process.platform 比较残留」单项（详见 verify-bundled-platform.py）
 if ! python3 "$PROJ/scripts/verify-bundled-platform.py" "$PROJ/.next/standalone"; then
   echo "✗ 平台折叠硬闸未通过 —— 拒绝组装（请先修复源码后重新构建）"
   exit 1

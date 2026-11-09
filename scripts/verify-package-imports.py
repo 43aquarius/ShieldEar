@@ -4,6 +4,8 @@
 包内文件却是 libespeak_ng.dll（下划线）—— 一字之差导致所有 Windows 机器上
 0xC0000135。当时的 verify-vc-dlls.py 只核对了 VC++ 三 DLL 的导入/导出函数匹配，
 对 libespeak-ng.dll 仅注释「包内同目录提供（已确认存在）」直接放行，未按名核实。
+（v1.3.11：espeak-ng 组件已随合成挑战功能移除出包；本闸继续守护包内
+ 其余 PE——node.exe / Prisma query_engine-windows.dll.node / VC++ 三 DLL。）
 
 规则：扫描目录树下全部 PE 文件（.exe/.dll/.node，MZ 魔数确认），
 其导入表（含延迟导入表）引用的每一个 DLL 必须满足：

@@ -16,7 +16,8 @@ model DetectionCase {
   id              String   @id @default(cuid())
   // 案件编号：SS-YYYYMMDD-XXXX
   caseNo          String   @unique
-  // LIVE=实时鉴听 / UPLOAD=文件检测 / TTS=现场合成挑战
+  // LIVE=实时鉴听 / UPLOAD=文件检测 / TTS=现场合成挑战（历史类型：v1.3.11
+  // 起功能已移除，仅为兼容既有存证记录与证据包而保留枚举值，新案例不再产生）
   sourceType      String
   sourceLabel     String
   fileName        String?

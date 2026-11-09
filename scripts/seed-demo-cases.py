@@ -67,7 +67,7 @@ for path, label, fname in UPLOAD_JOBS:
             "sourceType": "UPLOAD",
             "sourceLabel": label,
             "fileName": fname,
-            "notes": "v1.3.10 演示案例 · 断网便携包内置（含原始来源随证）",
+            "notes": "v1.3.11 演示案例 · 断网便携包内置（含原始来源随证）",
         })
         o = d["analysis"]["overall"]
         print(f"✓ {label} · caseNo={d.get('caseNo')} · risk={o.get('risk')} · "
