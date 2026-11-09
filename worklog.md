@@ -855,3 +855,27 @@ testsuite_results.json 刷新入库作为本轮验证实录（引擎行为零变
 CI 徽章 + 目录结构更新。**本轮不发 Release**（改动不触发行为与离线
 包内容，v1.3.12 portable zip 仍为最新发行版；发版管线留待下轮需要时
 执行）。vitest 为 devDependency，不进入 standalone 离线包产物。
+
+**推送实录（同树收束）**：直连 git push 沙箱超时（一贯），走数字 ID API
+通道。首推被自设快进闸正确拦下：远端基树 ≠ 本地父树 —— 递归比对定位
+唯一分歧为 next-env.d.ts（v1.3.12 文档推送期构建版/dev 版分叉，diff
+复刻未触及该文件所致）；13 个 docx「差异」为诊断脚本未关 quotePath 的
+假象。处置：远端内容对齐进本地新提交（amend）→ 推送成功。回读又现
+树差：两脚本（probe-v2-features.ts / vlm-check-report-v1312.js）内容
+同、模式异（本地 100755 / 远端 100644）——执行位对齐提交后二次推送，
+**终态同树确认**（远端 main 6d463e59ee，树 9635888955 == 本地）。
+固化：push-main-only.py（新增，复用 v1312 的 gh/git/push_commit），
+快进闸升级为「分歧文件（含模式）⊆ 本次提交变更集 → 收敛保证」+ 回读
+硬校验（首版回读误用远端 SHA 本地 rev-parse，已修）。
+
+**CI 实战验证**：推送即触发 ci.yml，两次运行（860777d965 / 6d463e59ee）
+全部 success——质量门（bun 1.3.14 冻结锁安装 → prisma generate →
+typecheck → lint → vitest 104 项）与构建冒烟（db push → next build
+standalone）双 job 在 GitHub 全新 runner 上各约 50s 通过。README 徽章
+自此实亮。
+
+**沙箱坑（本轮实证）**：prisma generate 首次失败（binaries.prisma.sh
+下载 darwin-arm64 引擎抖动，重试即过）；calibration/audio 的 nvar_*/
+tvar_* 变体 WAV 随沙箱回收丢失（gitignored），全量套件复跑前需先重跑
+两个确定性生成脚本（ffmpeg 在位）；期间一次无变体集误跑（98 判决）覆
+写基线，git checkout 恢复后重生成补齐至 129 文件 258 判决——基线无损。
