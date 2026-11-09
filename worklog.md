@@ -879,3 +879,65 @@ standalone）双 job 在 GitHub 全新 runner 上各约 50s 通过。README 徽�
 tvar_* 变体 WAV 随沙箱回收丢失（gitignored），全量套件复跑前需先重跑
 两个确定性生成脚本（ffmpeg 在位）；期间一次无变体集误跑（98 判决）覆
 写基线，git checkout 恢复后重生成补齐至 129 文件 258 判决——基线无损。
+
+## v1.3.14 · 安全加固：证据链路径遍历修复 + 全站安全响应头（2026-11-09 · 承「继续全面强化」）
+
+**背景**：v1.3.13 补齐测试护城河后，本轮继续项目本体审计，在服务端
+API 层发现一处真实安全缺陷并完成加固闭环。
+
+**缺陷（自审计发现）**：`/api/evidence/[caseNo]` 历史上「先读文件、后
+查库」——caseNo 取自 URL 参数未经校验，直接拼入 `evidencePath`
+（`path.join(evidence/, \`${caseNo}_evidence.wav\`)`）。`%2E%2E%2F`
+编码的路径段不被 Next.js 归一化，可逃逸 evidence/ 目录读取越界文件
+（本地单机部署下危害有限，但对以「取证存证链可信」立身的平台属必须
+清零的缺陷类别；且该路由是全部 5 个 [caseNo] 路由中唯一无 DB 查询
+前置免疫的一道）。
+
+**修复（双重独立防线，任一存在即阻断）**：
+1. 格式闸：新模块 `src/lib/server/case-no.ts`（`^SS-\d{8}-\d{4}$`，
+   服务端 nextCaseNo 唯一产出格式），全部 5 个 [caseNo] 路由入口
+   400 早退（evidence / cases GET+DELETE / verify / evidence-package）；
+2. 容器闸：`evidencePath` 改用 `resolveInsideDir`（resolve 后断言仍在
+   evidence/ 内，越界即抛错）——即使未来新调用方绕过格式闸也无路可逃。
+
+**HTTP 安全响应头（next.config.ts）**：nosniff / X-Frame-Options DENY
+（阻断 iframe 嵌套伪造「核验通过」假象）/ no-referrer /
+Permissions-Policy（仅保留实时鉴听麦克风）/ CSP。CSP 要点：
+script-src 需 'unsafe-inline'（Next 生产构建注入内联 hydration 脚本，
+仍阻断一切外部脚本）；media-src blob:（试听回放用 object URL）；
+**connect-src 'self' 使离线声明获得传输层强制执行**——任何违背
+「全程零外连」声明的请求将被浏览器直接拦截；开发模式额外放行
+'unsafe-eval'（React Fast Refresh 依赖，按 NODE_ENV 条件注入）。
+
+**服务层单测（+22 项 → 全套 126 项，1.7s）**：
+- `case-no.test.ts`（11 项）：遍历载荷逐一钉死（../、..%2F、反斜杠、
+  NUL、合法编号后拼路径段、绝对路径）+ 形似编号（位数/大小写/分隔符/
+  前后缀）+ 非字符串类型 + 容器闸逃逸矩阵（../、绝对段、嵌套逃逸、
+  相对化基目录）；
+- `zip.test.ts`（11 项）：CRC-32 IEEE 公开校验向量对拍（"123456789"→
+  0xCBF43926 / fox 短语→0x414FA339）、EOCD/中央目录/本地头结构自洽、
+  迷你解析器往返逐位一致、中文名 UTF-8 标志、空条目、共享 ArrayBuffer
+  视图、超长条目名拒绝、空包。
+- 新增可复跑交叉验证脚本：`crosscheck-zip.ts` + `crosscheck-zip-python.py`
+  （Python zipfile 实际解包 + testzip CRC + zlib.crc32 对拍）——互操作
+  性从「一次性人工验证」固化为脚本。
+
+**验证实录（全绿）**：typecheck / eslint src 零告警；vitest 126/126；
+build:offline 9 路由构建通过；standalone 真机：首页与 API 响应头五项
+齐全；6 类遍历攻击载荷实测全部 400（良构不存在编号保持 404 语义）；
+regress-all-apis.py 8/8（实时鉴听/文件检测/案例库/存证包/合成通道
+下线 404/自检 4/4 releaseOffline=True/证据核验 SHA 一致）；端到端
+存证包 HTTP 下载 → Python zipfile 解包 → testzip 全过 → SHA256SUMS
+逐条核验通过。
+
+**排障实录（沙箱坑新增）**：Next standalone 服务进程名为 `next-server`
+而非 `node .../server.js`——`pkill -f "standalone/server.js"` 匹配
+不到，旧进程存活导致新服务 EADDRINUSE 静默失败、环境变量
+（SHIELD_RELEASE_OFFLINE=1）从未生效，回归一度误报「发行包应声明纯
+离线」。以 `pkill -f "next-server"` 清理后 8/8。教训：验证环境变量
+是否生效须查 /proc/<pid>/environ 或响应体回读，不能只看启动命令。
+
+**版本与交付**：package.json 1.3.13 → 1.3.14；README「开发与质量
+保障」升级五层测试体系表 + 新增「安全加固（v1.3.14）」节；目录结构
+补 `lib/server/__tests__`。本轮改动触及产品代码（路由与响应头），
+便携包需重制 —— 发版 v1.3.14 安排在同日（见下节实录）。

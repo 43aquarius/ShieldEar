@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { readEvidence, evidencePath } from "@/lib/server/case-service";
+import { isValidCaseNo } from "@/lib/server/case-no";
 import fs from "fs";
 
 export const runtime = "nodejs";
@@ -16,6 +17,9 @@ export async function GET(
 ) {
   try {
     const { caseNo } = await params;
+    if (!isValidCaseNo(caseNo)) {
+      return NextResponse.json({ error: "无效的案件编号格式（应为 SS-日期-序号）" }, { status: 400 });
+    }
     const c = await db.detectionCase.findUnique({ where: { caseNo } });
     if (!c) {
       return NextResponse.json({ error: "案例不存在" }, { status: 404 });
@@ -40,6 +44,9 @@ export async function DELETE(
 ) {
   try {
     const { caseNo } = await params;
+    if (!isValidCaseNo(caseNo)) {
+      return NextResponse.json({ error: "无效的案件编号格式（应为 SS-日期-序号）" }, { status: 400 });
+    }
     const c = await db.detectionCase.findUnique({ where: { caseNo } });
     if (!c) {
       return NextResponse.json({ error: "案例不存在" }, { status: 404 });

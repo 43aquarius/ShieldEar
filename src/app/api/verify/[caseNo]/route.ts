@@ -7,6 +7,7 @@
  */
 import { NextResponse } from "next/server";
 import { verifyEvidenceIntegrity } from "@/lib/server/case-service";
+import { isValidCaseNo } from "@/lib/server/case-no";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,10 @@ export async function GET(
 ) {
   try {
     const { caseNo } = await params;
+    // v1.3.14 格式闸：核验路径虽先查库，仍统一入口校验（纵深防御）
+    if (!isValidCaseNo(caseNo)) {
+      return NextResponse.json({ error: "无效的案件编号格式（应为 SS-日期-序号）" }, { status: 400 });
+    }
     const report = await verifyEvidenceIntegrity(caseNo);
     // 核验"未通过"是一种结论而非服务错误，仍返回 200 携带 verified=false
     return NextResponse.json(report, { status: 200 });

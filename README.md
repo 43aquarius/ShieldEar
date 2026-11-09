@@ -92,17 +92,17 @@ python3 scripts/gen-test-figures.py   # 输出 download/assets/test_*.png
 
 引擎权重拟合过程（`scripts/calibrate-engine.ts` + `scripts/fit-weights.ts`）与校准数据同样随库交付，全部结果可复现。
 
-## 开发与质量保障（v1.3.13）
+## 开发与质量保障（v1.3.13–v1.3.14）
 
-v1.3.13 为工程强化版：引入 **vitest 单元测试体系**（104 项，约 1.7s 跑完）与 **GitHub Actions CI**，为引擎装上持续质量门。
+v1.3.13 为工程强化版：引入 **vitest 单元测试体系**与 **GitHub Actions CI**，为引擎装上持续质量门；v1.3.14 为安全加固版：修复证据链路由路径遍历缺陷 + 全站 HTTP 安全响应头，并为服务层补齐单测（126 项）。
 
 ```bash
 npm run typecheck   # TypeScript 严格类型检查（src/）
 npm run lint        # ESLint（src/，零告警）
-npm run test        # 单元测试套件（104 项）
+npm run test        # 单元测试套件（126 项）
 ```
 
-测试体系四层结构：
+测试体系五层结构：
 
 | 层 | 文件 | 锚定内容 |
 |----|------|----------|
@@ -110,8 +110,18 @@ npm run test        # 单元测试套件（104 项）
 | **特征注入响应** | `features.test.ts` | 合成信号逐维验证：零扰动下 jitter/shimmer/f0Std 精确为零，注入扰动后各特征定向响应；3.5kHz 功率占比信道判定（v2.0 修复的回归钉） |
 | **校准与指标契约** | `calibration.test.ts` · `metrics.test.ts` | z 标准化/限幅/逐特征单调性/窄带零权重不变性；EER/AUC 解析已知分布对拍 |
 | **真实数据回归** | `regression.test.ts` | 50 条真实特征向量重放（宽带 AUC 0.93 / 窄带 0.90）；引擎版本/参数/阈值与 258 条基线快照逐字段锚定；metrics 抽取前后 EER/AUC 逐位一致 |
+| **服务层与存证包** | `src/lib/server/__tests__/`（v1.3.14） | 案件编号格式闸（路径遍历载荷逐一钉死）与证据路径容器闸；存证包 ZIP 构建器（CRC-32 公开校验向量对拍 + 迷你解析器往返 + Python zipfile 交叉验证） |
 
 推送 main 即触发 CI（类型检查 → Lint → 单测 → standalone 构建冒烟），状态徽章见顶部。WAV 解码器同版加固：损坏头部（声道数/采样率/位宽非法、fmt 截断、空 data 块）从晦涩的 RangeError 变为可读错误信息；修复实时鉴听面板一处 React 19 渲染期 ref 访问违例。
+
+### 安全加固（v1.3.14）
+
+自审计发现并修复一处证据链路由缺陷：`/api/evidence/[caseNo]` 历史上未查库先读文件，未校验的 `caseNo` 直接拼入证据路径，`%2E%2E%2F` 编码段可路径遍历逃逸 `evidence/` 目录。修复采用双重独立防线：
+
+1. **格式闸**：全部 5 个 `[caseNo]` 路由入口校验 `^SS-\d{8}-\d{4}$`（服务端编号生成器的唯一产出格式），非法输入 400 早退；
+2. **容器闸**：`evidencePath` 改用 `resolveInsideDir` 解析并断言结果仍在 `evidence/` 内，即使未来新增调用方绕过格式闸也无路可逃。
+
+同时补齐全站 HTTP 安全响应头（`next.config.ts`）：`X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY`（阻断将核验页面 iframe 嵌套伪造「核验通过」假象）、`Referrer-Policy: no-referrer`、`Permissions-Policy`（仅保留实时鉴听所需麦克风）与 CSP —— 其中 `connect-src 'self'` 使「全程零外连」的离线声明获得传输层强制执行：任何违背声明的网络请求将被浏览器直接拦截。
 
 ## 目录结构
 
@@ -120,7 +130,8 @@ npm run test        # 单元测试套件（104 项）
 │   ├── lib/engine/         # 同构检测引擎（DSP / 十一维特征 / 校准 / 流式分析器 / EER·AUC 指标）
 │   │   └── __tests__/      # 单元测试（DSP 契约 / 特征注入 / 校准 / 真实数据回归）
 │   ├── lib/audio/          # WAV 编解码（含头部合法性闸）
-│   ├── lib/server/         # 分析与存证服务
+│   ├── lib/server/         # 分析与存证服务（含案件编号闸与证据路径容器闸）
+│   │   └── __tests__/      # 服务层单测（路径遍历攻击面 / ZIP 构建器契约）
 │   ├── app/api/            # 检测复核 / 案例与证据 / 自检 API
 │   └── components/shield/  # 单页应用 UI（实时鉴听 / 文件检测 / 案例库 / 报告）
 ├── scripts/                # 校准与测试套件（含文档生成源）

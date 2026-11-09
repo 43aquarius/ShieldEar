@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { readEvidence } from "@/lib/server/case-service";
+import { isValidCaseNo } from "@/lib/server/case-no";
 import { db } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -39,6 +40,16 @@ export async function GET(
 ) {
   try {
     const { caseNo } = await params;
+    // v1.3.14 格式闸：本路由历史上先读文件后查库，是全部 [caseNo] 路由中
+    // 唯一不设 DB 免疫的一道 —— 未校验的 caseNo 直接拼进证据路径，
+    // `%2E%2E%2F` 编码段可路径遍历逃逸 evidence/ 目录读取越界文件。
+    // 与 case-service 的容器闸（resolveInsideDir）构成双重独立防线。
+    if (!isValidCaseNo(caseNo)) {
+      return NextResponse.json(
+        { error: "无效的案件编号格式（应为 SS-日期-序号）" },
+        { status: 400 }
+      );
+    }
     const kind =
       req.nextUrl.searchParams.get("kind") === "source" ? "source" : "evidence";
     const buf = readEvidence(caseNo, kind);

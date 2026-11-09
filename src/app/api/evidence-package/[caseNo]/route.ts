@@ -15,6 +15,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { readEvidence, sha256Hex, verifyEvidenceIntegrity } from "@/lib/server/case-service";
+import { isValidCaseNo } from "@/lib/server/case-no";
 import { buildZip, type ZipEntry } from "@/lib/server/zip";
 
 export const runtime = "nodejs";
@@ -35,6 +36,10 @@ export async function GET(
 ) {
   try {
     const { caseNo } = await params;
+    // v1.3.14 格式闸：存证包导出先查库，仍统一入口校验（纵深防御）
+    if (!isValidCaseNo(caseNo)) {
+      return NextResponse.json({ error: "无效的案件编号格式（应为 SS-日期-序号）" }, { status: 400 });
+    }
     const rec = await db.detectionCase.findUnique({ where: { caseNo } });
     if (!rec) {
       return NextResponse.json({ error: `案例不存在：${caseNo}` }, { status: 404 });

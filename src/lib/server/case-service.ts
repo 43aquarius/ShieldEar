@@ -11,6 +11,7 @@ import { createHash } from "crypto";
 import fs from "fs";
 import path from "path";
 import { db } from "@/lib/db";
+import { resolveInsideDir } from "@/lib/server/case-no";
 
 const EVIDENCE_DIR = path.join(process.cwd(), "evidence");
 
@@ -71,8 +72,10 @@ export function safeApiMessage(err: unknown, fallback: string): string {
 export function evidencePath(caseNo: string, kind: "evidence" | "source" = "evidence"): string {
   // v1.3.9：原始来源文件（可能是 mp3/m4a/webm 等任意格式）落盘为 .bin，
   // 由 /api/evidence 按案例记录的原始文件名下发；证据音频恒为 16kHz WAV。
+  // v1.3.14：容器闸 —— 解析结果必须仍在 evidence/ 内，物理阻断路径遍历
+  // （格式闸见各路由的 isValidCaseNo 早退，两道防线独立生效）。
   const ext = kind === "evidence" ? "wav" : "bin";
-  return path.join(EVIDENCE_DIR, `${caseNo}_${kind}.${ext}`);
+  return resolveInsideDir(EVIDENCE_DIR, `${caseNo}_${kind}.${ext}`);
 }
 
 export function saveEvidence(caseNo: string, wav: Uint8Array, kind: "evidence" | "source" = "evidence"): void {
