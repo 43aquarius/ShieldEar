@@ -46,3 +46,7 @@ tsconfig.tsbuildinfo
 
 # 发版令牌（绝不入库）
 .secrets/
+
+# 测试变体（确定性可再生：gen-natural-variants.ts / gen-tts-variants.ts，仓库仅存源）
+calibration/audio/nvar_*.wav
+calibration/audio/tvar_*.wav
