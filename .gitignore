@@ -42,5 +42,4 @@ repo-stage/
 /tool-results/
 /scripts/api-push/
 tsconfig.tsbuildinfo
-espeak.msi
 .gh_pat

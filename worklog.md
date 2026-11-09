@@ -582,3 +582,15 @@ v1.3.11 重制属于独立任务。
 TAG/ASSET_NAME 仍硬编码 v1.3.10，发版前参数化或另建 v1.3.11 版；
 数字 ID 路由 /repositories/1435969436/… 沿用；上轮 PAT 已耗尽并建议
 撤销，发版前需取新 PAT。
+
+**补记（发版前终扫收尾）**：全仓残留终扫又清出三项——① 架构图
+fig_architecture.png 采集层仍画着「现场合成挑战」芯片（README 正文
+正引用该图）：图源去项后 Playwright 重渲染（2720×2598 · 410KB），
+DOM 级断言采集层余 2 芯片、七层要素齐全、零合成残留，docs/figures
+与 download/assets 双处同步；② v1.3.0–1.3.2 时代死打包工具随批清理
+（scripts/packaging/ 三平台组装器、build-zip-gbk.py GBK 打包器——
+均早被 build-portable.sh + make-portable-zip.py 取代）；③ .gitignore
+移除 espeak.msi 条目。fig-pipeline.html 复核无合成残留（命中行为
+检测侧「合成概率」评分步骤，属引擎术语）。至此 v1.3.11 移除面收敛：
+仓库活代码、打包链、图文档、交付包四层一致，参赛五件套按冻结口径
+不动。
