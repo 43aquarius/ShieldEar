@@ -941,3 +941,48 @@ regress-all-apis.py 8/8（实时鉴听/文件检测/案例库/存证包/合成�
 保障」升级五层测试体系表 + 新增「安全加固（v1.3.14）」节；目录结构
 补 `lib/server/__tests__`。本轮改动触及产品代码（路由与响应头），
 便携包需重制 —— 发版 v1.3.14 安排在同日（见下节实录）。
+
+## v1.3.14 发版实录（2026-11-09 · 承上节安全加固）
+
+**node.exe 恢复（沙箱回收后）**：/tmp/node.exe 随沙箱回收丢失。github.com
+网页直连不通（一贯限制），走 API 资产端点（api.github.com → 302 → CDN
+签名直链）：parallel_fetch 16 段并行拉回 v1.3.12 Release 资产原物
+（60.7MB，续传一次补齐）。双校验：zip SHA-256 7b4fd6dd… 与 v1.3.12
+发布体登记值逐位一致；提取的 node.exe SHA-256 06c1dec1… 与
+nodejs.org 官方 dist v20.18.1 win-x64 SHASUMS256 完全吻合（零版本
+漂移，与 build-portable.sh [7/8] 闸内登记值一致）。
+
+**发版管线（全新构建 + 净库重播）**：
+1. 提交复刻推送先行（管线脚本升版 commit + 断言修正 commit，均同树
+   收束）；
+2. build:offline 全新构建（standalone package.json 携 1.3.14）；
+3. 发行库重置：回归测试污染的 6 条 sine 波案例清零（rm db + prisma
+   db push），seed-and-stop.sh 重播 4 条种子（真人 LOW 0.162/0.201 +
+   AI CRITICAL 0.792 / HIGH 0.713，srcPreserved 全过）；
+4. build-portable.sh：四重硬闸全过（外部依赖解析 11 / 平台折叠
+   19 chunk / PE 导入表 8 文件 / node.exe fail-fast），STAGE 151MB；
+5. make-portable-zip.py：ShieldEar-v1.3.14-portable.zip 57.9MB ·
+   1,459 文件 · SHA-256 ed9a6d71…33；
+6. test-offline-portable.sh（unshare -rn 断网对交付 zip 实测）：
+   基线 8/8 + v1.3.14 专项 9/9 全绿。首轮专项 8/9 —— 唯一失败项为
+   测试自身断言错误：verify 路由对「良构但不存在」编号按设计返回
+   200+verified=false（核验未通过是结论而非服务错误），修正断言后
+   9/9。安全头与 7 类遍历载荷 400 均系对交付物实测。
+
+**Release 发布**：release-v1314.py（复用 v1312 的 gh/cdn_readback，
+跳过提交复刻段）：附注标签 v1.3.14 → 发版提交 f027145dc6；Release
+id=439196072（变更说明 + 断网验证记录 + SHA-256）；资产 60,748,817B
+上传。首跑踩坑：RELEASE_BODY 的 .format() 把正则 \d{8} 的 {8} 当
+占位符 → IndexError，改字面 replace 修复。上传+回读合跑超 300s 收
+割窗被截断 → 回读独立成 readback-v1314.py（16 段并行可续传，沙箱
+坑固化：「长任务与回读分开跑」再添一例）。**回读三方一致**：本地
+SHA-256 = CDN 回读 SHA-256 = 登记尺寸（ed9a6d71…33 / 60,748,817B）。
+
+**CI 实战**：v1.3.14 两次推送均触发 ci.yml 双 job 全绿（质量门：
+typecheck → lint → vitest 126 项；构建冒烟：db push → next build
+standalone）。排障实录：actions/runs 列表端点间歇 404（限流余量
+4996/5000 正常），换 commits/{sha}/check-runs 端点稳定取回结论。
+
+**收尾**：download/README.md 交付清单置顶 v1.3.14 发行版条目（含
+SHA-256 与断网实测记录）；遗留待办不变（答辩 PPT v1.3.0 口径、
+演示手册 v1.3.8 口径，见清单标注）。
