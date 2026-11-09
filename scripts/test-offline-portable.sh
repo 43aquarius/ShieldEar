@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 # ============================================================
-# test-offline-portable.sh — v1.3.12 便携包断网实测
+# test-offline-portable.sh — v1.3.14 便携包断网实测
 # 在无任何外网接口的网络命名空间中启动 standalone 服务端，
 # 验证纯离线模式全功能可用（铁证零联网）。
 # v1.3.6 关键改进：测试对象 = 解压后的交付 zip（「测什么，交付什么」）。
 #   v1.3.5 事故教训：只测 stage 目录时，目录软链在 Linux 上可解析、
 #   全部通过；而 zip(os.walk) 丢弃软链后的真实交付物在 Windows 上启动即崩。
+# v1.3.14 变更（安全加固）：
+#   · 专项回归换用 regress-v1314.py（新增两节：安全响应头×首页与 API
+#     实测回读；caseNo 格式闸——遍历载荷对交付包实测 400 + 良构 404）；
+#   · 继承 v1.3.12 全部防回归（引擎 v2.0 口径 / 合成通道下线 / 并发 /
+#     存证包 / 体积闸）。
 # v1.3.12 变更（引擎 v2.0.0-calibrated 学术增强）：
 #   · 专项回归换用 regress-v1312.py（引擎 v2.0 口径：版本号/11 维特征
 #     剖面/新特征键在场 + v1.3.11 起全部防回归）；
@@ -21,7 +26,7 @@
 # ============================================================
 set -u
 
-ZIP=/home/z/my-project/download/ShieldEar-v1.3.12-portable.zip
+ZIP=/home/z/my-project/download/ShieldEar-v1.3.14-portable.zip
 STAGE=/tmp/zip-verify/ShieldEar
 NODE=$(which node)
 
@@ -49,7 +54,7 @@ python3 /home/z/my-project/scripts/verify-bundled-platform.py "$STAGE/server" ||
 
 # 回归脚本副本（netns 内 BASE 一致，走 localhost）
 cp /home/z/my-project/scripts/regress-all-apis.py /tmp/regress-offline.py
-cp /home/z/my-project/scripts/regress-v1312.py /tmp/regress-v1312.py
+cp /home/z/my-project/scripts/regress-v1314.py /tmp/regress-v1314.py
 
 # ── 临时补 Linux 引擎到包内（仅测试期；包交付 Windows 引擎） ──
 LINUX_ENGINE=$(ls /home/z/my-project/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node 2>/dev/null || true)
@@ -96,8 +101,8 @@ echo '════════ 断网环境全功能回归（v1.3.12 基线）�
 python3 /tmp/regress-offline.py
 RC1=\$?
 echo
-echo '════════ v1.3.12 专项回归（引擎v2.0口径/合成通道下线/并发/存证包/体积闸）════════'
-python3 /tmp/regress-v1312.py
+echo '════════ v1.3.14 专项回归（安全响应头/caseNo格式闸/引擎v2.0口径/合成通道下线/并发/存证包/体积闸）════════'
+python3 /tmp/regress-v1314.py
 RC2=\$?
 kill \$SRV 2>/dev/null
 [ \$RC1 -eq 0 ] && [ \$RC2 -eq 0 ]
