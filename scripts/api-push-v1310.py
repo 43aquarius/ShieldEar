@@ -15,8 +15,10 @@ import base64
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -136,6 +138,73 @@ def push_commit(local_parent, local_commit, remote_parent):
     return commit["sha"]
 
 
+def cdn_readback(url, total, out, n_seg=16):
+    """CDN 资产回读：解析 302 拿签名直链 → 分段并行 + 断点续传 → 合并哈希。
+
+    首发实录：单流直读被 CDN 静默掐断（RemoteDisconnected，1800s 超时形同虚设），
+    改与 parallel_fetch.py 同款策略；逐段 6 次重试，失败段可整段重跑续传。
+    返回 (sha256hex, nbytes)。"""
+    req = urllib.request.Request(url, headers={"User-Agent": "ShieldEar-release-script"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        url = r.url  # 跟随 302 拿 CDN 签名直链（仅一次，后续分段不再触碰 github.com）
+    seg = (total + n_seg - 1) // n_seg
+    tmpdir = out + ".parts"
+    os.makedirs(tmpdir, exist_ok=True)
+    ok = [False] * n_seg
+
+    def fetch(i):
+        start, end = i * seg, min((i + 1) * seg - 1, total - 1)
+        if start > end:
+            ok[i] = True
+            return
+        part = f"{tmpdir}/p{i:02d}"
+        have = os.path.getsize(part) if os.path.exists(part) else 0
+        need = end - start + 1
+        for _ in range(6):
+            if have >= need:
+                ok[i] = True
+                return
+            try:
+                rq = urllib.request.Request(url, headers={
+                    "Range": f"bytes={start + have}-{end}",
+                    "User-Agent": "ShieldEar-release-script"})
+                with urllib.request.urlopen(rq, timeout=120) as r, open(part, "ab") as f:
+                    first = r.read(1)
+                    if first == b"{":  # 防污染：意外拿到 JSON 元数据即弃段重试
+                        time.sleep(2)
+                        continue
+                    f.write(first)
+                    have += 1
+                    while True:
+                        chunk = r.read(65536)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        have += len(chunk)
+            except Exception:
+                time.sleep(1.5)
+        ok[i] = os.path.getsize(part) >= need if os.path.exists(part) else False
+
+    ts = [threading.Thread(target=fetch, args=(i,)) for i in range(n_seg)]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+    if not all(ok):
+        raise RuntimeError("回读分段下载存在失败段（重跑同命令可续传）")
+    got = hashlib.sha256()
+    n = 0
+    with open(out, "wb") as f:
+        for i in range(n_seg):
+            with open(f"{tmpdir}/p{i:02d}", "rb") as p:
+                data = p.read()
+            f.write(data)
+            got.update(data)
+            n += len(data)
+    shutil.rmtree(tmpdir, ignore_errors=True)
+    return got.hexdigest(), n
+
+
 def main():
     # ── 1. 提交复刻（快进基座按树比对） ──
     code, ref = gh("GET", f"{API}/git/ref/heads/main")
@@ -159,25 +228,29 @@ def main():
         raise RuntimeError(f"ref 更新失败: {r}")
     print(f"✓ main → {tip[:10]}")
 
-    # ── 2. 附注标签 ──
-    print(f"── 创建附注标签 {TAG} ──")
-    code, tagobj = gh("POST", f"{API}/git/tags", {
-        "tag": TAG,
-        "message": f"{TAG} — 合成挑战音色丢弃与 Windows 中文乱读双症同修",
-        "object": tip,
-        "type": "commit",
-        "tagger": {"name": "43aquarius", "email": "43aquarius@users.noreply.github.com"},
-    })
-    if code == 422:
-        print("  标签对象已存在，复用")
-    elif code != 201:
-        raise RuntimeError(f"tag object 失败: {tagobj}")
-    if code == 201:
-        code, rr = gh("POST", f"{API}/git/refs", {"ref": f"refs/tags/{TAG}", "sha": tagobj["sha"]})
+    # ── 2. 附注标签（幂等：引用已存在即保持不动，不随 main 前移、不产孤儿对象）──
+    print(f"── 附注标签 {TAG} ──")
+    code, existing = gh("GET", f"{API}/git/ref/tags/{TAG}")
+    if code == 200:
+        print(f"  标签引用已存在 → {existing['object']['sha'][:10]}（保持不动，标签锚定发版提交）")
+    else:
+        code, tagobj = gh("POST", f"{API}/git/tags", {
+            "tag": TAG,
+            "message": f"{TAG} — 合成挑战音色丢弃与 Windows 中文乱读双症同修",
+            "object": tip,
+            "type": "commit",
+            "tagger": {"name": "43aquarius", "email": "43aquarius@users.noreply.github.com"},
+        })
         if code == 422:
-            print("  标签引用已存在")
+            print("  标签对象已存在，复用")
         elif code != 201:
-            raise RuntimeError(f"tag ref 失败: {rr}")
+            raise RuntimeError(f"tag object 失败: {tagobj}")
+        if code == 201:
+            code, rr = gh("POST", f"{API}/git/refs", {"ref": f"refs/tags/{TAG}", "sha": tagobj["sha"]})
+            if code == 422:
+                print("  标签引用已存在")
+            elif code != 201:
+                raise RuntimeError(f"tag ref 失败: {rr}")
     print(f"✓ 标签 {TAG} 就绪")
 
     # ── 3. Release（幂等） ──
@@ -223,23 +296,11 @@ def main():
         if not ok:
             raise RuntimeError("资产上传 4 次均失败")
 
-    # ── 5. CDN 回读复核 ──
-    print("── CDN 回读下载复核 ──")
+    # ── 5. CDN 回读复核（16 段并行 + 逐段续传 · 首发实战加固）──
+    print("── CDN 回读下载复核（16 段并行）──")
     code, rel2 = gh("GET", f"{API}/releases/tags/{TAG}")
     asset2 = next(a for a in rel2["assets"] if a["name"] == ASSET_NAME)
-    url = asset2["browser_download_url"]
-    got = hashlib.sha256()
-    n = 0
-    req = urllib.request.Request(url, headers={"User-Agent": "ShieldEar-release-script"})
-    with urllib.request.urlopen(req, timeout=1800) as r, open("/tmp/v1310-readback.zip", "wb") as f:
-        while True:
-            chunk = r.read(1 << 20)
-            if not chunk:
-                break
-            f.write(chunk)
-            got.update(chunk)
-            n += len(chunk)
-    rb = got.hexdigest()
+    rb, n = cdn_readback(asset2["browser_download_url"], asset2["size"], "/tmp/v1310-readback.zip")
     three_way = "一致" if rb == sha256 else f"不一致!! 回读 {rb[:16]}"
     print(f"  回读 {n:,}B · SHA-256 {rb[:16]}… · 本地=上传=登记 {three_way}")
     if rb != sha256:
