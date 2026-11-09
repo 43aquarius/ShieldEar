@@ -103,9 +103,15 @@ def push_commit(local_parent, local_commit, remote_parent):
     files = git("-c", "core.quotePath=false", "diff", "--name-status", local_parent, local_commit).splitlines()
     entries = []
     for line in files:
-        status, path = line.split("\t", 1)
-        path = path.strip('"')
-        if status == "D":
+        parts = line.split("\t")
+        status = parts[0]
+        if status[:1] in ("R", "C"):  # 重命名/复制：三列（状态\t旧\t新）→ 拆成删旧 + 增新
+            old, path = parts[1].strip('"'), parts[2].strip('"')
+            entries.append({"path": old, "mode": "100644", "type": "blob", "sha": None})
+            print(f"    D {old}（{status[:1]} 源路径）")
+        else:
+            path = parts[1].strip('"')
+        if status[:1] == "D":
             entries.append({"path": path, "mode": "100644", "type": "blob", "sha": None})
             print(f"    D {path}")
             continue

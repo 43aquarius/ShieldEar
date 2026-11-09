@@ -594,3 +594,55 @@ DOM 级断言采集层余 2 芯片、七层要素齐全、零合成残留，docs
 检测侧「合成概率」评分步骤，属引擎术语）。至此 v1.3.11 移除面收敛：
 仓库活代码、打包链、图文档、交付包四层一致，参赛五件套按冻结口径
 不动。
+
+---
+
+## v1.3.11 发布实录（2026-11-09 · 第八次沙箱重置后重建 + 新 PAT）
+
+**环境重建**：node_modules 幸存；.next/db 内容/evidence//tmp（含
+package-build 与 node.exe）全失。恢复链：Prisma 四引擎 ←
+restore-prisma-engines.sh（c2990dca 锚定，require 探针自验过）；
+node.exe ← nodejs.org 官方 dist v20.18.1 win-x64 直下
+（69,812,368B · SHA-256 06c1dec1… 与官方 SHASUMS256.txt 一致）。
+
+**管线全绿**：db:push（空库重建）→ build:offline（12.4s 编译通过，
+路由表证实合成通道下线：无 /api/tts-challenge 与 /api/config/cloud）→
+seed-and-stop.sh（4 条种子重灌：LOW 0.156–0.254 / HIGH 0.670–0.712，
+与 v1.3.10 五条梯度中对应四条完全一致，引擎确定性零漂移；本次脚本
+干净退出无收割）→ build-portable（平台折叠 19 chunk / Windows 引擎 /
+外部依赖 11 项 / PE 导入 8 文件四闸全过；软链解引用 1 处）→
+make-portable-zip。
+
+**交付产物（重建版）**：ShieldEar-v1.3.11-portable.zip · 60,737,993B
+（57.9MB）· 1,459 文件 · SHA-256
+63ab20e82f16610bed990d2eab13d4829ae3fdd6bb8793eb395d21804e0ba440。
+上一 zip 已随沙箱回收（284095417… 仅存实录），重建版文件数与结构
+一致、内容同构；断网 netns 实测对新 zip 原物重跑：基线 8/8 +
+v1.3.11 专项 6/6 全绿（口径同上节）。
+
+**发版（api-push-v1311.py · 数字 ID 路由全程）**：新 PAT 由用户提供
+（存 .secrets/github_pat · 600 权限 · .gitignore 已收录防误入库）。
+复刻 f17b838..HEAD 六提交（81d10c6 / e6105de / c30bdf7 / 4a33f84 /
+11c4151 / 2a77d18）：远端 b946f698 快进 → c5524fc4bc，逐提交树 SHA
+与本地一致（同树异形：复刻挂远端父母链之上，本地/远端提交 SHA 必异，
+与 v1.3.10 后既定局面同口径，快进校验按树比对不受影响）。
+
+**工具加固实录（发版中暴露两处）**：① 81d10c6 含 regress-v1310.py →
+regress-v1311.py 改名（R056），v1310 蓝本按两列解析 name-status 致
+ls-tree 落空崩溃 —— push_commit 增加 R/C 三列拆解（rename 拆为删旧 +
+增新两条 tree entry），重跑续推（blob 内容寻址天然幂等）；② 发版主体
+完成后 CDN 回读的 302 跟随一步超时（大上传后连接抖动，该步单次无
+重试），且 main 已快进、全脚本重跑必被快进校验拦下 —— 拆出
+cdn-readback-v1311.py（302 跟随带 5 次重试 · 16 段并行 · 逐段续传 ·
+可独立续跑不触碰 main/tag/release），单独跑通。
+
+**Release 登记**：id 438819092 · tag v1.3.11（附注标签 6fcaf661 锚定
+发版提交 c5524fc4bc，不随后续 main 前移）· 资产 id 726537187 ·
+60,737,993B · state=uploaded。**四方校验一致**：本地 SHA-256
+63ab20e8… = GitHub 资产 digest 字段（sha256:63ab20e8…）= CDN 回读
+重算 = Release body 登记。
+
+**发版后补录**：本节实录 + push_commit 的 R/C 修复 + cdn-readback
+恢复脚本随本提交推送（api-push-v1311.py 支持命令行传提交列表，
+单提交补录时 Release/标签/资产全部幂等复用）。PAT 建议用户在确认
+发版无误后撤销。
