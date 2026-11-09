@@ -189,7 +189,7 @@ export function ResultPanel() {
                 {channel === "narrowband" ? "窄带（电话）信道模式" : "宽带信道模式"}
               </Badge>
               <span className="text-muted-foreground">
-                {meta.sourceType === "LIVE" ? "实时鉴听" : meta.sourceType === "TTS" ? "现场合成挑战" : "文件检测"} ·{" "}
+                {meta.sourceType === "LIVE" ? "实时鉴听" : "文件检测"} ·{" "}
                 {formatTime(meta.createdAt)}
               </span>
               <div className="ml-auto flex gap-2">

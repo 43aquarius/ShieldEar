@@ -48,11 +48,11 @@ const STAGE_TEXT: Record<Stage, string> = {
 const PRESETS = [
   {
     file: "/samples/demo_scam_tongtong.wav",
-    name: "AI 合成 · 冒充亲属诈骗话术（tongtong 音色）",
+    name: "AI 合成 · 冒充亲属诈骗话术（女声）",
   },
   {
     file: "/samples/demo_scam_luodo.wav",
-    name: "AI 合成 · 冒充亲属诈骗话术（luodo 音色）",
+    name: "AI 合成 · 冒充亲属诈骗话术（男声）",
   },
   {
     file: "/samples/demo_natural_viper.wav",

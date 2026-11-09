@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-"""seed-demo-cases.py — 为演示便携包灌入代表性案例库数据（v1.3.10）
-5 条案例：2 真人（低危）+ 2 神经合成（高危）+ 1 本地引擎现场合成（边界演示），
-全部经 /api/analyze 与 /api/tts-challenge 的正式管线入库（服务端复核 +
-先插库后写盘 + 原始来源随证落盘），标签面向答辩演示。
+"""seed-demo-cases.py — 为演示便携包灌入代表性案例库数据（v1.3.11）
+4 条案例：2 真人（低危）+ 2 神经合成（高危），全部经 /api/analyze 的
+正式管线入库（服务端复核 + 先插库后写盘 + 原始来源随证落盘），
+标签面向答辩演示。
 
-v1.3.9 变更：
-  · 客户端侧重采样改用 scipy resample_poly（与新版浏览器管线等质量，
-    替代旧线性插值）；
+v1.3.11 变更：随合成挑战功能整体移除，不再灌入本地引擎现场合成案例
+（案例类型仅剩 LIVE/UPLOAD）。
+
+v1.3.9 变更（历史口径）：
+  · 客户端侧重采样改用 scipy resample_poly（与新版浏览器管线等质量）；
   · 上传案例附带 sourceB64（原始 WAV 字节随行），使核验页「原始来源
-    文件」检查在出厂库上即为 ok；
-  · 新增 1 条「本地 espeak-ng 现场合成」案例 —— v1.3.10 起音色
-    真实生效（cmn+f2），检出 HIGH；7 音色实测分数带 0.538–0.788
-    （MEDIUM–CRITICAL），真人样本 LOW 0.16–0.25，梯度完整。
+    文件」检查在出厂库上即为 ok。
 
 用法: python3 scripts/seed-demo-cases.py  (需 server 运行在 :3000)
 """
@@ -24,8 +23,6 @@ import numpy as np
 import scipy.io.wavfile as wavfile
 from scipy.signal import resample_poly
 from math import gcd
-
-BASE = "http://localhost:3000"
 
 
 def load_pcm16k_b64(path):
@@ -59,10 +56,7 @@ UPLOAD_JOBS = [
     ("public/samples/demo_scam_luodo.wav", "演示 · AI合成『落多』话术", "demo_ai_synth_luodo.wav"),
 ]
 
-TTS_JOB = {
-    "text": "喂，妈，是我啊。我手机摔坏了，这是我同学的号码。我在外地出了点事，急需八千块钱周转，你先别问我爸，把钱转到我发你的这个账户上。",
-    "voice": "tongtong",
-}
+BASE = "http://localhost:3000"
 
 ok = fail = 0
 for path, label, fname in UPLOAD_JOBS:
@@ -83,20 +77,7 @@ for path, label, fname in UPLOAD_JOBS:
         print(f"✗ {label}: {e}")
         fail += 1
 
-# 本地 espeak-ng 现场合成案例（v1.3.9：修复后应用内合成通道真实可用）
-try:
-    code, d = post("/api/tts-challenge", TTS_JOB)
-    o = d["analysis"]["overall"]
-    print(f"✓ 演示 · 本地引擎现场合成 · caseNo={d.get('caseNo')} · mode={d.get('mode')} · "
-          f"engine={d.get('engine')} · risk={o.get('risk')} · verdict={o.get('verdict')}")
-    if d.get("mode") != "live":
-        print("  ⚠ 非 live 模式 —— 种子环境合成通道异常，请检查 espeak 探测")
-        fail += 1
-    else:
-        ok += 1
-except Exception as e:
-    print(f"✗ 演示 · 本地引擎现场合成: {e}")
-    fail += 1
+# 本地引擎现场合成案例已于 v1.3.11 随合成挑战功能移除
 
 print(f"\n种子完成：{ok} 成功 / {fail} 失败")
 sys.exit(1 if fail else 0)

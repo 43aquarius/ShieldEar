@@ -1,21 +1,20 @@
 @echo off
 chcp 65001 >nul
-title ShieldEar v1.3.9 - Offline Edition
+title ShieldEar v1.3.11 - Offline Edition
 cd /d "%~dp0server"
 
 rem ============================================================
-rem  ShieldEar v1.3.9 - Pure Offline Edition
+rem  ShieldEar v1.3.11 - Pure Offline Edition
 rem  This release contains NO cloud channels at all:
-rem  synthesis / detection / evidence - all local, zero network.
-rem  (SHIELD_RELEASE_OFFLINE + ESPEAK_DATA_PATH are set by
-rem   server\boot.js - do not hard-code them here)
+rem  detection / evidence / verification - all local, zero network.
+rem  (SHIELD_RELEASE_OFFLINE is set by server\boot.js)
 rem ============================================================
 set "DATABASE_URL=file:./db/custom.db"
 set "PORT=3000"
 set "HOSTNAME=127.0.0.1"
 
 echo ============================================================
-echo   ShieldEar v1.3.9 - AI Voice Fraud Detection Platform
+echo   ShieldEar v1.3.11 - AI Voice Fraud Detection Platform
 echo   Dalian University of Technology - InfoSec Competition
 echo ============================================================
 echo.

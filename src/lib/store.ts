@@ -5,7 +5,7 @@ import { create } from "zustand";
 import type { AnalysisResult } from "@/lib/engine/types";
 
 export type View = "workbench" | "cases" | "tech" | "selfcheck";
-export type WorkMode = "live" | "file" | "challenge";
+export type WorkMode = "live" | "file";
 
 /** 案例元信息（存证链） */
 export interface ResultMeta {
@@ -13,7 +13,7 @@ export interface ResultMeta {
   createdAt: string;
   audioHash: string;
   sourceHash?: string | null;
-  sourceType: "LIVE" | "UPLOAD" | "TTS";
+  sourceType: "LIVE" | "UPLOAD";
   sourceLabel: string;
   fileName?: string | null;
   durationSec: number;

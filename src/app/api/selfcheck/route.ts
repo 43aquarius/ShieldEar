@@ -1,24 +1,17 @@
 /**
- * GET /api/selfcheck — 系统自检（v1.3.5）
+ * GET /api/selfcheck — 系统自检（v1.3.5；v1.3.11 移除合成通道后为 4 项）
  *
  * 对平台各关键子系统做一次只读体检（仅证据目录做写探针后即刻删除，不发出任何网络请求）：
  *   1. 数据引擎（Prisma + SQLite 连通性）
  *   2. 证据目录（存在且可写）
  *   3. 引擎校准（calibration/features.json 可读）
- *   4. 本地合成引擎（espeak-ng 探活，包内组件优先）
- *   5. 云端通道状态（离线声明）
+ *   4. 离线声明（纯离线发行版标识）
  * 每项返回 { name, ok, detail, ms }，前端逐项动画展示。
  */
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { db } from "@/lib/db";
-import { probeLocalSynth } from "@/lib/server/local-tts";
-import {
-  isCloudEnabled,
-  isOfflineMode,
-  isReleaseOfflineBuild,
-} from "@/lib/server/cloud-config";
 import { ENGINE_VERSION } from "@/lib/engine/types";
 
 export const runtime = "nodejs";
@@ -84,21 +77,14 @@ export async function GET() {
     })
   );
 
-  // 4. 本地合成引擎（espeak-ng 探活；不合成音频、不联网）
-  checks.push(
-    await timed("本地合成引擎", async () => probeLocalSynth())
-  );
-
-  // 5. 云端通道状态（离线声明，非故障项）
-  const releaseOffline = isReleaseOfflineBuild();
+  // 4. 离线声明（发行标识，非故障项；v1.3.11 起平台不含任何合成/联网通道）
+  const releaseOffline = process.env.SHIELD_RELEASE_OFFLINE === "1";
   checks.push({
-    name: "云端通道",
+    name: "离线声明",
     ok: true,
     detail: releaseOffline
-      ? "纯离线发行版：云端合成通道已锁死关闭，零联网"
-      : isCloudEnabled()
-        ? "云端合成通道开启（四级降级链完整）"
-        : "云端合成通道关闭：本地 espeak-ng 直达，零联网",
+      ? "纯离线发行版：检测、存证、核验全程本地运行，零联网"
+      : "开发模式（非发行包）：功能与发行版一致，检测全程本地运行",
     ms: 0,
   });
 

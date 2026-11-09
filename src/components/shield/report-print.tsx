@@ -114,11 +114,7 @@ export function ReportPrint() {
               <td>{meta?.sourceLabel ?? "—"}</td>
               <th className="w-[110px]">来源方式</th>
               <td>
-                {meta?.sourceType === "LIVE"
-                  ? "实时鉴听（麦克风）"
-                  : meta?.sourceType === "TTS"
-                    ? "现场合成挑战（平台 TTS）"
-                    : "文件上传"}
+                {meta?.sourceType === "LIVE" ? "实时鉴听（麦克风）" : "文件上传"}
               </td>
             </tr>
             <tr>
@@ -304,7 +300,7 @@ export function ReportPrint() {
             {meta?.sourceHash && (
               <tr>
                 <th>
-                  {meta.sourceType === "TTS" ? "原始合成音频 SHA-256" : "原始上传文件 SHA-256"}
+                  原始上传文件 SHA-256
                 </th>
                 <td className="font-mono-data break-all">{meta.sourceHash}</td>
               </tr>

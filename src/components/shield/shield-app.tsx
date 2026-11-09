@@ -2,7 +2,7 @@
 
 /**
  * 声盾 — 应用外壳（单页应用，答辩演示零跳转）
- * 工作台（实时鉴听 / 文件检测 / 现场合成挑战）· 案例库 · 技术方案
+ * 工作台（实时鉴听 / 文件检测）· 案例库 · 技术方案
  */
 
 import { Shield as ShieldAppIcon, PhoneCall, FileAudio, Zap, BookOpen, Database, Cog, Activity } from "lucide-react";
@@ -13,7 +13,6 @@ import { useShield } from "@/lib/store";
 import { ENGINE_VERSION } from "@/lib/engine/types";
 import { LivePanel } from "./live-panel";
 import { FilePanel } from "./file-panel";
-import { ChallengePanel } from "./challenge-panel";
 import { ResultPanel } from "./result-panel";
 import { CasesView } from "./cases-view";
 import { TechView } from "./tech-view";
@@ -102,8 +101,8 @@ export function ShieldApp() {
                   <div className="w-full max-w-[260px] rounded-lg border bg-card/80 p-3 text-xs leading-5">
                     <div className="mb-1 font-semibold text-foreground">答辩演示动线（3 步）</div>
                     <ol className="space-y-1 text-muted-foreground">
-                      <li>1. 「现场合成挑战」生成诈骗话术语音</li>
-                      <li>2. 外放同时开启「实时鉴听」→ 实时告警</li>
+                      <li>1. 「文件检测」内置 AI 克隆诈骗样本，一键送检</li>
+                      <li>2. 外放音频同时开启「实时鉴听」→ 实时告警</li>
                       <li>3. 结束鉴听 → 存证 → 导出核验报告 PDF</li>
                     </ol>
                   </div>
@@ -122,15 +121,12 @@ export function ShieldApp() {
 
               {/* 模式切换 */}
               <Tabs value={workMode} onValueChange={(v) => setWorkMode(v as typeof workMode)}>
-                <TabsList className="grid w-full max-w-md grid-cols-3">
+                <TabsList className="grid w-full max-w-md grid-cols-2">
                   <TabsTrigger value="live" className="gap-1.5 text-xs sm:text-sm">
                     <PhoneCall className="h-3.5 w-3.5" aria-hidden /> 实时鉴听
                   </TabsTrigger>
                   <TabsTrigger value="file" className="gap-1.5 text-xs sm:text-sm">
                     <FileAudio className="h-3.5 w-3.5" aria-hidden /> 文件检测
-                  </TabsTrigger>
-                  <TabsTrigger value="challenge" className="gap-1.5 text-xs sm:text-sm">
-                    <Zap className="h-3.5 w-3.5" aria-hidden /> 合成挑战
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="live" className="mt-4">
@@ -138,9 +134,6 @@ export function ShieldApp() {
                 </TabsContent>
                 <TabsContent value="file" className="mt-4">
                   <FilePanel />
-                </TabsContent>
-                <TabsContent value="challenge" className="mt-4">
-                  <ChallengePanel />
                 </TabsContent>
               </Tabs>
 

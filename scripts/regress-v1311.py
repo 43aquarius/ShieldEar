@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
-"""regress-v1310.py — v1.3.10 专项回归（在断网 netns 内对交付包运行）
+"""regress-v1311.py — v1.3.11 专项回归（在断网 netns 内对交付包运行）
 
-覆盖本轮两缺陷的修复验证 + v1.3.9 既有四项（防回归）：
-  1. 七音色真实互异（v1.3.10 bug 1：音色丢弃）：
-     7 音色全部 live/espeak；sourceHash 两两互异；engineLabel 含各自
-     预期变体（cmn+f2…cmn+m6 精确匹配）；返回 PCM 基频女声组(3)显著
-     高于男声组(4)；时长正常（非乱码碎片）
-  2. selfcheck 第 4 项「发行包内组件」+ 单音色 live 合成（v1.3.9 根因）
-  3. 并发存证竞态：6 并发，编号唯一、证据零交叉污染（v1.3.9）
-  4. 存证包 ZIP：结构、SHA256SUMS 自洽、记录锚定（v1.3.9）
-  5. 请求体早期上限：>16MiB → 413（v1.3.9）
-前置（由 test-offline-portable.sh 完成）：包内 espeak-ng.exe 与 espeak-ng-data
-已替换为 Linux 等价物（仅测试期；Windows 交付树由 zip 重建）。
+本轮主题：合成挑战功能整体移除后的完整性验证 + 既有通用防回归：
+  1. 合成通道下线：/api/tts-challenge 与 /api/config/cloud 均 404，
+     前端 chunk 中不得残留 tts-challenge / espeak 字面量（防僵尸引用）；
+  2. 自检四项口径：无「本地合成引擎」项，四项全绿；
+  3. 并发存证竞态：6 并发，编号唯一、证据零交叉污染（v1.3.9 起防回归）；
+  4. 存证包 ZIP：结构、SHA256SUMS 自洽、记录锚定（v1.3.9 起防回归）；
+  5. 请求体早期上限：>16MiB → 413（v1.3.9 起防回归）。
+前置（由 test-offline-portable.sh 完成）：解压树位于
+/tmp/zip-verify/ShieldEar（chunk 静态检查直接读该树）。
 """
 import base64
+import glob
 import hashlib
 import io
 import json
 import math
+import os
+import socket
 import struct
 import sys
 import threading
@@ -27,20 +28,12 @@ import urllib.request
 import zipfile
 
 BASE = "http://127.0.0.1:3000"
+STAGE = "/tmp/zip-verify/ShieldEar"
 PASS, FAIL = [], []
 
-EXPECT_VARIANT = {
-    "tongtong": "cmn+f2", "chuichui": "cmn+f5", "xiaochen": "cmn+m3",
-    "jam": "cmn+m1", "kazi": "cmn+m5", "douji": "cmn+f4", "luodo": "cmn+m6",
-}
-FEMALE = ("tongtong", "chuichui", "douji")
-MALE = ("xiaochen", "jam", "kazi", "luodo")
 
-
-def req(path, body=None, timeout=120, raw_body=None):
-    if raw_body is not None:
-        data = raw_body
-    elif body is not None:
+def req(path, body=None, timeout=120):
+    if body is not None:
         data = json.dumps(body).encode()
     else:
         data = None
@@ -48,13 +41,14 @@ def req(path, body=None, timeout=120, raw_body=None):
                                headers={"Content-Type": "application/json"}, method="POST" if data else "GET")
     try:
         with urllib.request.urlopen(r, timeout=timeout) as resp:
-            # 注意：Next/Node 以【小写】输出响应头，统一小写化避免漏查
             return resp.status, resp.read(), {k.lower(): v for k, v in resp.headers.items()}
     except urllib.error.HTTPError as e:
         try:
             return e.code, e.read(), {k.lower(): v for k, v in e.headers.items()}
         except Exception:
             return e.code, b"", {}
+    except Exception as e:
+        return -1, str(e).encode(), {}
 
 
 def sine_pcm_b64(freq=440.0, sec=3.0, rate=16000):
@@ -70,84 +64,56 @@ def sha256(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
 
 
-def f0_median(pcm, sr=16000):
-    win, hop = int(sr * 0.04), int(sr * 0.02)
-    f0s = []
-    for i in range(0, len(pcm) - win, hop):
-        seg = pcm[i:i + win]
-        if max(abs(x) for x in seg) < 300:
-            continue
-        best_l, best_r = 0, 0
-        for lag in range(int(sr / 400), int(sr / 70)):
-            r = sum(seg[j] * seg[j + lag] for j in range(win - lag))
-            if r > best_r:
-                best_r, best_l = r, lag
-        if best_l:
-            f0s.append(sr / best_l)
-    f0s.sort()
-    return f0s[len(f0s) // 2] if f0s else 0.0
+# ── 1. 合成通道下线（API 面 + 产物静态面）────────────────────────
+print("═══ 1. 合成通道下线（路由 404 + chunk 零残留）═══")
+try:
+    code, raw, _ = req("/api/tts-challenge", {"text": "下线验证", "voice": "tongtong"})
+    code2, raw2, _ = req("/api/config/cloud", {"enabled": True})
+    route_ok = code == 404 and code2 == 404
+    print(f"  [路由下线]     {'✓' if route_ok else '✗'} tts-challenge={code} · config/cloud={code2}（均应为 404）")
 
+    chunk_files = glob.glob(os.path.join(STAGE, "server", ".next", "server", "chunks", "*.js"))
+    residue = []
+    for p in chunk_files:
+        text = open(p, encoding="utf-8", errors="replace").read()
+        for lit in ("tts-challenge", "espeak", "ESPEAK_VOICE_MAP", "local-tts"):
+            if lit in text:
+                residue.append(f"{os.path.basename(p)}: {lit}")
+    chunk_ok = not residue
+    print(f"  [chunk 零残留] {'✓' if chunk_ok else '✗'} {len(chunk_files)} 个服务端 chunk 无合成代码残留"
+          + (f"（{residue[:3]}）" if residue else ""))
 
-# ── 1. 七音色真实互异（v1.3.10 bug 1+2 修复验证）──────────────────
-print("═══ 1. 七音色真实互异（变体 · 哈希 · 基频分组 · 朗读时长）═══")
-voice_rows = {}
-v_fails = []
-for v, expect in EXPECT_VARIANT.items():
-    try:
-        code, raw, _ = req("/api/tts-challenge", {
-            "text": "喂您好，我是您的专属客服，您有一笔退款需要处理，请按提示操作。",
-            "voice": v, "speed": 1.0})
-        d = json.loads(raw)
-        label = d.get("engineLabel", "")
-        variant = label.split("·")[-1].strip() if "·" in label else "?"
-        pcm = struct.unpack(f"<{len(base64.b64decode(d['audio']['pcmB64'])) // 2}h",
-                            base64.b64decode(d["audio"]["pcmB64"]))
-        f0 = f0_median(list(pcm))
-        dur = d["audio"]["durationSec"]
-        voice_rows[v] = dict(code=code, mode=d.get("mode"), engine=d.get("engine"),
-                             variant=variant, sha=d.get("sourceHash", "")[:12], dur=dur, f0=f0)
-        print(f"  [{v:9s}] {'✓' if code == 200 else '✗'} {d.get('mode')}/{d.get('engine')} · "
-              f"{variant}(期望 {expect}) · sha={d.get('sourceHash', '')[:12]} · {dur:.2f}s · {f0:.0f}Hz")
-    except Exception as e:
-        print(f"  [{v:9s}] ✗ {e}")
-        v_fails.append(f"{v}: 异常 {e}")
+    pkg_files = glob.glob(os.path.join(STAGE, "espeak-ng*")) + glob.glob(os.path.join(STAGE, "windows-smoke.cmd"))
+    pkg_ok = not pkg_files
+    print(f"  [交付树无合成] {'✓' if pkg_ok else '✗'} espeak-ng/ 与 windows-smoke.cmd 均不在包内"
+          + (f"（发现 {pkg_files}）" if pkg_files else ""))
 
-if len(voice_rows) == 7:
-    live_ok = all(r["mode"] == "live" and r["engine"] == "espeak" for r in voice_rows.values())
-    var_ok = all(voice_rows[v]["variant"] == e for v, e in EXPECT_VARIANT.items())
-    n_sha = len({r["sha"] for r in voice_rows.values()})
-    sha_ok = n_sha == 7
-    dur_ok = all(4 < r["dur"] < 16 for r in voice_rows.values())
-    f_min = min(voice_rows[v]["f0"] for v in FEMALE)
-    m_max = max(voice_rows[v]["f0"] for v in MALE)
-    grp_ok = f_min > m_max
-    print(f"  [live/espeak]  {'✓' if live_ok else '✗'} 全部走本地 espeak（非回放）")
-    print(f"  [变体精确匹配] {'✓' if var_ok else '✗'} 7/7 与 ESPEAK_VOICE_MAP 一致")
-    print(f"  [哈希互异]     {'✓' if sha_ok else '✗'} {n_sha}/7")
-    print(f"  [朗读时长]     {'✓' if dur_ok else '✗'} 全部 4–16s（非乱码碎片）")
-    print(f"  [基频分组]     {'✓' if grp_ok else '✗'} 女声组最低 {f_min:.0f}Hz > 男声组最高 {m_max:.0f}Hz")
-    if all((live_ok, var_ok, sha_ok, dur_ok, grp_ok)) and not v_fails:
-        PASS.append("七音色真实互异")
+    if route_ok and chunk_ok and pkg_ok:
+        PASS.append("合成通道下线")
     else:
-        FAIL.append("七音色真实互异")
-else:
-    print(f"  ✗ 仅 {len(voice_rows)}/7 音色成功")
-    FAIL.append("七音色真实互异")
+        FAIL.append("合成通道下线")
+except Exception as e:
+    print(f"  ✗ {e}")
+    FAIL.append("合成通道下线")
 
-# ── 2. selfcheck + 单音色（v1.3.9 根因修复，防回归）────────────────
-print("═══ 2. 自检·发行包内组件 + live 合成（v1.3.9 防回归）═══")
+# ── 2. 自检四项口径（无合成项 · 全绿）────────────────────────────
+print("═══ 2. 系统自检四项口径 ═══")
 try:
     code, raw, _ = req("/api/selfcheck")
     d = json.loads(raw)
-    item4 = next((c for c in d["checks"] if c["name"] == "本地合成引擎"), None)
-    ok4 = bool(item4 and item4["ok"] and "发行包内组件" in item4["detail"])
-    print(f"  [自检第4项]   {'✓' if ok4 else '✗'} ok={item4 and item4['ok']} · {item4['detail'] if item4 else '缺失'}")
-    (PASS if ok4 else FAIL).append("自检·本地合成引擎(包内组件)")
+    names = [c["name"] for c in d["checks"]]
+    no_synth = not any(("合成" in n or "espeak" in n.lower()) for n in names)
+    all_ok = d.get("allOk") is True and d.get("total") == 4
+    print(f"  [四项口径]     {'✓' if all_ok and no_synth else '✗'} {d.get('passed')}/{d.get('total')} 全绿 · 项: {names}")
+    if all_ok and no_synth:
+        PASS.append("自检四项口径")
+    else:
+        FAIL.append("自检四项口径")
 except Exception as e:
-    print(f"  [自检第4项]   ✗ {e}")
-    FAIL.append("自检·本地合成引擎(包内组件)")
+    print(f"  ✗ {e}")
+    FAIL.append("自检四项口径")
 
-# ── 3. 并发存证竞态（v1.3.9 防回归）────────────────────────────────
+# ── 3. 并发存证竞态（v1.3.9 起防回归）────────────────────────────
 print("═══ 3. 并发存证竞态（6 并发 · 编号唯一 · 证据零污染）═══")
 N = 6
 results = [None] * N
@@ -162,7 +128,7 @@ def worker(i):
         "sourceType": "UPLOAD",
         "sourceLabel": f"并发回归·{i}",
         "fileName": f"concurrent-{i}.bin",
-        "notes": "v1.3.10 并发竞态回归",
+        "notes": "v1.3.11 并发竞态回归",
     }
     results[i] = req("/api/analyze", body)
 
@@ -202,7 +168,7 @@ if all_ok and uniq and clean and no_leak:
 else:
     FAIL.append("并发存证竞态")
 
-# ── 4. 证据核验 + 存证包 ZIP（v1.3.9 防回归）──────────────────────
+# ── 4. 证据核验 + 存证包 ZIP（v1.3.9 起防回归）──────────────────
 print("═══ 4. 证据核验与存证包 ZIP ═══")
 verify_ok = package_ok = False
 if caseNos:
@@ -245,10 +211,9 @@ else:
     FAIL.append("证据核验·含原始来源")
     FAIL.append("存证包ZIP")
 
-# ── 5. 请求体早期上限（v1.3.9 防回归）─────────────────────────────
+# ── 5. 请求体早期上限（v1.3.9 起防回归）──────────────────────────
 print("═══ 5. 请求体早期上限（>16MiB → 413，不进解码）═══")
 try:
-    import socket
     s = socket.create_connection(("127.0.0.1", 3000), timeout=20)
     total = 17 * 1024 * 1024
     head = (
@@ -280,7 +245,7 @@ except Exception as e:
 
 # ── 汇总 ──────────────────────────────────────────────────────────
 print()
-print(f"═══ v1.3.10 专项回归：{len(PASS)} 通过 / {len(FAIL)} 失败 ═══")
+print(f"═══ v1.3.11 专项回归：{len(PASS)} 通过 / {len(FAIL)} 失败 ═══")
 for f in FAIL:
     print(f"  ✗ {f}")
 sys.exit(1 if FAIL else 0)

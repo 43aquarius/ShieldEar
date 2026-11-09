@@ -447,7 +447,7 @@ export function LivePanel() {
 
           <p className="text-xs leading-relaxed text-muted-foreground">
             提示：实时鉴听在浏览器本地完成特征提取与初判，结束后整段 PCM 上传服务端用同一引擎复核并固定哈希 —
-            双端一致性是反诈取证可信度的基础。演示建议：外放一段「现场合成挑战」生成的音频，同时开启鉴听。
+            双端一致性是反诈取证可信度的基础。演示建议：外放一段「AI 克隆」诈骗样本（文件检测内置，可下载后播放），同时开启鉴听。
           </p>
         </CardContent>
       </Card>

@@ -1,11 +1,59 @@
 #!/usr/bin/env python3
-"""regress-all-apis.py — v1.3.5 全功能回归
-（合成挑战/实时鉴听/文件检测/案例库/存证包/云端通道/系统自检/证据完整性核验）"""
-import json, base64, urllib.request, urllib.error, sys, time as _t
+"""regress-all-apis.py — 全功能回归（v1.3.11 口径）
+（实时鉴听/文件检测/案例库/存证包/离线声明/系统自检/证据完整性核验）
+
+v1.3.11 变更：合成挑战已随功能移除 —— LIVE/UPLOAD 用例的输入改为
+读取包内预置样本（16kHz WAV 直读；24kHz 样本纯 Python 多相重采样），
+不再依赖 TTS 产物；「云端通道」项改为验证旧合成路由已下线（404）
+且自检声明纯离线。
+"""
+import base64
+import json
+import struct
+import sys
+import urllib.error
+import urllib.request
+import wave
 
 BASE = "http://localhost:3000"
-_latest_case = "SS-20261027-0001"  # 案例库读取后动态更新
 PASS, FAIL = [], []
+
+# 样本定位：断网包测时用解压树内样本，开发机用仓库样本
+import os
+_CANDIDATES = [
+    "/tmp/zip-verify/ShieldEar/server/public/samples/demo_natural_demo.wav",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public", "samples", "demo_natural_demo.wav"),
+    "public/samples/demo_natural_demo.wav",
+]
+SAMPLE = next((p for p in _CANDIDATES if os.path.exists(p)), None)
+
+
+def load_pcm16k_b64(path, max_sec=8.0):
+    """读 WAV → 单声道 int16 PCM → 16kHz（如需则线性插值降采样）→ base64。
+
+    回归用途（验证 API 管线），线性插值足够；与浏览器/种子管线的
+    抗混叠重采样差异不影响接口层断言。
+    """
+    with wave.open(path, "rb") as w:
+        rate = w.getframerate()
+        nch = w.getnchannels()
+        sw = w.getsampwidth()
+        assert sw == 2, f"非 16bit: {path}"
+        n = min(w.getnframes(), int(max_sec * rate))
+        raw = w.readframes(n)
+    pcm = struct.unpack(f"<{len(raw) // 2}h", raw)
+    if nch > 1:
+        pcm = pcm[::nch]
+    if rate != 16000:
+        out_n = int(len(pcm) * 16000 / rate)
+        pcm = tuple(
+            int(pcm[min(int(i * rate / 16000), len(pcm) - 1)] +
+                (pcm[min(int(i * rate / 16000) + 1, len(pcm) - 1)] -
+                 pcm[min(int(i * rate / 16000), len(pcm) - 1)]) *
+                ((i * rate / 16000) % 1.0))
+            for i in range(out_n)
+        )
+    return base64.b64encode(struct.pack(f"<{len(pcm)}h", *pcm)).decode()
 
 
 def post(path, body, timeout=120):
@@ -15,29 +63,32 @@ def post(path, body, timeout=120):
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, json.loads(r.read())
     except urllib.error.HTTPError as e:
-        # 4xx/5xx 也是有效响应体（发行锁 403 等）
         try:
             return e.code, json.loads(e.read())
         except Exception:
             return e.code, {}
 
+
 def get(path, timeout=60):
     with urllib.request.urlopen(BASE + path, timeout=timeout) as r:
         return r.status, r.read()
 
-# ── 1. 合成挑战（四级链） ──
+
+_latest_case = "SS-00000000-0000"
+
+# ── 1. 检测输入源（包内真人样本） ──
+if not SAMPLE:
+    print("[检测输入]   ✗ 找不到预置样本（候选路径均不存在）")
+    FAIL.append("检测输入")
+    sys.exit(1)
 try:
-    code, d = post("/api/tts-challenge", {
-        "text": "您好，我是您的孙子，我遇到车祸急需三万元医药费，请马上转账到这个账户。",
-        "voice": "tongtong", "speed": 1.0})
-    overall = d["analysis"]["overall"]
-    print(f"[合成挑战]   HTTP {code} · engine={d['engine']}({d['engineLabel']}) mode={d['mode']} · "
-          f"caseNo={d['caseNo']} · risk={overall['risk']} · 合成置信度={overall['syntheticRatio']*100:.1f}% · "
-          f"时长={d['audio']['durationSec']}s")
-    PASS.append("合成挑战")
-    pcm_b64 = d["audio"]["pcmB64"]
+    pcm_b64 = load_pcm16k_b64(SAMPLE)
+    print(f"[检测输入]   ✓ {os.path.basename(SAMPLE)} → {len(base64.b64decode(pcm_b64)) // 2 :,} 样本（16kHz）")
+    PASS.append("检测输入")
 except Exception as e:
-    print(f"[合成挑战]   ✗ {e}"); FAIL.append("合成挑战"); sys.exit(1)
+    print(f"[检测输入]   ✗ {e}")
+    FAIL.append("检测输入")
+    sys.exit(1)
 
 # ── 2. 实时鉴听（LIVE）与 3. 文件检测（UPLOAD） ──
 for name, st in [("实时鉴听", "LIVE"), ("文件检测", "UPLOAD")]:
@@ -46,7 +97,7 @@ for name, st in [("实时鉴听", "LIVE"), ("文件检测", "UPLOAD")]:
             "pcmB64": pcm_b64, "sourceType": st,
             "sourceLabel": f"回归测试·{name}",
             "fileName": "regression.wav" if st == "UPLOAD" else None,
-            "notes": "v1.3.5 全功能回归"})
+            "notes": "v1.3.11 全功能回归"})
         o = d["analysis"]["overall"]
         print(f"[{name}]   HTTP {code} · caseNo={d['caseNo']} · risk={o['risk']} · verdict={o['verdict']}")
         PASS.append(name)
@@ -73,53 +124,30 @@ try:
 except Exception as e:
     print(f"[存证包]     ✗ {e}"); FAIL.append("存证包")
 
-# ── 6. 云端通道：发行锁(403)或运行时开关（v1.3.5 自适应） ──
+# ── 6. 合成通道下线声明（v1.3.11：旧合成/云端路由必须 404） ──
 try:
-    code, d = post("/api/config/cloud", {"enabled": True}, timeout=15)
-    if code == 403:
-        # 纯离线发行版：切换必须被拒绝，且状态恒为关闭
-        assert d.get("releaseOffline") is True and d.get("cloudEnabled") is False, "发行锁响应异常"
-        t0 = _t.time()
-        code2, d2 = post("/api/tts-challenge", {
-            "text": "发行锁验证：纯离线发行版合成必走本地espeak，零联网。",
-            "voice": "tongtong", "speed": 1.0}, timeout=60)
-        dt = _t.time() - t0
-        assert d2["engine"] == "espeak" and d2.get("cloudEnabled") is False, \
-            f"发行锁下合成应走espeak，实际={d2['engine']}"
-        print(f"[云端通道·锁] HTTP {code} 403 ✓ · engine={d2['engine']}({d2['engineLabel']}) · 耗时={dt:.2f}s · 零联网零等待")
-    else:
-        # 开发版：运行时开关可用，开→关→复位验证
-        assert d["cloudEnabled"] is True, "开启失败"
-        code2, d2 = post("/api/config/cloud", {"enabled": False}, timeout=15)
-        assert d2["cloudEnabled"] is False, "关闭失败"
-        t0 = _t.time()
-        code3, d3 = post("/api/tts-challenge", {
-            "text": "离线验证：云端通道关闭后，合成应直达本地espeak，零联网零等待。",
-            "voice": "tongtong", "speed": 1.0}, timeout=60)
-        dt = _t.time() - t0
-        assert d3["engine"] == "espeak" and d3.get("cloudEnabled") is False, \
-            f"离线合成应走espeak，实际={d3['engine']}"
-        print(f"[云端开关·离] HTTP {code3} · engine={d3['engine']}({d3['engineLabel']}) · 耗时={dt:.2f}s · 零联网零等待")
-        code4, d4 = post("/api/config/cloud", {"reset": True}, timeout=15)
-        expect = not d4["offlineMode"]
-        assert d4["cloudEnabled"] is expect, f"恢复默认失败: 期望 {expect}, 实际 {d4['cloudEnabled']}"
-        print(f"[云端开关·复位] HTTP {code4} · cloudEnabled={d4['cloudEnabled']} · offlineMode={d4['offlineMode']}（恢复环境默认值）")
-    PASS.append("云端通道")
+    code, d = post("/api/tts-challenge", {"text": "下线验证", "voice": "tongtong"}, timeout=15)
+    assert code == 404, f"合成路由应已下线(404)，实际 HTTP {code}"
+    code2, _ = post("/api/config/cloud", {"enabled": True}, timeout=15)
+    assert code2 == 404, f"云端配置路由应已下线(404)，实际 HTTP {code2}"
+    print(f"[合成通道下线] HTTP {code}/{code2} 404 ✓ · 合成与云端路由均已移除（零联网面）")
+    PASS.append("合成通道下线")
 except Exception as e:
-    print(f"[云端通道]   ✗ {e}"); FAIL.append("云端通道")
+    print(f"[合成通道下线] ✗ {e}"); FAIL.append("合成通道下线")
 
-# ── 7. 系统自检（v1.3.5）：全部子系统必须通过 ──
+# ── 7. 系统自检：四项全部通过且声明纯离线 ──
 try:
     code, raw = get("/api/selfcheck", timeout=60)
     d = json.loads(raw)
     assert d["allOk"] is True, f"自检存在失败项: {[c['name'] for c in d['checks'] if not c['ok']]}"
+    assert d["releaseOffline"] is True, "发行包应声明纯离线"
     print(f"[系统自检]   HTTP {code} · {d['passed']}/{d['total']} 全绿 · "
           f"engine={d['engineVersion']} · releaseOffline={d['releaseOffline']}")
     PASS.append("系统自检")
 except Exception as e:
     print(f"[系统自检]   ✗ {e}"); FAIL.append("系统自检")
 
-# ── 8. 证据完整性核验（v1.3.5）：最新案例必须核验通过 ──
+# ── 8. 证据完整性核验：最新案例必须核验通过 ──
 try:
     code, raw = get("/api/verify/" + _latest_case, timeout=60)
     d = json.loads(raw)

@@ -35,6 +35,15 @@
 #   · VC++ 三 DLL 增至包根与 .prisma/client/（Prisma 引擎 DLL
 #     依赖 msvcp140 等，未装运行库的机器上 app-local 就位）。
 #
+# v1.3.11 变更（合成挑战功能整体移除，专注识别分析）：
+#   · 便携包不再携带任何本地合成组件（espeak-ng.exe / DLL / 全量声库，
+#     共约 27MB）；相应地 boot.js 移除 ESPEAK_DATA_PATH 注入与合成组件
+#     自检，windows-smoke.cmd 不再随包；
+#   · VC++ 2015-2022 三 DLL 仍随包（Prisma query_engine-windows.dll.node
+#     依赖 msvcp140 等，与合成组件无关），改为直接落包根与 .prisma/client；
+#   · verify-bundled-platform.py 收敛为「平台比较残留」单项硬闸
+#     （espeak/ffmpeg 字面量闸随探测代码一并移除）。
+#
 # 注意：最终包只含 Windows Prisma 引擎；Linux 断网测试由
 #       test-offline-portable.sh 临时补 debian 引擎后自行清理
 # ============================================================
@@ -114,19 +123,16 @@ rm -rf "$STAGE/server/calibration/audio" \
 echo "── [4/8] 启动包装器 boot.js（自检 + 纯离线发行锁 + DATABASE_URL 绝对化） ──"
 cat > "$STAGE/server/boot.js" << 'BOOTEOF'
 /**
- * boot.js — 声盾便携包启动包装器（v1.3.5；v1.3.9 增强）
+ * boot.js — 声盾便携包启动包装器（v1.3.5；v1.3.11 移除合成通道）
  * 职责：
- *   1. 纯离线发行锁：SHIELD_RELEASE_OFFLINE=1（云端通道在本包中永久关闭，
- *      切换接口 403，前端编译期已徽章化，不存在任何可触发的联网路径）；
- *   2. ESPEAK_DATA_PATH 全局注入（v1.3.9）：包内 espeak-ng-data 存在且
- *      环境变量未设时指向包内目录 —— 官方 CI 构建的 espeak-ng.exe 找不到
- *      数据目录时会直接崩溃（0xC0000005），无论以何种方式被解析；
- *   3. 启动自检：实际加载 Prisma 引擎 + 数据库连通 + 校准数据 + espeak 组件，
+ *   1. 纯离线发行锁：SHIELD_RELEASE_OFFLINE=1（本包检测/存证/核验
+ *      全程本地，不含任何联网路径）；
+ *   2. 启动自检：实际加载 Prisma 引擎 + 数据库连通 + 校准数据，
  *      任何一项失败都打印明确提示并写 STARTUP-ERROR.txt 后退出 ——
  *      杜绝"带病启动 → 页面 Internal Server Error"；
- *   4. 把相对形态的 DATABASE_URL 转为基于本目录的绝对路径；
- *   5. 固定 cwd 到本目录，保证 espeak-ng 等包内组件的相对定位；
- *   6. 加载 Next.js standalone 服务端。
+ *   3. 把相对形态的 DATABASE_URL 转为基于本目录的绝对路径；
+ *   4. 固定 cwd 到本目录，保证相对路径组件的定位；
+ *   5. 加载 Next.js standalone 服务端。
  */
 const path = require("path");
 const fs = require("fs");
@@ -134,19 +140,6 @@ process.chdir(__dirname);
 
 // ── 1. 纯离线发行锁 ──
 process.env.SHIELD_RELEASE_OFFLINE = "1";
-
-// ── 1b. ESPEAK_DATA_PATH 全局注入（v1.3.9）──
-// 官方 CI 构建的 espeak-ng.exe 在无数据目录时直接 0xC0000005 崩溃；
-// 提前注入可覆盖「包内 espeak-ng 目录被加入 PATH 后经裸名解析」的边缘场景。
-// 仅当包内数据目录真实存在且用户未显式设置时注入，不影响系统安装的 espeak。
-(function () {
-  const dataDir = path.join(__dirname, "..", "espeak-ng", "espeak-ng-data");
-  try {
-    if (!process.env.ESPEAK_DATA_PATH && fs.existsSync(dataDir)) {
-      process.env.ESPEAK_DATA_PATH = path.join(__dirname, "..", "espeak-ng");
-    }
-  } catch {}
-})();
 
 // ── 2. DATABASE_URL 相对→绝对（自检的 Prisma 探针需要正确路径） ──
 let url = process.env.DATABASE_URL || "file:./db/custom.db";
@@ -166,11 +159,8 @@ function startupFail(items) {
     items.map((s) => "  ✗ " + s).join("\n") +
     "\n\n  处理建议：\n" +
     "  · 重新解压完整发行包（可能解压不完整或文件被杀毒软件误删，请将本文件夹加入杀毒白名单）\n" +
-    "  · 若提示 0xC0000135 / DLL 缺失（espeak 合成组件）：包内 espeak-ng\\ 目录的\n" +
-    "    DLL 缺失或文件名不匹配 —— 请重新解压完整包，或运行包根目录\n" +
-    "    windows-smoke.cmd 自动定位/修复（安装 VC++ 运行库无效，v1.3.7 曾误诊）\n" +
-    "  · 若数据引擎（Prisma）加载失败：本包已随附全部所需 DLL（msvcp140 等，\n" +
-    "    v1.3.9 起包内三处就位）；如仍失败，多为解压不完整或杀毒误删 \u2014\u2014 \n" +
+    "  · 若数据引擎（Prisma）加载失败：本包已随附所需 DLL（msvcp140 等，\n" +
+    "    v1.3.9 起包内两处就位）；如仍失败，多为解压不完整或杀毒误删 ——\n" +
     "    请重新解压完整包\n" +
     "  · 数据库（server/db/custom.db）不会自动重建：若缺失或损坏，请从\n" +
     "    发行包重新解压恢复，勿手动删除该文件\n" +
@@ -185,19 +175,6 @@ function startupFail(items) {
 
 async function main() {
   const problems = [];
-
-  // 3a-bis. VC++ 运行库 DLL 预置校验（v1.3.9）：Prisma 的 query_engine-windows.dll.node
-  // 依赖 msvcp140/vcruntime140；包根（node.exe 同目录，DLL 搜索首选路径）与
-  // .prisma/client/（LOAD_WITH_ALTERED_SEARCH_PATH 目录）都应有三 DLL。
-  for (const vcDir of [path.join(__dirname, ".."), path.join(__dirname, "node_modules", ".prisma", "client")]) {
-    for (const vc of ["msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll"]) {
-      try {
-        const src = path.join(__dirname, "..", "espeak-ng", vc);
-        const dst = path.join(vcDir, vc);
-        if (fs.existsSync(src) && !fs.existsSync(dst)) fs.copyFileSync(src, dst);
-      } catch {}
-    }
-  }
 
   // 3a. Prisma 查询引擎：文件存在性（平台对应的引擎文件）
   const prismaClientDir = path.join(__dirname, "node_modules", ".prisma", "client");
@@ -251,43 +228,6 @@ async function main() {
     problems.push("检测引擎校准数据缺失（server/calibration/features.json）— 检测功能将不可用");
   }
 
-  // 3e. espeak-ng 本地合成组件（Windows 发行包内建；缺失仅降级到 Tier4 预置样本回放，
-  //     不阻断启动 — v1.3.7：避免杀毒误删单一组件导致整包不可用）
-  //     v1.3.8：先自愈 DLL 别名 —— espeak-ng.exe 导入表要求 libespeak-ng.dll
-  //     （连字符），历史包内为下划线名导致全平台 0xC0000135（真机实测根因，
-  //     v1.3.7 曾误诊为 VC++ 运行库缺失）。
-  const bootWarnings = [];
-  if (process.platform === "win32") {
-    const espeakDir = path.join(__dirname, "..", "espeak-ng");
-    try {
-      const hyph = path.join(espeakDir, "libespeak-ng.dll");
-      const under = path.join(espeakDir, "libespeak_ng.dll");
-      if (!fs.existsSync(hyph) && fs.existsSync(under)) {
-        fs.copyFileSync(under, hyph);
-        console.warn("  [ShieldEar] 已自动补齐 espeak-ng\\libespeak-ng.dll（连字符别名 · v1.3.8 自愈）");
-      }
-    } catch {}
-    const espeakFiles = [
-      "espeak-ng.exe",
-      "espeak-ng-data",
-      "libespeak-ng.dll",
-      "msvcp140.dll",
-      "vcruntime140.dll",
-      "vcruntime140_1.dll",
-    ];
-    const missing = espeakFiles.filter((f) => !fs.existsSync(path.join(espeakDir, f)));
-    if (missing.length > 0) {
-      bootWarnings.push(
-        "本地合成组件不完整（espeak-ng/ 缺少: " + missing.join(", ") +
-          "）— 现场合成挑战将降级为预置样本回放；常见原因：解压不完整或杀毒软件误删，" +
-          "可将本文件夹加入杀毒白名单后重新解压；也可运行包根目录 windows-smoke.cmd 自动定位"
-      );
-    }
-  }
-  for (const w of bootWarnings) {
-    console.warn("  [ShieldEar] 警告: " + w);
-  }
-
   if (problems.length > 0) startupFail(problems);
 
   // ── 4. 加载 Next.js standalone 服务端 ──
@@ -336,65 +276,26 @@ if [ "$SEED_COUNT" -lt 1 ] 2>/dev/null; then
 fi
 echo "✓ 案例库含 $SEED_COUNT 条种子案例"
 
-echo "── [6/8] espeak-ng Windows 组件（含 VC++ 运行库三 DLL · v1.3.8 双文件名）──"
-mkdir -p "$STAGE/espeak-ng"
-cp /tmp/msi-out/espeak-ng.exe "$STAGE/espeak-ng/espeak-ng.exe"
-# v1.3.8 关键修复（根因修正）：espeak-ng.exe（官方 CI 构建）导入表要求
-# libespeak-ng.dll（连字符），而 MSI 解包产物为 libespeak_ng.dll（下划线）。
-# v1.3.7 及之前只放入下划线名 → 任何 Windows 上合成器 0xC0000135 拒绝启动
-# （曾被误诊为 VC++ 运行库缺失，真机实测坐实为文件名不匹配）。
-# 现两个文件名同时随包（互为拷贝）；另有三层运行时自愈兜底：
-#   boot.js 启动别名补齐 / local-tts.ts 探测前补齐 / windows-smoke.cmd 就地修复。
-[ -f /tmp/msi-out/libespeak_ng.dll ] || { echo "✗ libespeak_ng.dll 缺失（MSI 解包不完整）"; exit 1; }
-cp /tmp/msi-out/libespeak_ng.dll "$STAGE/espeak-ng/libespeak_ng.dll"
-cp /tmp/msi-out/libespeak_ng.dll "$STAGE/espeak-ng/libespeak-ng.dll"
-if [ -d /tmp/msi-out/espeak-ng-data ]; then
-  # 预提取布局（MSI 已解包形态）：直接整目录复制
-  cp -r /tmp/msi-out/espeak-ng-data "$STAGE/espeak-ng/espeak-ng-data"
-else
-  # MSI 原始解包布局：非二进制文件平铺于数据目录
-  mkdir -p "$STAGE/espeak-ng/espeak-ng-data"
-  cd /tmp/msi-out
-  for f in *; do
-    case "$f" in
-      *.exe|*.dll|*.msi) ;;
-      *) cp -r "$f" "$STAGE/espeak-ng/espeak-ng-data/" ;;
-    esac
-  done
-fi
-[ -f "$STAGE/espeak-ng/espeak-ng.exe" ] || { echo "✗ espeak-ng.exe 缺失"; exit 1; }
-[ -d "$STAGE/espeak-ng/espeak-ng-data" ] || { echo "✗ espeak-ng-data 缺失"; exit 1; }
-
-# v1.3.7 关键修复：espeak-ng.exe / libespeak_ng.dll 为 MSVC 构建，
-# 依赖 msvcp140 / vcruntime140 / vcruntime140_1（VC++ 2015-2022 运行库）。
-# 未装运行库的目标机上进程以 0xC0000135 拒绝启动（v1.3.6 用户机实锤）。
-# 修复：三 DLL 以 app-local 方式随包分发（微软官方 VCLibs 包提取，
-# 仓库 scripts/package-files/vcredist/ 存档），放在 exe 同目录即生效，
-# 已装运行库的机器不受影响。UCRT（api-ms-win-crt-*）Win10+ 系统内置，无需随包。
+echo "── [6/8] VC++ 运行库三 DLL（Prisma 引擎依赖 · v1.3.11 起唯一消费者）──"
+# v1.3.7 引入（espeak-ng 需要）；v1.3.9 扩展（Prisma 引擎也需要）；
+# v1.3.11 合成组件移除后，Prisma query_engine-windows.dll.node 成为唯一消费者。
+# 放包根（node.exe 同目录，DLL 搜索首选路径）与 .prisma/client/
+# （引擎加载目录）—— 未装 VC++ 运行库的机器上也能正常加载（app-local 就位）。
+# UCRT（api-ms-win-crt-*）Win10+ 系统内置，无需随包。
+mkdir -p "$STAGE/server/node_modules/.prisma/client"
 for vc in msvcp140.dll vcruntime140.dll vcruntime140_1.dll; do
   src="$PROJ/scripts/package-files/vcredist/$vc"
   [ -f "$src" ] || { echo "✗ VC++ 运行库 DLL 缺失：$src（仓库不完整）"; exit 1; }
-  cp "$src" "$STAGE/espeak-ng/$vc"
+  cp "$src" "$STAGE/$vc"
+  cp "$src" "$STAGE/server/node_modules/.prisma/client/$vc"
 done
-# v1.3.9：三 DLL 同步放到包根（node.exe 同目录，DLL 搜索首选路径）
-# 与 .prisma/client/（Prisma 引擎加载目录）—— 未装 VC++ 运行库的机器上
-# query_engine-windows.dll.node 也能正常加载（app-local 就位，boot.js 亦有运行时自愈兑底）。
-mkdir -p "$STAGE/server/node_modules/.prisma/client"
-for vc in msvcp140.dll vcruntime140.dll vcruntime140_1.dll; do
-  cp "$STAGE/espeak-ng/$vc" "$STAGE/$vc"
-  cp "$STAGE/espeak-ng/$vc" "$STAGE/server/node_modules/.prisma/client/$vc"
-done
-VC_SIZE=$(du -cb "$STAGE/espeak-ng/"{msvcp140,vcruntime140,vcruntime140_1}.dll | tail -1 | cut -f1)
-echo "✓ VC++ 运行库三 DLL 就位（$((VC_SIZE/1024))KB × espeak-ng/ 包根 .prisma/client 三处）"
-echo "✓ espeak-ng 组件就位（$(du -sh "$STAGE/espeak-ng" | cut -f1)，libespeak-ng.dll 双文件名随包）"
+VC_SIZE=$(du -cb "$PROJ/scripts/package-files/vcredist/"{msvcp140,vcruntime140,vcruntime140_1}.dll | tail -1 | cut -f1)
+echo "✓ VC++ 运行库三 DLL 就位（$((VC_SIZE/1024))KB × 包根 + .prisma/client 两处；合成组件已随 v1.3.11 移除，包体约 -27MB）"
 
 echo "── [7/8] Node 运行时与启动脚本 ──"
 cp /tmp/node.exe "$STAGE/node.exe"
 cp "$PROJ/scripts/package-files/START-ShieldEar.bat" "$STAGE/"
-cp "$PROJ/scripts/package-files/README.txt" "$STAGE/"
-# v1.3.8：Windows 冒烟脚本随包（真机 10 秒验证 espeak 组件；可就地修复 v1.3.7 旧包）
-cp "$PROJ/scripts/package-files/windows-smoke.cmd" "$STAGE/windows-smoke.cmd"
-[ -f "$STAGE/windows-smoke.cmd" ] || { echo "✗ windows-smoke.cmd 复制失败"; exit 1; }
+cp "$PROJ/scripts/package-files/README.txt" "$STAGE/README.txt"
 
 echo "── [8/8] 组装后校验与体积统计 ──"
 # fail-fast：Windows 引擎必须真的在包里（防构建机状态异常导致静默缺失）

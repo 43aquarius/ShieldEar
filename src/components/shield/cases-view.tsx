@@ -2,7 +2,7 @@
 
 /**
  * 声盾 — 案例库
- * 所有检测案例（实时/文件/合成挑战）统一入库，可回看、导出报告、下载证据
+ * 所有检测案例（实时/文件）统一入库，可回看、导出报告、下载证据
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -49,7 +49,6 @@ interface CaseRow {
 const SOURCE_TEXT: Record<string, string> = {
   LIVE: "实时鉴听",
   UPLOAD: "文件检测",
-  TTS: "合成挑战",
 };
 
 export function CasesView() {
@@ -144,7 +143,7 @@ export function CasesView() {
         createdAt: detail.row.createdAt,
         audioHash: detail.row.audioHash,
         sourceHash: null,
-        sourceType: detail.row.sourceType as "LIVE" | "UPLOAD" | "TTS",
+        sourceType: detail.row.sourceType as "LIVE" | "UPLOAD",
         sourceLabel: detail.row.sourceLabel,
         fileName: detail.row.fileName,
         durationSec: detail.row.durationSec,

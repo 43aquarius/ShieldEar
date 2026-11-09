@@ -24,7 +24,7 @@ const ARCH_ROWS = [
   {
     layer: "采集层",
     icon: AudioWaveform,
-    modules: "麦克风实时流（AudioWorklet 16kHz）· 文件导入（浏览器解码重采样）· TTS 现场合成（24kHz→16kHz）",
+    modules: "麦克风实时流（AudioWorklet 16kHz）· 文件导入（浏览器解码重采样）",
     points: "统一至 16kHz 单声道分析标准；AudioWorklet 采集零回退丢失，兼容 ScriptProcessor 降级",
   },
   {
