@@ -499,3 +499,86 @@ API 数字 ID 路由复刻：blob 内容寻址逐个校验、树 SHA 逐提交�
 沙箱再次回收（发版完成后）：本地 download/ 交付 zip 与 /tmp 构建资产
 再次清空，交付副本已自 Release 资产 16 段回读恢复（78,020,700B ·
 SHA-256 7473f1c1… 与登记一致；恢复即复验）。
+
+---
+
+## v1.3.11 · 合成挑战功能整体移除（2026-11-09）
+
+**决策**：本地语音生成（espeak-ng 现场合成）真机实测音质不达标——机器
+感明显、无法代表真实 AI 诈骗威胁面。与其带一条「演示效果对不起产品
+主张」的功能线，不如整体删除，平台回归「检测 → 告警 → 存证 → 报告」
+识别分析主线。云端 TTS 通道（tts-client / cloud-config / config 路由）
+随挑战功能一并退役（发行包 v1.3.5 起本就 403 锁死，源码侧也无需再养）。
+
+**移除清单（代码主体 + 本轮工具链清理）**：
+- 服务端：local-tts.ts（878 行 · synthesizeEspeak/七音色表/stdin+b1
+  通道）、tts-client.ts（160 行）、cloud-config.ts、api/tts-challenge 与
+  api/config/cloud 两路由 —— 构建路由表仅剩 7 个检测/存证 API；
+- 前端：challenge-panel.tsx（372 行）及导航入口；store/各视图的挑战
+  引用同步收敛；
+- 静态资产：public/samples/challenge/tts_*.wav 七件全删；
+- 打包链：build-portable.sh 的 espeak 套件注入（/tmp/msi-out 三处
+  拷贝）与 boot.js 的 ESPEAK_DATA_PATH 注入/合成组件自检；windows-
+  smoke.cmd 不再随包；verify-bundled-platform.py 由三闸收敛为
+  「process.platform 比较残留」单项泛化闸（espeak/ffmpeg 字面量闸随
+  探测代码消亡）；verify-package-imports.py 保留（守护 node.exe /
+  Prisma 引擎 / VC++ 三 DLL，头注补 v1.3.11 口径）；
+- 脚本清理 21 个：probe-espeak-{variants,final} · rebuild-espeak-from-
+  msi · extract-espeak-binaries · pe-imports-functions · cab-mszip
+  （MSI/CAB 为 espeak 专用工具链）· recover-assets-v1310（v1.3.10
+  espeak 包专用恢复器；node.exe 恢复改走官方 dist 直下）· regress-
+  v1310 · e2e-voices-v1310（作废专项）· tts-live-check / tts-curl-
+  probe / local-tts-module-test / tts-isolation-test / tts-node-fetch-
+  test / tts-poll / tts-content-test / fake-tts-server（合成栈测试与
+  WAF 探针）· gen-tts-samples{,2}.ts（依赖已删 tts-client，校准语料
+  tts_*.wav 已随库交付）· write-launchers.py（v1.3.2 旧布局生成器）·
+  retake-spectrogram-shot.sh（指向已删 UI）；另删 scripts/fusion/
+  陈旧融合快照 12 件（内含挑战路由/面板旧副本，git 历史可考）；
+- 种子：SS-0005 现场合成案例取消，回归 4 条（真人×2 / 神经合成×2）；
+- schema：sourceType 枚举值 TTS 保留（兼容既有存证与证据包），注释
+  标注历史类型口径。
+
+**环境重建（沙箱再次回收后）**：node_modules 本次幸存；.next/db/
+evidence//tmp 全失。恢复链：Prisma 四引擎 ← restore-prisma-engines.sh
+（commit c2990dca… 与 engines-version 锚定一致，require 探针自验过）；
+node.exe ← nodejs.org 官方 dist v20.18.1 win-x64 直下（69,812,368B ·
+SHA-256 06c1dec1… 与官方 SHASUMS256.txt 一致）——不再从旧 Release
+资产回读（espeak 包恢复器已删，官方源更直接）。
+
+**完整管线（全绿）**：db:push（空库重建）→ build:offline（11.5s 编译
+通过，路由表证实合成通道下线）→ seed-and-stop.sh（4 条种子重灌：
+LOW 0.156–0.254 / HIGH 0.670–0.712，与 v1.3.10 五条梯度完全一致，
+同构引擎确定性零漂移；脚本收尾卡住被 600s 超时收割，数据已入库无碍
+——老环境坑复现，(seed) 数据完整性以 DB/证据目录为准）→
+build-portable（平台折叠 19 chunk / Windows 引擎 / 外部依赖 11 项 /
+PE 导入 8 文件四闸全过；软链解引用 1 处）→ make-portable-zip。
+
+**新产物**：ShieldEar-v1.3.11-portable.zip · 60,738,027B（57.9MiB）
+· 1,459 文件 · SHA-256
+284095417baea88ce8f799ec5e1656052baef7f07f949d3fa8ae92f69e0e2723。
+对比 v1.3.10（78,020,700B · 1,942 文件）：**-17.3MB（-22.2%）·
+-483 文件**——espeak-ng 全量组件 + windows-smoke + 挑战样本 wav
+的净移除量；包体随功能诚实化首次回落到 60MB 档。
+
+**断网 netns 实测（unshare -rn · 解压交付 zip 原物）**：
+- 基线 8/8：检测输入（包内样本直读）· 实时鉴听 · 文件检测 · 案例库
+  · 存证包 WAV · **合成通道下线（/api/tts-challenge 与
+  /api/config/cloud 均 404）** · 系统自检 4/4 全绿（releaseOffline=
+  true）· 证据核验 SHA-256 重算一致；
+- v1.3.11 专项 6/6：路由 404 + **19 个服务端 chunk 零合成字面量
+  残留**（tts-challenge/espeak/ESPEAK_VOICE_MAP/local-tts 四关键词
+  扫描）+ 交付树无 espeak-ng/ 与 windows-smoke.cmd · 自检四项口径
+  （无合成项）· 并发存证竞态 6/6（编号唯一 · srcHash 逐路一致 ·
+  0.2s）· 存证包 ZIP（SHA256SUMS 自洽 · 记录锚定）· 体积闸 413。
+
+**文档口径**：主 README 徽章/功能表/快速开始/架构采集层/目录树全面
+更新（现场合成挑战行删除 · 四案件口径 · 58MB · v1.3.11 变更与排障
+史收笔）；包内 README.txt / START-ShieldEar.bat 已随 6f6f577 就位。
+**冻结不动**：docs/ 参赛五件套与 scripts/report/* 生成源——已交付
+参赛材料描述 v1.3.10 形态（含答辩演示剧本中的挑战环节），如需随
+v1.3.11 重制属于独立任务。
+
+**待办（发版）**：push 复刻基线改为 f17b838..HEAD；api-push 脚本
+TAG/ASSET_NAME 仍硬编码 v1.3.10，发版前参数化或另建 v1.3.11 版；
+数字 ID 路由 /repositories/1435969436/… 沿用；上轮 PAT 已耗尽并建议
+撤销，发版前需取新 PAT。
