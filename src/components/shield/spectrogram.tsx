@@ -70,6 +70,16 @@ export function SpectrogramCard({ audioUrl, durationSec, segments, sampleRate = 
   const [ready, setReady] = useState(false);
   const [playhead, setPlayhead] = useState(0); // 0-1 播放位置
 
+  // 渲染期条件重置（react.dev 官方模式，react-hooks/set-state-in-effect）：
+  // audioUrl 变化时在渲染阶段同步重置计算状态，避免 effect 内同步 setState 的级联渲染
+  const [prevUrl, setPrevUrl] = useState<string | null>(null);
+  if (audioUrl !== prevUrl) {
+    setPrevUrl(audioUrl);
+    setComputing(true);
+    setReady(false);
+    setProgress(0);
+  }
+
   // 频率 → 像素行（对数轴，顶部为高频）
   const binHz = sampleRate / FFT_SIZE;
   const frames = useMemo(
@@ -77,12 +87,9 @@ export function SpectrogramCard({ audioUrl, durationSec, segments, sampleRate = 
     [durationSec, sampleRate]
   );
 
-  /** 分块计算时频矩阵并绘制（不阻塞主线程） */
+  /** 分块计算时频矩阵并绘制（不阻塞主线程）；状态重置已上移至渲染期条件重置 */
   const compute = useCallback(async () => {
-    if (!audioUrl || !canvasRef.current) return;
-    setComputing(true);
-    setReady(false);
-    setProgress(0);
+    if (!audioUrl || !canvasRef.current || !computing) return;
     try {
       const buf = await fetch(audioUrl).then((r) => r.arrayBuffer());
       const Ctor: typeof AudioContext =
@@ -153,9 +160,10 @@ export function SpectrogramCard({ audioUrl, durationSec, segments, sampleRate = 
     } finally {
       setComputing(false);
     }
-  }, [audioUrl, durationSec, frames, sampleRate]);
+  }, [audioUrl, durationSec, frames, sampleRate, computing]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- compute 内 setState 均在 await（fetch/decodeAudioData/分块让步）之后（合法异步延续）；插件 7.1.1 对 await 边界误报，见 react/react#34905（修复 PR #36734），待修复版发布后移除本豁免
     void compute();
   }, [compute]);
 

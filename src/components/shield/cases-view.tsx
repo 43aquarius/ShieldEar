@@ -57,10 +57,12 @@ export function CasesView() {
   const setResult = useShield((s) => s.setResult);
   const [cases, setCases] = useState<CaseRow[] | null>(null);
   const [detail, setDetail] = useState<{ row: CaseRow; analysis: AnalysisResult } | null>(null);
-  const [loading, setLoading] = useState(false);
+  // 首屏即处于加载中（挂载后 effect 立即拉取案例库）；后续由刷新按钮置位
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    // loading 置位由调用方负责（挂载首屏初始即为 true、刷新按钮在 onClick 中置位）：
+    // effect 调用链上不再有 await 之前的同步 setState（react-hooks/set-state-in-effect）
     try {
       const data = await fetchJson<{ cases: CaseRow[] }>("/api/cases?limit=100");
       setCases(data.cases);
@@ -76,6 +78,7 @@ export function CasesView() {
   }, [toast]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load 内 setState 均在 await fetchJson 之后（合法异步数据获取延续）；插件 7.1.1 对 await 边界误报，见 react/react#34905（修复 PR #36734），待修复版发布后移除本豁免
     void load();
   }, [load]);
 
@@ -167,7 +170,7 @@ export function CasesView() {
                 每条案例含完整逐窗判决、特征剖面与哈希证据链，支持回看与报告导出
               </CardDescription>
             </div>
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => void load()} disabled={loading}>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => { setLoading(true); void load(); }} disabled={loading}>
               <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} aria-hidden /> 刷新
             </Button>
           </div>

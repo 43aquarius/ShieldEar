@@ -36,6 +36,10 @@ const SECURITY_HEADERS = [
   { key: "Referrer-Policy", value: "no-referrer" },
   // 实时鉴听需要本页麦克风；其余能力一律关闭
   { key: "Permissions-Policy", value: "microphone=(self), camera=(), geolocation=(), payment=(), usb=()" },
+  // 跨域隔离纵深（v1.3.15 安全复查）：本应用零外连、零跨域子资源、零 OAuth 弹窗，
+  // 同源隔离对功能零影响；阻断 Spectre 类侧信道对证据链页面与判决音频的读取面
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
   { key: "Content-Security-Policy", value: CSP },
 ];
 
