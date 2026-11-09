@@ -16,6 +16,9 @@ import {
   ENGINE_VERSION,
   QUALITY_THRESHOLDS,
   QUALITY_ADVICE,
+  formatQualityMetrics,
+  formatQualitySummary,
+  type AudioQuality,
   type QualityWarning,
 } from "../types";
 
@@ -174,5 +177,59 @@ describe("护栏契约（版本与文案完备性）", () => {
       expect(QUALITY_ADVICE[w].length).toBeGreaterThan(10);
       expect(QUALITY_ADVICE[w]).toContain("检测");
     }
+  });
+});
+
+describe("质量摘要格式化（报告/面板共用，结论可靠边界呈现）", () => {
+  const CLEAN: AudioQuality = {
+    clippingRatio: 0.000001,
+    dcOffset: 0.0002,
+    noiseFloorDb: -86.8,
+    peakDb: -3.2,
+    warnings: [],
+  };
+
+  it("正常输入：四项实测齐全（含直流偏置），无警示段", () => {
+    const s = formatQualitySummary(CLEAN);
+    expect(s).toContain("正常（");
+    expect(s).toContain("削波 0.000%");
+    expect(s).toContain("直流偏置 0.02%");
+    expect(s).toContain("底噪 -87dBFS");
+    expect(s).toContain("峰值 -3.2dBFS");
+    expect(s).not.toContain("警示");
+    // metrics 与 summary 的数值行一致（全端口径统一）
+    expect(s).toContain(formatQualityMetrics(CLEAN));
+  });
+
+  it("警示输入：实测四项 + 对应建议文案拼接", () => {
+    const q: AudioQuality = {
+      ...CLEAN,
+      clippingRatio: 0.1,
+      dcOffset: 0.05,
+      warnings: ["clipping", "dc-offset"],
+    };
+    const s = formatQualitySummary(q);
+    expect(s).toContain("削波 10.000%");
+    expect(s).toContain("直流偏置 5.00%");
+    expect(s).toContain("｜ 警示：");
+    expect(s).toContain(QUALITY_ADVICE.clipping);
+    expect(s).toContain(QUALITY_ADVICE["dc-offset"]);
+    expect(s).not.toContain("正常（");
+  });
+
+  it("metrics 行与 QUALITY_THRESHOLDS 四项一一对应（阈值改动时 UI 不漂移）", () => {
+    // 面板阈值行取自 QUALITY_THRESHOLDS 派生，此处锚定阈值与格式化字段的对应关系
+    expect(QUALITY_THRESHOLDS.clippingRatio).toBe(0.0002);
+    expect(QUALITY_THRESHOLDS.dcOffset).toBe(0.01);
+    expect(QUALITY_THRESHOLDS.noiseFloorDb).toBe(-42);
+    expect(QUALITY_THRESHOLDS.peakDb).toBe(-20);
+    const m = formatQualityMetrics(CLEAN);
+    expect(m.match(/·/g)!.length).toBe(3); // 四项由三个间隔符分隔
+  });
+
+  it("真实校准音频端到端：clean 样本摘要以「正常（」开头", () => {
+    const r = analyzeBuffer(loadPcm16k(REAL_CLEAN));
+    expect(r.quality).toBeDefined();
+    expect(formatQualitySummary(r.quality!).startsWith("正常（")).toBe(true);
   });
 });

@@ -10,7 +10,7 @@ import { useCallback } from "react";
 import { useShield } from "@/lib/store";
 import { formatDuration, formatTime } from "@/lib/client/audio-client";
 import type { WindowResult } from "@/lib/engine/types";
-import { QUALITY_ADVICE } from "@/lib/engine/types";
+import { formatQualitySummary } from "@/lib/engine/types";
 
 export function useReport() {
   const print = useCallback(() => {
@@ -172,11 +172,7 @@ export function ReportPrint() {
               <th>录音质量</th>
               <td className="leading-5">
                 {quality
-                  ? quality.warnings.length
-                    ? quality.warnings
-                        .map((w) => QUALITY_ADVICE[w])
-                        .join("；")
-                    : `正常（削波 ${(quality.clippingRatio * 100).toFixed(3)}% · 底噪 ${quality.noiseFloorDb.toFixed(0)}dBFS · 峰值 ${quality.peakDb.toFixed(1)}dBFS）`
+                  ? formatQualitySummary(quality)
                   : "（历史案例：未记录，v2.1 前引擎无此项）"}
               </td>
             </tr>

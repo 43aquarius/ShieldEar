@@ -77,6 +77,27 @@ export const QUALITY_ADVICE: Record<QualityWarning, string> = {
     "输入电平过低，有效语音窗不足，判决可靠性下降，建议提高音量后重新检测",
 };
 
+/** 四项质量实测的单行摘要：削波/直流偏置/底噪/峰值（与 QUALITY_THRESHOLDS 四项一一对应）。
+ *  核验报告与结果面板共用，保证「结论可靠边界」的呈现口径全端一致。 */
+export function formatQualityMetrics(q: AudioQuality): string {
+  return (
+    `削波 ${(q.clippingRatio * 100).toFixed(3)}% · ` +
+    `直流偏置 ${(q.dcOffset * 100).toFixed(2)}% · ` +
+    `底噪 ${q.noiseFloorDb.toFixed(0)}dBFS · ` +
+    `峰值 ${q.peakDb.toFixed(1)}dBFS`
+  );
+}
+
+/** 质量诊断完整摘要：实测四项 + （有警示时）用户可读建议。
+ *  正常 → 「正常（削波 … · 直流偏置 … · 底噪 … · 峰值 …）」；
+ *  警示 → 「削波 … ｜ 警示：<建议1>；<建议2>」。核验报告「录音质量」行专用。 */
+export function formatQualitySummary(q: AudioQuality): string {
+  const metrics = formatQualityMetrics(q);
+  return q.warnings.length
+    ? `${metrics} ｜ 警示：${q.warnings.map((w) => QUALITY_ADVICE[w]).join("；")}`
+    : `正常（${metrics}）`;
+}
+
 export interface RawFeatures {
   /** 4-8kHz 高频段谱平坦度（几何均值/算术均值），越接近 1 越接近白噪声 */
   hfFlatness: number;

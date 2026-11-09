@@ -21,7 +21,7 @@ import { useCountUp } from "./use-count-up";
 import { useShield } from "@/lib/store";
 import { formatDuration, formatTime } from "@/lib/client/audio-client";
 import type { AnalysisResult, Segment } from "@/lib/engine/types";
-import { QUALITY_ADVICE } from "@/lib/engine/types";
+import { QUALITY_ADVICE, QUALITY_THRESHOLDS, formatQualityMetrics } from "@/lib/engine/types";
 import {
   FileCheck2,
   Printer,
@@ -165,6 +165,9 @@ export function ResultPanel() {
                       </li>
                     ))}
                   </ul>
+                  <p className="text-xs leading-5 text-amber-700/80 dark:text-amber-300/80">
+                    实测：{formatQualityMetrics(quality)}（阈值：削波≥{QUALITY_THRESHOLDS.clippingRatio * 100}% / 直流≥{QUALITY_THRESHOLDS.dcOffset * 100}% / 底噪&gt;{QUALITY_THRESHOLDS.noiseFloorDb} / 峰值&lt;{QUALITY_THRESHOLDS.peakDb}dBFS）
+                  </p>
                 </div>
               )}
 
