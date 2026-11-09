@@ -704,3 +704,20 @@ EER 宽带 0.16 / 窄带 0.20 / 综合 0.18，AUC 综合 0.9245。v1.3.5 引擎
 RawNet2、AASIST、One-class SPL、信道鲁棒性 Interspeech、DeepSonar
 ACM MM、TIFS 2024 ASDG、USENIX Sec'25 AudioMarkNet + VoiceWukong、
 两篇综述）。
+
+**发版勘误（当日实录）**：v1.3.12 发版复刻的默认提交列表误用了
+amend 前的 7c5579a（含 80 个测试变体 WAV，约 30MB），远端 main 短暂
+带变体入库；本地已 amend 为 b90e559（变体撤出 + .gitignore 收录），
+两侧树分叉被快进校验拦下。处置：在 7c5579a 孤儿提交上制作 amend 镜像
+提交 1bba0ca3（树 948d223f 与 b90e559 完全一致），按「远端父 = 误复刻
+提交 e04ce6ce」复刻推送，再复刻 e523655，main → df8be9a585，树与
+本地 e523655 一致（823ae238d3）。附注标签 v1.3.12 仍锚定特性提交
+e04ce6ce（其树含变体）——该提交经由标签保持可达，变体 blob 常驻远端
+（约 30MB；标签源码包因此可直接复现 258 判决，属可接受的副产品），
+main 干线树已与本地一致。教训：发版工具默认提交列表必须用
+`git log` 核对 amend 后的最终 SHA；短 SHA 在 git/commits 端点会 404
+（本轮回滚修正中实测），全流程一律用完整 SHA。
+
+**PAT 回收实录**：本回合中沙箱再次回收 .secrets/github_pat（与
+/tmp/node.exe 同波），已从会话凭据恢复并验证；发版完成后建议用户
+再次撤销该 PAT（本会话内已使用两次全流程发版）。
