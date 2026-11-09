@@ -4,7 +4,7 @@
 
 > 接到可疑来电，如何在转账之前知道对方的声音是不是 AI 合成的？声盾把这道反诈治理中最直接的问题，变成一次可以随身携带的浏览器操作：**边通话、边检测、边存证**。
 
-![version](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-v1.3.12-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9) ![CI](https://github.com/43aquarius/ShieldEar/actions/workflows/ci.yml/badge.svg)
+![version](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-v1.3.15-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9) ![CI](https://github.com/43aquarius/ShieldEar/actions/workflows/ci.yml/badge.svg)
 
 ---
 
@@ -45,17 +45,18 @@
 
 ![声盾总体架构](docs/figures/fig_architecture.png)
 
-五层架构：采集层（AudioWorklet / 文件导入）→ 检测引擎层（纯 TS 同构引擎 v2.0：滑动窗口管线 + 十一维声学特征（声码器指纹 × 8 + 韵律动态/振幅微扰/音节律调制 × 3）+ 数据驱动校准的逻辑回归评分 + 窄带自适应）→ 判决融合层（中值 + EMA 平滑、能量加权整段判决、四级风险分级）→ 业务层（风险提示、SHA-256 证据固定、服务端复核、核验报告）→ 展示层（单页应用）。
+五层架构：采集层（AudioWorklet / 文件导入）→ 检测引擎层（纯 TS 同构引擎 v2.1：滑动窗口管线 + 十一维声学特征（声码器指纹 × 8 + 韵律动态/振幅微扰/音节律调制 × 3）+ 数据驱动校准的逻辑回归评分 + 窄带自适应 + 帧级直流免疫 + 输入质量护栏）→ 判决融合层（中值 + EMA 平滑、能量加权整段判决、四级风险分级）→ 业务层（风险提示、SHA-256 证据固定、服务端复核、核验报告）→ 展示层（单页应用）。
 
 ## 快速开始
 
 ### 方式一：可执行程序包（免安装，推荐评审使用）
 
-从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.12-portable.zip`（约 58MB）并解压：
+从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.14-portable.zip`（约 58MB）并解压：
 
 - **Windows**：双击 `START-ShieldEar.bat`——包内含便携 Node.js 运行时与 VC++ 2015-2022 运行库三 DLL（app-local），无需任何预装环境；启动时自动完成启动自检（数据引擎/数据库/校准数据），异常会在启动窗口给出中文提示并写入 `STARTUP-ERROR.txt`，不再出现含义不明的页面报错；
 - 等待数秒浏览器自动打开 `http://127.0.0.1:3000`，包内已含 4 件演示案件（真人×2 / 神经合成×2）与对应证据存档（含原始来源文件），全部功能开箱即用；
 - **Release 包为「纯离线发行版」**：检测、存证、核验全程本地运行，零联网依赖，断网开箱即用；
+- **v1.3.15 变更（引擎 v2.1.0-robust 抗干扰鲁棒性）**：新增探针实证的抗干扰强化（`scripts/probe-robustness.ts`，11 种录音链路扰动 × 15 源全量留档）：修复直流偏置引发误报的缺陷（+0.05 直流原使自然人声误报翻倍，帧级/窗口级去均值后判决与干净输入完全一致）；新增输入质量护栏（削波平顶比/直流偏置/底噪/电平四项诊断，判决不受影响但随核验报告说明结论可靠边界，界面与报告均有提示）；258 判决基线 TP/FP/TN/FN 逐位不变，单测 126→139 项；
 - **v1.3.12 变更（引擎 v2.0.0-calibrated 学术增强）**：参照 ASVspoof / ADD 挑战赛与 TIFS、USENIX Security 等学术文献重构检测引擎——新增三维权韵律特征（基频韵律动态 f0Std / 振幅微扰 shimmer / 4–8Hz 包络调制占比 envMod45，宽带计分），修复自 v1 起窄带信道判定从未触发的潜伏缺陷（3.25kHz 幅度占比 → 3.5kHz 功率占比）；测试套件引入 EER/AUC 学术口径指标。全套 258 判决对比上一入库基线（v1.3.0 引擎实录）：宽带 F1 0.893→0.962、整体正确 209/258→226/258、综合 EER 0.18 / AUC 0.925；相位域 MGD 类与倒谱纹理类特征经探针实证分离不足，诚实不入引擎（scripts/probe-v2-features.ts 可复现）；
 - **v1.3.11 变更**：移除「现场合成挑战」功能及全部本地语音合成组件（espeak-ng 引擎与声库，约 27MB）——真机实测其机器音质不达标，为保持产品诚实与专注，平台聚焦「检测、存证、核验」核心能力。检测演示动线不受影响：文件检测内置合成诈骗与真人对照样本，实时鉴听对外放音频即可实时告警；
 - **常见问题（排障史）**：v1.3.7 曾把 0xC0000135 误诊为「缺 VC++ 运行库」；v1.3.8 定位为包内 DLL 文件名不匹配并双文件名随包；v1.3.9 坐实更深一层根因 —— 构建工具（Turbopack）把 `process.platform === "win32"` 按构建机（Linux）常量折叠，导致应用内组件探测从未成功过，现已改为平台无关按名探测 + 打包硬闸防复发。以上均针对已移除的合成组件（历史供源码考古）；当前包内 PE 仅 node.exe / Prisma 引擎 / VC++ 三 DLL，由打包期 PE 导入表硬闸逐一校验，**无需安装任何运行库**。
@@ -92,17 +93,17 @@ python3 scripts/gen-test-figures.py   # 输出 download/assets/test_*.png
 
 引擎权重拟合过程（`scripts/calibrate-engine.ts` + `scripts/fit-weights.ts`）与校准数据同样随库交付，全部结果可复现。
 
-## 开发与质量保障（v1.3.13–v1.3.14）
+## 开发与质量保障（v1.3.13–v1.3.15）
 
-v1.3.13 为工程强化版：引入 **vitest 单元测试体系**与 **GitHub Actions CI**，为引擎装上持续质量门；v1.3.14 为安全加固版：修复证据链路由路径遍历缺陷 + 全站 HTTP 安全响应头，并为服务层补齐单测（126 项）。
+v1.3.13 为工程强化版：引入 **vitest 单元测试体系**与 **GitHub Actions CI**，为引擎装上持续质量门；v1.3.14 为安全加固版：修复证据链路由路径遍历缺陷 + 全站 HTTP 安全响应头，并为服务层补齐单测；v1.3.15 为抗干扰鲁棒性版：引擎直流免疫 + 输入质量护栏（新增质量护栏专项测试，139 项）。
 
 ```bash
 npm run typecheck   # TypeScript 严格类型检查（src/）
 npm run lint        # ESLint（src/，零告警）
-npm run test        # 单元测试套件（126 项）
+npm run test        # 单元测试套件（139 项）
 ```
 
-测试体系五层结构：
+测试体系六层结构：
 
 | 层 | 文件 | 锚定内容 |
 |----|------|----------|
@@ -110,6 +111,7 @@ npm run test        # 单元测试套件（126 项）
 | **特征注入响应** | `features.test.ts` | 合成信号逐维验证：零扰动下 jitter/shimmer/f0Std 精确为零，注入扰动后各特征定向响应；3.5kHz 功率占比信道判定（v2.0 修复的回归钉） |
 | **校准与指标契约** | `calibration.test.ts` · `metrics.test.ts` | z 标准化/限幅/逐特征单调性/窄带零权重不变性；EER/AUC 解析已知分布对拍 |
 | **真实数据回归** | `regression.test.ts` | 50 条真实特征向量重放（宽带 AUC 0.93 / 窄带 0.90）；引擎版本/参数/阈值与 258 条基线快照逐字段锚定；metrics 抽取前后 EER/AUC 逐位一致 |
+| **输入质量护栏** | `quality.test.ts`（v1.3.15） | 削波平顶比/直流偏置/底噪/电平四项诊断阈值（探针实证口径）；引擎直流免疫（±0.05 直流下判决不变、静音闸不被击穿）；整段与流式双路径质量挂载 |
 | **服务层与存证包** | `src/lib/server/__tests__/`（v1.3.14） | 案件编号格式闸（路径遍历载荷逐一钉死）与证据路径容器闸；存证包 ZIP 构建器（CRC-32 公开校验向量对拍 + 迷你解析器往返 + Python zipfile 交叉验证） |
 
 推送 main 即触发 CI（类型检查 → Lint → 单测 → standalone 构建冒烟），状态徽章见顶部。WAV 解码器同版加固：损坏头部（声道数/采样率/位宽非法、fmt 截断、空 data 块）从晦涩的 RangeError 变为可读错误信息；修复实时鉴听面板一处 React 19 渲染期 ref 访问违例。
@@ -127,7 +129,7 @@ npm run test        # 单元测试套件（126 项）
 
 ```
 ├── src/                    # 平台源码（Next.js 16 + React 19）
-│   ├── lib/engine/         # 同构检测引擎（DSP / 十一维特征 / 校准 / 流式分析器 / EER·AUC 指标）
+│   ├── lib/engine/         # 同构检测引擎（DSP / 十一维特征 / 校准 / 流式分析器 / EER·AUC 指标 / 输入质量护栏）
 │   │   └── __tests__/      # 单元测试（DSP 契约 / 特征注入 / 校准 / 真实数据回归）
 │   ├── lib/audio/          # WAV 编解码（含头部合法性闸）
 │   ├── lib/server/         # 分析与存证服务（含案件编号闸与证据路径容器闸）

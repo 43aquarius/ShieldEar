@@ -24,6 +24,13 @@
  *    不入引擎（scripts/probe-v2-features.ts 全程可复现）；
  *  - 入选三特征分离度（宽带/窄带）：f0Std 1.26/1.41 · shimmer 1.08/0.95 ·
  *    envMod45 1.70/0.96，且双信道方向一致。
+ *
+ * v2.1 抗干扰鲁棒性（探针实证：scripts/probe-robustness.ts，11 扰动 × 15 源）：
+ *  - 帧级/窗口级直流去除：+0.05 直流偏置（劣质声卡常见）原会使白相关峰值
+ *    （HNR 代理）虚高、静音闸失效，致自然人声误报翻倍（FP 1→2，均值
+ *    0.298→0.512）；去均值后恢复 clean 水平（258 判决基线逐位不变）；
+ *  - 输入质量护栏 assessQuality：削波平顶比/直流偏置/底噪/电平四项诊断
+ *    与警示（只提示不改变判决，随取证报告输出）。
  */
 
 import {
@@ -44,9 +51,12 @@ import {
   ENGINE_VERSION,
   ENGINE_PARAMS,
   SCORE_THRESHOLDS,
+  QUALITY_THRESHOLDS,
   type AnalysisResult,
+  type AudioQuality,
   type ChannelType,
   type FeatureProfileItem,
+  type QualityWarning,
   type RawFeatures,
   type RiskLevel,
   type Segment,
@@ -92,7 +102,18 @@ export function analyzeWindow(
   const end = start + winLen;
   const startSec = start / SR;
   const endSec = end / SR;
-  const winRms = rms(pcm, start, winLen);
+
+  // v2.1 窗口级直流去除：直流偏置会抬高 RMS 与静音闸（+0.05 DC 即可使
+  // 全帧 RMS ≥ 0.05 > 闸值 0.005，静音窗被误判为语音窗），并污染包络闸。
+  // 去均值后的 winRms 为真实交流电平（clean 音频均值 ≈ 0，数值不变）。
+  let wSum = 0, wSq = 0;
+  for (let i = 0; i < winLen; i++) {
+    const v = pcm[start + i];
+    wSum += v;
+    wSq += v * v;
+  }
+  const winMean = wSum / winLen;
+  const winRms = Math.sqrt(Math.max(wSq / winLen - winMean * winMean, 0));
 
   const nFrames = Math.max(0, Math.floor((winLen - FRAME) / FRAME_HOP) + 1);
   const activeRms: number[] = [];
@@ -108,22 +129,31 @@ export function analyzeWindow(
 
   const { minLag, maxLag } = pitchLags();
   const hann = getHann(FRAME);
+  // v2.1 帧级去均值缓冲：ZCR / FFT / 基音自相关 / shimmer 均在无直流域计算
+  const frameZ = new Float32Array(FRAME);
   let prevMag: Float64Array | null = null;
 
   for (let fi = 0; fi < nFrames; fi++) {
     const fStart = start + fi * FRAME_HOP;
     const frame = pcm.subarray(fStart, fStart + FRAME);
-    const frms = rms(frame, 0, FRAME);
+    // v2.1 帧级去均值：直流会使过零率系统性偏低、自相关峰值（HNR 代理）
+    // 虚高（+0.05 DC 实测使自然人声得分均值 0.298→0.512，误报翻倍）。
+    // 所有帧域分析（RMS 闸 / FFT / ZCR / 基音 / shimmer）改在去均值域进行。
+    let fSum = 0;
+    for (let i = 0; i < FRAME; i++) fSum += frame[i];
+    const fMean = fSum / FRAME;
+    for (let i = 0; i < FRAME; i++) frameZ[i] = frame[i] - fMean;
+    const frms = rms(frameZ, 0, FRAME);
     if (frms <= ENGINE_PARAMS.frameActiveRms) {
       prevMag = null; // 跨静音不做 flux
       continue;
     }
     activeRms.push(frms);
 
-    // ---- FFT（一次计算，复用幅度谱与相位） ----
+    // ---- FFT（一次计算，复用幅度谱与相位；输入为去均值帧） ----
     const re = new Float64Array(FFT);
     const im = new Float64Array(FFT);
-    for (let i = 0; i < FRAME; i++) re[i] = frame[i] * hann[i];
+    for (let i = 0; i < FRAME; i++) re[i] = frameZ[i] * hann[i];
     fftInPlace(re, im);
     const mag = new Float64Array(BINS);
     for (let k = 0; k < BINS; k++) mag[k] = Math.sqrt(re[k] * re[k] + im[k] * im[k]);
@@ -174,18 +204,18 @@ export function analyzeWindow(
     }
     prevMag = mag;
 
-    // 过零率
+    // 过零率（去均值域：直流不再系统性压低过零数）
     let zc = 0;
-    for (let i = 1; i < frame.length; i++) {
-      if ((frame[i - 1] >= 0 && frame[i] < 0) || (frame[i - 1] < 0 && frame[i] >= 0)) zc++;
+    for (let i = 1; i < frameZ.length; i++) {
+      if ((frameZ[i - 1] >= 0 && frameZ[i] < 0) || (frameZ[i - 1] < 0 && frameZ[i] >= 0)) zc++;
     }
-    zcrList.push(zc / frame.length);
+    zcrList.push(zc / frameZ.length);
 
-    // ---- 基音分析（8kHz 抽取域） ----
+    // ---- 基音分析（8kHz 抽取域，去均值帧） ----
     const decLen = Math.floor(FRAME / DEC);
     const dec = new Float32Array(decLen);
     for (let i = 0; i < decLen; i++) {
-      dec[i] = (frame[i * DEC] + frame[i * DEC + 1]) * 0.5;
+      dec[i] = (frameZ[i * DEC] + frameZ[i * DEC + 1]) * 0.5;
     }
     const peak = autocorrPeak(dec, 0, decLen, minLag, maxLag);
     if (peak.value > 0.35 && peak.refined > 0) {
@@ -270,7 +300,10 @@ export function analyzeWindow(
       for (let i = 0; i < nSub; i++) {
         let s = 0;
         const b0 = start + i * SUB;
-        for (let j = 0; j < SUB; j++) s += pcm[b0 + j] * pcm[b0 + j];
+        for (let j = 0; j < SUB; j++) {
+          const v = pcm[b0 + j] - winMean; // v2.1：去窗口均值，免直流污染
+          s += v * v;
+        }
         env[i] = Math.sqrt(s / SUB);
         em += env[i];
       }
@@ -427,11 +460,67 @@ function buildFeatureProfile(
   });
 }
 
+/**
+ * 输入质量护栏（v2.1）：削波平顶比 / 直流偏置 / 底噪 / 电平四项诊断。
+ *
+ * 只提示不改变判决 —— 判决逻辑与 258 条基线完全不变；质量警示用于
+ * 向使用者说明「本次输入条件下结论的可靠边界」，随取证报告输出。
+ * 阈值全部来自 scripts/probe-robustness.ts 的 11 扰动 × 15 源实证
+ * （calibration/robustness_results.json，阈值与实测分布的间隔见
+ *  QUALITY_THRESHOLDS 注释）。
+ */
+export function assessQuality(pcm: Float32Array): AudioQuality {
+  const n = pcm.length;
+  if (n === 0) {
+    return { clippingRatio: 0, dcOffset: 0, noiseFloorDb: -120, peakDb: -120, warnings: [] };
+  }
+  let dc = 0, peak = 0;
+  for (let i = 0; i < n; i++) {
+    const a = Math.abs(pcm[i]);
+    if (a > peak) peak = a;
+    dc += pcm[i];
+  }
+  const dcOffset = dc / n;
+  // 削波平顶比：|x| ≥ 0.98·peak 的样本占比（能检出非满幅削波，
+  // 如 ±0.5 硬削波；clean 语音 < 0.001%，实测削波 0.03%~0.14%）
+  let clip = 0;
+  if (peak > QUALITY_THRESHOLDS.minPeak) {
+    const rail = 0.98 * peak;
+    for (let i = 0; i < n; i++) if (Math.abs(pcm[i]) >= rail) clip++;
+  }
+  const clippingRatio = clip / n;
+  // 底噪估计：去均值后 20ms 子帧 RMS 的 5% 分位（与探针同口径；
+  // 先去均值可避免直流偏置抬高底噪估计造成双重警示）
+  const SUB = Math.round(0.02 * SR);
+  const subs: number[] = [];
+  for (let s = 0; s + SUB <= n; s += SUB) {
+    let p = 0;
+    for (let i = s; i < s + SUB; i++) {
+      const v = pcm[i] - dcOffset;
+      p += v * v;
+    }
+    subs.push(Math.sqrt(p / SUB));
+  }
+  subs.sort((a, b) => a - b);
+  const floorRms = subs.length ? subs[Math.floor(subs.length * 0.05)] : 0;
+  const noiseFloorDb = floorRms > 0 ? 20 * Math.log10(floorRms) : -120;
+  const peakDb = peak > 0 ? 20 * Math.log10(peak) : -120;
+
+  const warnings: QualityWarning[] = [];
+  if (clippingRatio >= QUALITY_THRESHOLDS.clippingRatio) warnings.push("clipping");
+  if (Math.abs(dcOffset) >= QUALITY_THRESHOLDS.dcOffset) warnings.push("dc-offset");
+  if (noiseFloorDb > QUALITY_THRESHOLDS.noiseFloorDb) warnings.push("noisy-floor");
+  if (peakDb < QUALITY_THRESHOLDS.peakDb) warnings.push("low-level");
+
+  return { clippingRatio, dcOffset, noiseFloorDb, peakDb, warnings };
+}
+
 /** 计算整体结论（供整段分析与流式中间态共用） */
 export function summarize(
   windows: WindowResult[],
   durationSec: number,
-  analyzeMs: number
+  analyzeMs: number,
+  quality?: AudioQuality
 ): AnalysisResult {
   smoothAndLabel(windows);
   const voiced = windows.filter((w) => w.voiced);
@@ -479,6 +568,7 @@ export function summarize(
     segments,
     featureProfile: buildFeatureProfile(windows, channel),
     channel,
+    quality,
     stats: {
       rtf: durationSec > 0 ? analyzeMs / 1000 / durationSec : 0,
       analyzeMs,
@@ -501,7 +591,8 @@ export function analyzeBuffer(pcm: Float32Array): AnalysisResult {
     }
   }
   const t1 = nowMs();
-  return summarize(windows, pcm.length / SR, t1 - t0);
+  // v2.1：输入质量护栏随整段判决一并返回（取证报告随附）
+  return summarize(windows, pcm.length / SR, t1 - t0, assessQuality(pcm));
 }
 
 /**
@@ -553,7 +644,7 @@ export class StreamingAnalyzer {
     return { newWindows: made, all: this.windows };
   }
 
-  /** 结束分析（含尾窗） */
+  /** 结束分析（含尾窗；v2.1：质量护栏覆盖实时鉴听路径） */
   finalize(): AnalysisResult {
     const tailStart = this.nextWindow * HOP;
     const remain = this.sampleCount - tailStart;
@@ -562,7 +653,12 @@ export class StreamingAnalyzer {
     }
     const t1 = nowMs();
     const dur = this.sampleCount / SR;
-    return summarize(this.windows, dur, t1 - this.startedAt);
+    return summarize(
+      this.windows,
+      dur,
+      t1 - this.startedAt,
+      assessQuality(this.samples.subarray(0, this.sampleCount))
+    );
   }
 
   get recordedSamples(): number {

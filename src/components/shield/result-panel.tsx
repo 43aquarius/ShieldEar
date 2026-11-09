@@ -21,6 +21,7 @@ import { useCountUp } from "./use-count-up";
 import { useShield } from "@/lib/store";
 import { formatDuration, formatTime } from "@/lib/client/audio-client";
 import type { AnalysisResult, Segment } from "@/lib/engine/types";
+import { QUALITY_ADVICE } from "@/lib/engine/types";
 import {
   FileCheck2,
   Printer,
@@ -31,6 +32,7 @@ import {
   Activity,
   Server,
   Gauge,
+  AlertTriangle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useReport } from "./report-print";
@@ -109,7 +111,7 @@ export function ResultPanel() {
   const { toast } = useToast();
 
   if (!result) return null;
-  const { overall, audio, windows, segments, featureProfile, stats, channel } = result;
+  const { overall, audio, windows, segments, featureProfile, stats, channel, quality } = result;
   const risk = RISK_META[overall.risk];
   const voiced = windows.filter((w) => w.voiced);
   const dangerous = overall.risk === "HIGH" || overall.risk === "CRITICAL";
@@ -148,6 +150,23 @@ export function ResultPanel() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">{risk.desc} · {overall.advice}</p>
+
+              {/* v2.1 输入质量护栏：只提示不改变判决，说明本次输入条件下结论的可靠边界 */}
+              {quality && quality.warnings.length > 0 && (
+                <div className="space-y-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2">
+                  <p className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+                    <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+                    录音质量提示（不影响上述判决，但影响其可靠性）
+                  </p>
+                  <ul className="space-y-0.5">
+                    {quality.warnings.map((w) => (
+                      <li key={w} className="text-xs leading-5 text-amber-700 dark:text-amber-300">
+                        · {QUALITY_ADVICE[w]}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-x-6 gap-y-2 border-t pt-3 sm:grid-cols-4">
                 <StatAnim

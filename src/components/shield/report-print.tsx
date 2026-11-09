@@ -10,6 +10,7 @@ import { useCallback } from "react";
 import { useShield } from "@/lib/store";
 import { formatDuration, formatTime } from "@/lib/client/audio-client";
 import type { WindowResult } from "@/lib/engine/types";
+import { QUALITY_ADVICE } from "@/lib/engine/types";
 
 export function useReport() {
   const print = useCallback(() => {
@@ -80,7 +81,7 @@ function CurveSvg({ windows }: { windows: WindowResult[] }) {
 export function ReportPrint() {
   const { result, meta } = useShield();
   if (!result) return null;
-  const { overall, audio, windows, segments, featureProfile, stats, channel } = result;
+  const { overall, audio, windows, segments, featureProfile, stats, channel, quality } = result;
   const riskText: Record<string, string> = {
     LOW: "未发现明显合成特征（低风险）",
     MEDIUM: "存在可疑片段（中风险）",
@@ -166,6 +167,18 @@ export function ReportPrint() {
             <tr>
               <th>处置建议</th>
               <td className="leading-5">{overall.advice}</td>
+            </tr>
+            <tr>
+              <th>录音质量</th>
+              <td className="leading-5">
+                {quality
+                  ? quality.warnings.length
+                    ? quality.warnings
+                        .map((w) => QUALITY_ADVICE[w])
+                        .join("；")
+                    : `正常（削波 ${(quality.clippingRatio * 100).toFixed(3)}% · 底噪 ${quality.noiseFloorDb.toFixed(0)}dBFS · 峰值 ${quality.peakDb.toFixed(1)}dBFS）`
+                  : "（历史案例：未记录，v2.1 前引擎无此项）"}
+              </td>
             </tr>
           </tbody>
         </table>

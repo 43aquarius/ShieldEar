@@ -3,7 +3,7 @@
  */
 
 export const ENGINE_NAME = "ShieldEar";
-export const ENGINE_VERSION = "v2.0.0-calibrated";
+export const ENGINE_VERSION = "v2.1.0-robust";
 
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type WindowLabel = "silent" | "natural" | "suspect" | "synthetic";
@@ -24,6 +24,58 @@ export const ENGINE_PARAMS = {
   /** 窄带（电话信道）判定：3.5kHz+ 功率占比阈值（v2.0 修复原 3.25kHz 幅度占比的泄漏缺陷） */
   narrowbandHfRatio: 0.015,
 } as const;
+
+/** 输入质量护栏阈值（v2.1 探针实证：scripts/probe-robustness.ts，11 种扰动 × 15 源）
+ *
+ *  实证依据（calibration/robustness_results.json）：
+ *  - +0.05 直流偏置使自然人声误报翻倍（FP 1→2，均值 0.298→0.512）
+ *    → v2.1 引擎侧帧级/窗口级去均值修复 + 本护栏提示；
+ *  - 白噪 SNR≤20dB 使合成漏检翻倍（1/10→4/10）且底噪指纹 -40dB
+ *    （clean -89dB / 电话仿真 -53dB 不触发）→ 漏检风险提示；
+ *  - ×0.1 极低电平（峰值 -23~-28dB）判决崩塌（硬漏 3/10、信道误判 6/15）
+ *    → 电平过低提示；
+ *  - 硬削波平顶比：clean <0.001% vs 削波 0.03%~0.14% → 削波提示。
+ */
+export const QUALITY_THRESHOLDS = {
+  /** 平顶比：|x| ≥ 0.98·peak 样本占比 ≥ 0.02% 判削波 */
+  clippingRatio: 0.0002,
+  /** 直流偏置绝对均值 ≥ 1% 满幅 */
+  dcOffset: 0.01,
+  /** 底噪（去均值后 20ms 子帧 RMS 的 5% 分位，dBFS）高于此值 → 底噪偏高 */
+  noiseFloorDb: -42,
+  /** 峰值低于此值（dBFS）→ 输入电平过低 */
+  peakDb: -20,
+  /** 平顶比统计的峰值下限（避免极小信号误统计） */
+  minPeak: 0.05,
+} as const;
+
+export type QualityWarning = "clipping" | "dc-offset" | "noisy-floor" | "low-level";
+
+/** 输入质量诊断（v2.1：不影响判决本身，但影响判决可靠性，取证报告随附） */
+export interface AudioQuality {
+  /** 平顶比（|x| ≥ 0.98·peak 样本占比） */
+  clippingRatio: number;
+  /** 直流偏置（样本均值） */
+  dcOffset: number;
+  /** 底噪估计（去均值后 20ms 子帧 RMS 的 5% 分位，dBFS） */
+  noiseFloorDb: number;
+  /** 峰值电平（dBFS） */
+  peakDb: number;
+  /** 触发的质量警示（空数组 = 输入质量正常） */
+  warnings: QualityWarning[];
+}
+
+/** 质量警示的用户可读建议（引擎同构交付，浏览器/服务端/报告共用同一份文案） */
+export const QUALITY_ADVICE: Record<QualityWarning, string> = {
+  clipping:
+    "信号存在削波（削峰），部分声学特征可能失真，建议降低录音增益后重新检测",
+  "dc-offset":
+    "检测到直流偏置（劣质声卡/链路常见），引擎已自动去均值补偿，如对结论存疑建议交叉核验",
+  "noisy-floor":
+    "环境底噪偏高（约相当于信噪比 ≤ 20dB），漏检风险上升，建议在安静环境重新录制检测",
+  "low-level":
+    "输入电平过低，有效语音窗不足，判决可靠性下降，建议提高音量后重新检测",
+};
 
 export interface RawFeatures {
   /** 4-8kHz 高频段谱平坦度（几何均值/算术均值），越接近 1 越接近白噪声 */
@@ -126,6 +178,8 @@ export interface AnalysisResult {
   segments: Segment[];
   featureProfile: FeatureProfileItem[];
   channel: ChannelType;
+  /** 输入质量诊断（v2.1 起提供；历史存量案例无此字段，消费方需判空） */
+  quality?: AudioQuality;
   stats: {
     rtf: number;
     analyzeMs: number;
