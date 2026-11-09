@@ -126,10 +126,21 @@ try:
             gate_ok = False
             print(f"  [攻击] {a} → HTTP {code} ✗（期望 400）")
     print(f"  [遍历载荷×{len(attacks)}] {'✓' if gate_ok else '✗'} 全部 400 早退（含 NUL 截断 / 反斜杠 / 合法编号拼路径段）")
-    benign = [req("/api/evidence/SS-20260101-9999")[0], req("/api/cases/SS-20260101-9999")[0],
-              req("/api/verify/SS-20260101-9999")[0], req("/api/evidence-package/SS-20260101-9999")[0]]
-    fmt_ok = all(c == 404 for c in benign)
-    print(f"  [良构不存在]    {'✓' if fmt_ok else '✗'} {benign}（均应为 404，语义不被误伤）")
+    # 良构但不存在：evidence/cases/evidence-package 三路由 404（案例不存在）；
+    # verify 路由按设计返回 200 + verified=false（「核验未通过」是结论而非服务错误）
+    b1 = req("/api/evidence/SS-20260101-9999")
+    b2 = req("/api/cases/SS-20260101-9999")
+    b3 = req("/api/verify/SS-20260101-9999")
+    b4 = req("/api/evidence-package/SS-20260101-9999")
+    not_found_ok = b1[0] == 404 and b2[0] == 404 and b4[0] == 404
+    try:
+        vj = json.loads(b3[1])
+        verify_semantics_ok = b3[0] == 200 and vj.get("verified") is False
+    except Exception:
+        verify_semantics_ok = False
+    fmt_ok = not_found_ok and verify_semantics_ok
+    print(f"  [良构不存在]    {'✓' if fmt_ok else '✗'} evidence/cases/pkg={[b1[0], b2[0], b4[0]]}（应 404）"
+          f" · verify={b3[0]}+verified={str(verify_semantics_ok and vj.get('verified'))}（应 200+False，语义不被误伤）")
     if gate_ok and fmt_ok:
         PASS.append("caseNo格式闸")
     else:
