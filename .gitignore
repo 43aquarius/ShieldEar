@@ -43,3 +43,6 @@ repo-stage/
 /scripts/api-push/
 tsconfig.tsbuildinfo
 .gh_pat
+
+# 发版令牌（绝不入库）
+.secrets/
