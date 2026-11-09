@@ -394,7 +394,7 @@ export function ResultPanel() {
             />
             {meta.sourceHash && (
               <HashRow
-                label={meta.sourceType === "TTS" ? "原始合成音频 SHA-256" : "原始上传文件 SHA-256"}
+                label="原始上传文件 SHA-256"
                 value={<HashText hash={meta.sourceHash} />}
               />
             )}

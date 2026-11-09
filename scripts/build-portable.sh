@@ -293,6 +293,13 @@ VC_SIZE=$(du -cb "$PROJ/scripts/package-files/vcredist/"{msvcp140,vcruntime140,v
 echo "✓ VC++ 运行库三 DLL 就位（$((VC_SIZE/1024))KB × 包根 + .prisma/client 两处；合成组件已随 v1.3.11 移除，包体约 -27MB）"
 
 echo "── [7/8] Node 运行时与启动脚本 ──"
+# fail-fast（v1.3.12 加固）：node.exe 缺失曾产出无运行时的无效 zip（沙箱回收 /tmp 实录）
+if [ ! -f /tmp/node.exe ]; then
+  echo "✗ /tmp/node.exe 缺失 —— 先从官方 dist 下载："
+  echo "    curl -fL -o /tmp/node.exe https://nodejs.org/dist/v20.18.1/win-x64/node.exe"
+  echo "    SHA-256 应为 06c1dec1b428927d6ff01c8f5882f119ec13b61ac77483760aa7fba215c72cf5"
+  exit 1
+fi
 cp /tmp/node.exe "$STAGE/node.exe"
 cp "$PROJ/scripts/package-files/START-ShieldEar.bat" "$STAGE/"
 cp "$PROJ/scripts/package-files/README.txt" "$STAGE/README.txt"

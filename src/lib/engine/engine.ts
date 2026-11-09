@@ -14,6 +14,16 @@
  *  - jitter          基音周期微扰
  *  - zcrCV           过零率变异系数
  *  - hfPeriodicity   高频段周期性（声码器谐波延展指纹）
+ *  - f0Std           基频韵律动态（窗内 F0 变异系数，v2.0 学术增强）
+ *  - shimmer         振幅微扰（相邻基音周期峰值幅度扰动，v2.0 学术增强）
+ *  - envMod45        包络调制占比（4–8Hz 音节律调制能量比，v2.0 学术增强）
+ *
+ * v2.0 学术增强实验记录（诚实工程边界）：
+ *  - 相位域 MGD 类（群延迟参与比/平坦度等 6 形态）与倒谱纹理类（CQCC/LFCC
+ *    思路 3 形态）在本数据集（单一 TTS 引擎 × 7 音色）上分离度均 <0.8，
+ *    不入引擎（scripts/probe-v2-features.ts 全程可复现）；
+ *  - 入选三特征分离度（宽带/窄带）：f0Std 1.26/1.41 · shimmer 1.08/0.95 ·
+ *    envMod45 1.70/0.96，且双信道方向一致。
  */
 
 import {
@@ -51,6 +61,8 @@ const FRAME_HOP = Math.round(ENGINE_PARAMS.hopMs * SR / 1000); // 240
 const FFT = ENGINE_PARAMS.fftSize; // 512
 const BINS = (FFT >> 1) + 1;
 const BIN_HZ = SR / FFT; // 31.25 Hz
+/** 信道判定频点：3.5kHz（电话带外，只剩滤波泄漏；v2.0 修复） */
+const CH_LO = Math.ceil(3500 / BIN_HZ); // 112
 /** 高频段：4kHz–8kHz */
 const HF_LO = Math.floor(4000 / BIN_HZ);
 const HF_HI = FFT >> 1;
@@ -91,6 +103,8 @@ export function analyzeWindow(
   const hnrList: number[] = [];
   const periodList: number[] = [];
   const hfPeriodList: number[] = [];
+  const shimmerList: number[] = [];
+  const chRatioList: number[] = [];
 
   const { minLag, maxLag } = pitchLags();
   const hann = getHann(FRAME);
@@ -122,6 +136,20 @@ export function analyzeWindow(
         hfSum += mag[k];
         logSum += Math.log(mag[k] + 1e-12);
       }
+    }
+    // 信道判定指标（v2.0 修复）：3.5kHz+ 功率占比
+    // v1 潜伏缺陷：用 3.25kHz+ 幅度占比判窄带，带通泄漏使电话仿真音频
+    // 占比达 0.02–0.034 > 阈值 0.015，窄带路径从未触发（实证：改窄带权重
+    // 对全套测试结果零影响）。改用 3.5kHz+ 功率占比后：电话 ≤0.0044，
+    // 宽带 ≥0.07，分离干净。
+    {
+      let p35 = 0, ptot = 0;
+      for (let k = 1; k < BINS; k++) {
+        const pw = re[k] * re[k] + im[k] * im[k];
+        ptot += pw;
+        if (k >= CH_LO) p35 += pw;
+      }
+      if (ptot > 1e-12) chRatioList.push(p35 / ptot);
     }
     const hfCount = BINS - HF_LO;
     if (hfSum > 1e-9) {
@@ -164,6 +192,27 @@ export function analyzeWindow(
       hnrList.push(peak.value);
       periodList.push(peak.refined);
 
+      // ---- 振幅微扰 shimmer（v2.0）：相邻基音周期峰值幅度的相对扰动 ----
+      // 自然声门开合/气流动力学的幅度微观起伏 vs 声码器幅度轨迹的平稳性
+      {
+        const period = Math.round(peak.refined);
+        const nP = Math.floor(decLen / period);
+        let sA = 0, nA = 0, prevA = -1;
+        for (let pIdx = 0; pIdx < nP; pIdx++) {
+          let amp = 0;
+          for (let i = pIdx * period; i < (pIdx + 1) * period; i++) {
+            const a = Math.abs(dec[i]);
+            if (a > amp) amp = a;
+          }
+          if (prevA > 0 && prevA + amp > 1e-9) {
+            sA += Math.abs(amp - prevA) / ((amp + prevA) / 2);
+            nA++;
+          }
+          prevA = amp;
+        }
+        if (nA >= 2) shimmerList.push(sA / nA);
+      }
+
       // ---- 高频段周期性：声码器把谐波结构延展到高频，自然语音高频以气息噪声为主 ----
       // 用掩蔽谱的 IFFT 取高频段时域信号，在基音周期处的归一化自相关
       const hre = new Float64Array(FFT);
@@ -200,21 +249,67 @@ export function analyzeWindow(
     if (Math.abs(a - b) / a < 0.5) jitterList.push(Math.abs(b - a) / a);
   }
 
-  // 信道判定：高频能量占比极低 → 电话窄带信道
-  const hfRatioMean = hfRatioList.length ? mean(hfRatioList) : 0;
+  // 基频韵律动态（v2.0）：窗内浊音帧 F0 的变异系数
+  // 自然语流的重音/语调起伏 → 慢速 F0 波动；合成语音韵律轨迹趋于平坦
+  let f0Std = 0;
+  if (periodList.length >= 6) {
+    const f0s = periodList.map((p) => (SR / DEC) / p);
+    const m = mean(f0s);
+    if (m > 1e-6) f0Std = std(f0s) / m;
+  }
+
+  // 包络调制占比（v2.0）：4–8Hz 音节律调制能量 / 包络总调制能量（窗口级）
+  // 神经 TTS 韵律模型产生规律化/夸张的音节律调制，与自然语流的调制分布存在系统差异
+  let envMod45 = 0;
+  if (winRms > 0.01) {
+    const SUB = Math.round(0.02 * SR); // 20ms 子帧
+    const nSub = Math.floor(winLen / SUB);
+    if (nSub >= 16) {
+      const env = new Float64Array(FFT);
+      let em = 0;
+      for (let i = 0; i < nSub; i++) {
+        let s = 0;
+        const b0 = start + i * SUB;
+        for (let j = 0; j < SUB; j++) s += pcm[b0 + j] * pcm[b0 + j];
+        env[i] = Math.sqrt(s / SUB);
+        em += env[i];
+      }
+      em /= nSub;
+      const ere = new Float64Array(FFT);
+      const eim = new Float64Array(FFT);
+      for (let i = 0; i < nSub; i++) ere[i] = env[i] - em;
+      fftInPlace(ere, eim);
+      const envBinHz = 1 / (FFT * 0.02); // ≈0.0977Hz
+      const mlo = Math.ceil(4 / envBinHz);
+      const mhi = Math.floor(8 / envBinHz);
+      let s45 = 0, tot = 0;
+      for (let k = 1; k < FFT / 2; k++) {
+        const p = Math.sqrt(ere[k] * ere[k] + eim[k] * eim[k]);
+        tot += p;
+        if (k >= mlo && k <= mhi) s45 += p;
+      }
+      if (tot > 1e-12) envMod45 = s45 / tot;
+    }
+  }
+
+  // 信道判定：3.5kHz+ 功率占比极低 → 电话窄带信道（v2.0 修复，见上）
+  const chRatioMean = chRatioList.length ? mean(chRatioList) : 0;
   const channel: ChannelType =
     opts.forcedChannel ??
-    (hfRatioMean < ENGINE_PARAMS.narrowbandHfRatio ? "narrowband" : "wideband");
+    (chRatioMean < ENGINE_PARAMS.narrowbandHfRatio ? "narrowband" : "wideband");
 
   const features: RawFeatures = {
     hfFlatness: hfFlatList.length ? mean(hfFlatList) : 0,
-    hfEnergyRatio: hfRatioMean,
+    hfEnergyRatio: hfRatioList.length ? mean(hfRatioList) : 0,
     hnr: hnrList.length ? mean(hnrList) : 0,
     hnrCV: hnrList.length > 3 ? std(hnrList) / (mean(hnrList) + 1e-9) : 0,
     fluxCV: fluxList.length > 1 ? std(fluxList) / (mean(fluxList) + 1e-9) : 0,
     jitter: jitterList.length ? mean(jitterList) : 0,
     zcrCV: zcrList.length > 1 ? std(zcrList) / (mean(zcrList) + 1e-9) : 0,
     hfPeriodicity: hfPeriodList.length ? mean(hfPeriodList) : 0,
+    f0Std,
+    shimmer: shimmerList.length ? mean(shimmerList) : 0,
+    envMod45,
     voicedRatio,
   };
 

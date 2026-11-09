@@ -3,7 +3,7 @@
  */
 
 export const ENGINE_NAME = "ShieldEar";
-export const ENGINE_VERSION = "v1.3.5-calibrated";
+export const ENGINE_VERSION = "v2.0.0-calibrated";
 
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type WindowLabel = "silent" | "natural" | "suspect" | "synthetic";
@@ -21,7 +21,7 @@ export const ENGINE_PARAMS = {
   frameActiveRms: 0.005,
   /** 窗口判为有效语音所需的最小活跃帧比例 */
   windowVoicedRatio: 0.22,
-  /** 窄带（电话信道）判定：高频能量占比阈值 */
+  /** 窄带（电话信道）判定：3.5kHz+ 功率占比阈值（v2.0 修复原 3.25kHz 幅度占比的泄漏缺陷） */
   narrowbandHfRatio: 0.015,
 } as const;
 
@@ -42,6 +42,12 @@ export interface RawFeatures {
   zcrCV: number;
   /** 高频段周期性（声码器谐波延展指纹） */
   hfPeriodicity: number;
+  /** 基频韵律动态（窗内 F0 变异系数，v2.0 学术增强） */
+  f0Std: number;
+  /** 振幅微扰（相邻基音周期峰值幅度扰动，v2.0 学术增强） */
+  shimmer: number;
+  /** 包络调制占比（4–8Hz 音节律调制能量比，v2.0 学术增强） */
+  envMod45: number;
   /** 活跃帧占比 */
   voicedRatio: number;
 }
@@ -80,6 +86,9 @@ export interface FeatureProfileItem {
     | "jitter"
     | "zcrCV"
     | "hfPeriodicity"
+    | "f0Std"
+    | "shimmer"
+    | "envMod45"
   >;
   name: string;
   meanValue: number;

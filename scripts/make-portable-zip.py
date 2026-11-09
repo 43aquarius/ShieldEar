@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""make-portable-zip.py — 组装最终交付 zip（UTF-8 flag + DEFLATED）· v1.3.11
-产物: /home/z/my-project/download/ShieldEar-v1.3.11-portable.zip
+"""make-portable-zip.py — 组装最终交付 zip（UTF-8 flag + DEFLATED）· v1.3.12
+产物: /home/z/my-project/download/ShieldEar-v1.3.12-portable.zip
 """
 import os, subprocess, sys, zipfile
 
 SRC = "/tmp/package-build/ShieldEar"
-OUT = "/home/z/my-project/download/ShieldEar-v1.3.11-portable.zip"
+OUT = "/home/z/my-project/download/ShieldEar-v1.3.12-portable.zip"
 
 # fail-fast（v1.3.6）：交付树禁止软链 —— os.walk 会静默丢弃目录软链，
 # 导致 Windows 解压后模块缺失（v1.3.5 Prisma 外部依赖事故根因）

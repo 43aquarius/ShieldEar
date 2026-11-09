@@ -137,6 +137,27 @@ function judgeOne(
   };
 }
 
+/** EER（等错误率）：误报率=漏报率交叉点的错误率，学术口径标准指标 */
+function eerOf(pos: number[], neg: number[]): number {
+  if (!pos.length || !neg.length) return NaN;
+  const ths = [...new Set([...pos, ...neg])].sort((a, b) => a - b);
+  let best = 1;
+  for (const th of ths) {
+    const far = neg.filter((s) => s >= th).length / neg.length; // 自然被误判为合成
+    const frr = pos.filter((s) => s < th).length / pos.length;  // 合成被漏判
+    best = Math.min(best, Math.max(far, frr));
+  }
+  return Math.round(best * 10000) / 10000;
+}
+
+/** AUC（排序区分度）：Mann-Whitney U 统计，P(合成分>自然分)+0.5P(相等) */
+function aucOf(pos: number[], neg: number[]): number {
+  if (!pos.length || !neg.length) return NaN;
+  let u = 0;
+  for (const p of pos) for (const n of neg) u += p > n ? 1 : p === n ? 0.5 : 0;
+  return Math.round((u / (pos.length * neg.length)) * 10000) / 10000;
+}
+
 function pct(sorted: number[], q: number): number {
   if (!sorted.length) return 0;
   const idx = Math.min(sorted.length - 1, Math.max(0, Math.round((sorted.length - 1) * q)));
@@ -254,6 +275,28 @@ function main() {
     max: Math.round(pct(rtfs, 1) * 10000) / 10000,
   };
 
+  // ── 学术口径指标（v2.0）：EER / AUC，按信道与整体 ──
+  const ttsScores = (sel: typeof items) => sel.filter((i) => i.cls === 'tts').map((i) => i.syntheticRatio);
+  const natScores = (sel: typeof items) => sel.filter((i) => i.cls === 'natural').map((i) => i.syntheticRatio);
+  const eerAuc: Record<string, { eer: number; auc: number; nPos: number; nNeg: number }> = {};
+  for (const ch of ['wideband', 'narrowband'] as const) {
+    const sel = items.filter((i) => i.channel === ch);
+    eerAuc[ch] = {
+      eer: eerOf(ttsScores(sel), natScores(sel)),
+      auc: aucOf(ttsScores(sel), natScores(sel)),
+      nPos: sel.filter((i) => i.cls === 'tts').length,
+      nNeg: sel.filter((i) => i.cls === 'natural').length,
+    };
+  }
+  const selAllTts = items.filter((i) => i.cls === 'tts');
+  const selAllNat = items.filter((i) => i.cls === 'natural');
+  eerAuc['pooled'] = {
+    eer: eerOf(selAllTts.map((i) => i.syntheticRatio), selAllNat.map((i) => i.syntheticRatio)),
+    auc: aucOf(selAllTts.map((i) => i.syntheticRatio), selAllNat.map((i) => i.syntheticRatio)),
+    nPos: selAllTts.length,
+    nNeg: selAllNat.length,
+  };
+
   const out = {
     meta: {
       engine: `${ENGINE_NAME} ${ENGINE_VERSION}`,
@@ -261,6 +304,7 @@ function main() {
       runtime: `Node ${process.version} / bun ${typeof Bun !== 'undefined' ? Bun.version : 'n/a'}`,
       params: { ...ENGINE_PARAMS, thresholds: SCORE_THRESHOLDS },
       judgmentRule: 'TTS→HIGH/CRITICAL=检出(正确)；自然→LOW/MEDIUM=放行(正确)',
+      metricsNote: 'EER(等错误率)/AUC(排序区分度)为学术口径补充指标，基于 syntheticRatio 分数分布计算',
     },
     dataset: {
       naturalOriginal: naturals.length,
@@ -272,7 +316,7 @@ function main() {
     },
     items,
     microbench,
-    summary: { byChannel, byGroup, byVoice, rtf: rtfStats, totalJudgments: items.length },
+    summary: { byChannel, byGroup, byVoice, rtf: rtfStats, eerAuc, totalJudgments: items.length },
   };
   fs.writeFileSync(path.join(DIR, 'testsuite_results.json'), JSON.stringify(out, null, 2));
   console.log('\n== 汇总 ==');
@@ -286,6 +330,7 @@ function main() {
   }
   console.log('RTF:', JSON.stringify(rtfStats));
   console.log('单窗时延:', JSON.stringify(microbench));
+  console.log('EER/AUC:', JSON.stringify(eerAuc));
   console.log('saved → calibration/testsuite_results.json');
 }
 

@@ -30,7 +30,7 @@ const ARCH_ROWS = [
   {
     layer: "检测引擎层",
     icon: Cpu,
-    modules: "ShieldEar 轻量可解释引擎（8 维声学特征 + 数据驱动校准评分）",
+    modules: "ShieldEar 轻量可解释引擎（11 维声学特征 + 数据驱动校准评分）",
     points: "2s 滑窗 / 1s 步进 / 50% 重叠；帧级 25ms 分析；同构 TS 实现，浏览器与服务端运行同一份代码",
   },
   {
@@ -62,20 +62,23 @@ const FEATURE_TABLE = [
   { name: "基音微扰", key: "jitter", band: "基音", what: "相邻浊音帧周期相对扰动", why: "自然声带生理性抖动区间 vs 声码器周期稳定度" },
   { name: "过零率波动度", key: "zcrCV", band: "全带", what: "ZCR 变异系数", why: "辅音元音交替的自然波动 vs 合成的稳定性" },
   { name: "高频周期性", key: "hfPeriodicity", band: "4–8kHz", what: "高频段在基音周期处的自相关", why: "声码器把谐波延展到高频，自然语音高频以气息噪声为主" },
+  { name: "基频韵律动态", key: "f0Std", band: "基音轨迹", what: "窗内浊音帧 F0 变异系数", why: "自然语调起伏带来慢速 F0 波动，合成韵律轨迹趋于平坦（v2.0）" },
+  { name: "振幅微扰", key: "shimmer", band: "基音周期", what: "相邻基音周期峰值幅度相对扰动", why: "自然声门/气流动力学的幅度起伏 vs 声码器幅度轨迹平稳性（v2.0）" },
+  { name: "包络调制占比", key: "envMod45", band: "4–8Hz", what: "音节律调制能量 / 包络总调制能量", why: "神经 TTS 韵律模型的规律化/夸张音节律调制（v2.0）" },
 ];
 
 const CALIB_STEPS = [
   { step: "1. 样本构造", desc: "自然类：MDN / wavesurfer.js 公开人声录音 5 种（含有声书）；合成类：平台 TTS 7 音色 × 3 文本 = 20 段；另对两类均构造 300–3400Hz 电话窄带退化版本（50 条特征记录）。" },
   { step: "2. 先验拟合", desc: "按信道分别取自然类各特征 μ/σ 作为「自然人声统计先验」— z 分数即偏离同信道自然语音的程度。" },
-  { step: "3. 权重拟合", desc: "类加权（natural×4）L2 正则逻辑回归，梯度下降 4000 轮；宽带用全部 8 特征，窄带仅用时域 5 特征（高频特征失效清零）。" },
-  { step: "4. 验证", desc: "样本内：宽带 TTS 判合成 20/20、自然判正常 4/5；窄带 TTS 16/20、自然 4/5；自然类留一（LOO）稳定性检验。脚本 scripts/fit-weights.ts 全程可复现。" },
+  { step: "3. 权重拟合", desc: "类加权（natural×4）L2 正则逻辑回归，梯度下降 4000 轮；宽带用全部 11 特征（v2.0 新增韵律/微扰/调制三特征仅宽带计分），窄带用时域 5 特征（实证：新特征在退化窄带上被信道噪声主导，不入窄带评分）。" },
+  { step: "4. 验证", desc: "样本内：宽带 TTS 判合成 20/20、自然判正常 4/5；窄带 TTS 判合成 19/20、自然判正常 4/5；自然类留一（LOO）稳定性检验。全套 258 判决：宽带 F1 0.962 / 窄带 F1 0.876 / 综合 EER 0.18 · AUC 0.925。脚本 scripts/fit-weights.ts 全程可复现。" },
 ];
 
 const METRICS = [
-  { name: "EER（等错误率）", def: "误报率 = 漏报率时的错误率", status: "深度引擎接入后于 ASVspoof 2019/2021 LA 基准复现（目标百分之一量级）" },
+  { name: "EER（等错误率）", def: "误报率 = 漏报率时的错误率", status: "v2.0 起在自建 258 判决套件实测：宽带 0.16 / 窄带 0.20 / 综合 0.18（学术口径指标落地）" },
   { name: "RTF（实时因子）", def: "分析耗时 / 音频时长", status: "轻量引擎实测 0.003–0.008（2s 窗约 7–25ms），CPU 即满足实时" },
   { name: "判决时延", def: "窗口完成到判决输出", status: "≤ 1s（窗口步进）+ 引擎毫秒级，满足「边通话边检测」" },
-  { name: "跨信道鲁棒性", def: "窄带退化下的检出率", status: "窄带 TTS 检出 16/20（诚实呈现信道退化影响，作为评测贡献点）" },
+  { name: "跨信道鲁棒性", def: "窄带退化下的检出率", status: "窄带 TTS 检出 19/20（v2.0 修复信道判定缺陷，窄带路径真实生效；退化窄带召回 0.817）" },
 ];
 
 const ROADMAP = [
@@ -142,7 +145,7 @@ export function TechView() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <AudioWaveform className="h-4 w-4 text-emerald-400" aria-hidden /> 8 维声学特征（判决完全可解释）
+            <AudioWaveform className="h-4 w-4 text-emerald-400" aria-hidden /> 11 维声学特征（判决完全可解释）
           </CardTitle>
           <CardDescription>每一维都对应一类声码器/自然人声的物理差异，判决可逐特征审计</CardDescription>
         </CardHeader>

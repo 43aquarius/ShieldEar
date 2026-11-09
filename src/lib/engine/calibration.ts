@@ -82,6 +82,27 @@ export const FEATURE_META: FeatureMeta[] = [
     description:
       "高频段（4–8kHz）信号在基音周期处的自相关。自然语音高频以气息噪声为主，声码器会把谐波结构延展到高频段。",
   },
+  {
+    key: "f0Std",
+    name: "基频韵律动态",
+    unit: "",
+    description:
+      "窗内浊音帧基频的变异系数。自然语流的重音与语调起伏带来基频慢速波动，合成语音的韵律轨迹趋于平坦。",
+  },
+  {
+    key: "shimmer",
+    name: "振幅微扰",
+    unit: "",
+    description:
+      "相邻基音周期峰值幅度的相对扰动（shimmer）。自然声门开合与气流动力学带来幅度微观起伏，声码器的幅度轨迹更平稳。",
+  },
+  {
+    key: "envMod45",
+    name: "包络调制占比",
+    unit: "",
+    description:
+      "4–8Hz 音节律调制能量占包络总调制能量的比例。神经 TTS 韵律模型产生规律化/夸张的音节律调制，与自然语流的调制分布存在系统差异。",
+  },
 ];
 
 /**
@@ -97,6 +118,9 @@ export const NATURAL_PRIORS_WB = {
   jitter: { mu: 0.0626, sigma: 0.0234 },
   zcrCV: { mu: 0.6114, sigma: 0.379 },
   hfPeriodicity: { mu: 0.1367, sigma: 0.0786 },
+  f0Std: { mu: 0.3928, sigma: 0.1837 },
+  shimmer: { mu: 0.2114, sigma: 0.0679 },
+  envMod45: { mu: 0.1967, sigma: 0.0409 },
 } as const;
 
 /**
@@ -111,6 +135,9 @@ export const NATURAL_PRIORS_NB = {
   jitter: { mu: 0.0614, sigma: 0.0271 },
   zcrCV: { mu: 0.3302, sigma: 0.1821 },
   hfPeriodicity: { mu: 0.064, sigma: 0.005 },
+  f0Std: { mu: 0.3305, sigma: 0.0295 },
+  shimmer: { mu: 0.2201, sigma: 0.0385 },
+  envMod45: { mu: 0.2161, sigma: 0.0598 },
 } as const;
 
 /**
@@ -118,34 +145,41 @@ export const NATURAL_PRIORS_NB = {
  * 拟合自类加权 L2 逻辑回归；权重为正表示该特征升高偏向"合成"
  */
 export const WEIGHTS_WIDEBAND = {
-  bias: -1.289,
-  hfFlatness: 0.177,
-  hfEnergyRatio: 0.368,
-  hnr: 0.508,
-  hnrCV: 0.317,
-  fluxCV: 0.337,
+  bias: -1.504,
+  hfFlatness: -0.099,
+  hfEnergyRatio: 0.326,
+  hnr: 0.377,
+  hnrCV: 0.294,
+  fluxCV: 0.272,
   jitter: -0.037,
-  zcrCV: 0.096,
-  hfPeriodicity: 0.289,
+  zcrCV: 0.019,
+  hfPeriodicity: 0.261,
+  f0Std: -0.109,
+  shimmer: -0.11,
+  envMod45: 0.306,
 } as const;
 
 /**
  * 评分权重 — 窄带（高频特征失效，权重清零）
  */
 export const WEIGHTS_NARROWBAND = {
-  bias: -0.967,
+  bias: -0.991,
   hfFlatness: 0,
   hfEnergyRatio: 0,
-  hnr: 0.558,
-  hnrCV: 0.074,
-  fluxCV: 0.22,
-  jitter: -0.085,
-  zcrCV: 0.428,
+  hnr: 0.543,
+  hnrCV: 0.079,
+  fluxCV: 0.232,
+  jitter: -0.088,
+  zcrCV: 0.445,
   hfPeriodicity: 0,
+  // v2.0 新特征窄带不计分（实证：退化窄带上被信道噪声主导，见 fit-weights.ts 注）
+  f0Std: 0,
+  shimmer: 0,
+  envMod45: 0,
 } as const;
 
-export type Weights = typeof WEIGHTS_WIDEBAND;
-export type PriorMap = typeof NATURAL_PRIORS_WB;
+export type Weights = { [K in keyof typeof WEIGHTS_WIDEBAND]: number };
+export type PriorMap = { [K in keyof typeof NATURAL_PRIORS_WB]: { mu: number; sigma: number } };
 
 export function naturalPriors(channel: ChannelType): PriorMap {
   return (channel === "narrowband" ? NATURAL_PRIORS_NB : NATURAL_PRIORS_WB) as PriorMap;
@@ -161,6 +195,9 @@ export const SCORE_KEYS = [
   "jitter",
   "zcrCV",
   "hfPeriodicity",
+  "f0Std",
+  "shimmer",
+  "envMod45",
 ] as const;
 
 /** 单特征 z 分数（相对同信道自然人声先验，限幅） */

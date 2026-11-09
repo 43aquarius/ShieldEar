@@ -18,7 +18,10 @@ const DATA = JSON.parse(
   voicedWindows: number;
 }[];
 
-const WB_KEYS = ['hfFlatness', 'hfEnergyRatio', 'hnr', 'hnrCV', 'fluxCV', 'jitter', 'zcrCV', 'hfPeriodicity'] as const;
+const WB_KEYS = ['hfFlatness', 'hfEnergyRatio', 'hnr', 'hnrCV', 'fluxCV', 'jitter', 'zcrCV', 'hfPeriodicity', 'f0Std', 'shimmer', 'envMod45'] as const;
+// 窄带维持 v1.3.5 五特征口径：实证（testsuite v2 首跑）显示 f0Std/envMod45 在
+// 退化窄带（noise20/mp3/speed105 × 电话信道）上被信道噪声主导，召回 0.779→0.394，
+// 故新特征不参与窄带评分（特征剖面仍展示，仅不计分）
 const NB_KEYS = ['hnr', 'hnrCV', 'fluxCV', 'jitter', 'zcrCV'] as const;
 
 const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));

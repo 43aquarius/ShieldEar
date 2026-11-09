@@ -4,7 +4,7 @@
 
 > 接到可疑来电，如何在转账之前知道对方的声音是不是 AI 合成的？声盾把这道反诈治理中最直接的问题，变成一次可以随身携带的浏览器操作：**边通话、边检测、边存证**。
 
-![version](https://img.shields.io/badge/version-v1.3.11-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9)
+![version](https://img.shields.io/badge/version-v1.3.12-0E9F6E) ![license](https://img.shields.io/badge/license-All%20Rights%20Reserved-555) ![engine](https://img.shields.io/badge/engine-%E5%90%8C%E6%9E%84TS%20%E7%BA%AFCPU-1B6B7A) ![offline](https://img.shields.io/badge/%E5%8F%91%E8%A1%8C%E7%89%88-%E7%BA%AF%E7%A6%BB%E7%BA%BF-0EA5E9)
 
 ---
 
@@ -17,7 +17,7 @@
 | 模块 | 能力 |
 |------|------|
 | **实时鉴听** | AudioWorklet 16kHz 采集，2s 滑动窗口 / 1s 步进流式分析，逐窗置信度曲线与告警脉冲同屏呈现 |
-| **文件检测** | 拖拽即测，输出判决卡、可疑片段时间轴与可解释的八维声学特征剖面；包内预置 AI 合成诈骗样本与真人对照样本，开箱即可演示检测能力 |
+| **文件检测** | 拖拽即测，输出判决卡、可疑片段时间轴与可解释的十一维声学特征剖面；包内预置 AI 合成诈骗样本与真人对照样本，开箱即可演示检测能力 |
 | **案例库与证据链** | 检测案件入库、WAV 证据下载、音频与检测结果双 SHA-256 哈希校验；原始上传文件随证落盘，核验页「原始来源」检查真实可执行（v1.3.9） |
 | **存证包离线导出** | 任一案例一键导出 ZIP（证据音频 + 原始来源 + 案例全量记录 + 核验报告 + SHA-256 清单），解包后 `sha256sum -c` 可独立校验（v1.3.9） |
 | **证据完整性核验** | 一键重读证据 WAV 并重算 SHA-256 与入库值比对，绿色印章证明证据自存证以来未被篡改 —「存证 → 验真」闭环的验真端（v1.3.5；v1.3.9 起原始来源文件随证落盘，核验真正可执行） |
@@ -45,17 +45,18 @@
 
 ![声盾总体架构](docs/figures/fig_architecture.png)
 
-五层架构：采集层（AudioWorklet / 文件导入）→ 检测引擎层（纯 TS 同构引擎：滑动窗口管线 + 八维声码器指纹特征 + 数据驱动校准的逻辑回归评分 + 窄带自适应）→ 判决融合层（中值 + EMA 平滑、能量加权整段判决、四级风险分级）→ 业务层（风险提示、SHA-256 证据固定、服务端复核、核验报告）→ 展示层（单页应用）。
+五层架构：采集层（AudioWorklet / 文件导入）→ 检测引擎层（纯 TS 同构引擎 v2.0：滑动窗口管线 + 十一维声学特征（声码器指纹 × 8 + 韵律动态/振幅微扰/音节律调制 × 3）+ 数据驱动校准的逻辑回归评分 + 窄带自适应）→ 判决融合层（中值 + EMA 平滑、能量加权整段判决、四级风险分级）→ 业务层（风险提示、SHA-256 证据固定、服务端复核、核验报告）→ 展示层（单页应用）。
 
 ## 快速开始
 
 ### 方式一：可执行程序包（免安装，推荐评审使用）
 
-从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.11-portable.zip`（约 58MB）并解压：
+从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.12-portable.zip`（约 58MB）并解压：
 
 - **Windows**：双击 `START-ShieldEar.bat`——包内含便携 Node.js 运行时与 VC++ 2015-2022 运行库三 DLL（app-local），无需任何预装环境；启动时自动完成启动自检（数据引擎/数据库/校准数据），异常会在启动窗口给出中文提示并写入 `STARTUP-ERROR.txt`，不再出现含义不明的页面报错；
 - 等待数秒浏览器自动打开 `http://127.0.0.1:3000`，包内已含 4 件演示案件（真人×2 / 神经合成×2）与对应证据存档（含原始来源文件），全部功能开箱即用；
 - **Release 包为「纯离线发行版」**：检测、存证、核验全程本地运行，零联网依赖，断网开箱即用；
+- **v1.3.12 变更（引擎 v2.0.0-calibrated 学术增强）**：参照 ASVspoof / ADD 挑战赛与 TIFS、USENIX Security 等学术文献重构检测引擎——新增三维权韵律特征（基频韵律动态 f0Std / 振幅微扰 shimmer / 4–8Hz 包络调制占比 envMod45，宽带计分），修复自 v1 起窄带信道判定从未触发的潜伏缺陷（3.25kHz 幅度占比 → 3.5kHz 功率占比）；测试套件引入 EER/AUC 学术口径指标。全套 258 判决对比上一入库基线（v1.3.0 引擎实录）：宽带 F1 0.893→0.962、整体正确 209/258→226/258、综合 EER 0.18 / AUC 0.925；相位域 MGD 类与倒谱纹理类特征经探针实证分离不足，诚实不入引擎（scripts/probe-v2-features.ts 可复现）；
 - **v1.3.11 变更**：移除「现场合成挑战」功能及全部本地语音合成组件（espeak-ng 引擎与声库，约 27MB）——真机实测其机器音质不达标，为保持产品诚实与专注，平台聚焦「检测、存证、核验」核心能力。检测演示动线不受影响：文件检测内置合成诈骗与真人对照样本，实时鉴听对外放音频即可实时告警；
 - **常见问题（排障史）**：v1.3.7 曾把 0xC0000135 误诊为「缺 VC++ 运行库」；v1.3.8 定位为包内 DLL 文件名不匹配并双文件名随包；v1.3.9 坐实更深一层根因 —— 构建工具（Turbopack）把 `process.platform === "win32"` 按构建机（Linux）常量折叠，导致应用内组件探测从未成功过，现已改为平台无关按名探测 + 打包硬闸防复发。以上均针对已移除的合成组件（历史供源码考古）；当前包内 PE 仅 node.exe / Prisma 引擎 / VC++ 三 DLL，由打包期 PE 导入表硬闸逐一校验，**无需安装任何运行库**。
 
@@ -95,7 +96,7 @@ python3 scripts/gen-test-figures.py   # 输出 download/assets/test_*.png
 
 ```
 ├── src/                    # 平台源码（Next.js 16 + React 19）
-│   ├── lib/engine/         # 同构检测引擎（DSP / 八维特征 / 校准 / 流式分析器）
+│   ├── lib/engine/         # 同构检测引擎（DSP / 十一维特征 / 校准 / 流式分析器）
 │   ├── lib/audio/          # WAV 编解码
 │   ├── lib/server/         # 分析与存证服务
 │   ├── app/api/            # 检测复核 / 案例与证据 / 自检 API

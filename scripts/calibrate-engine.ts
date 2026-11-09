@@ -94,7 +94,7 @@ function extractFeats(name: string, cls: 'natural' | 'tts', pcm: Float32Array, c
   const res = analyzeBuffer(pcm);
   const voiced = res.windows.filter((w) => w.voiced);
   const feats: Record<string, number> = {};
-  for (const k of ['hfFlatness', 'hfEnergyRatio', 'hnr', 'hnrCV', 'fluxCV', 'jitter', 'zcrCV', 'hfPeriodicity']) {
+  for (const k of ['hfFlatness', 'hfEnergyRatio', 'hnr', 'hnrCV', 'fluxCV', 'jitter', 'zcrCV', 'hfPeriodicity', 'f0Std', 'shimmer', 'envMod45']) {
     feats[k] = voiced.length
       ? voiced.reduce((s, w) => s + (w.features as any)[k], 0) / voiced.length
       : 0;
@@ -121,7 +121,7 @@ function dump() {
   // 快速打印类间分布
   for (const channel of ['wideband', 'narrowband'] as const) {
     console.log(`\n== ${channel} ==`);
-    for (const k of ['hfFlatness', 'hfEnergyRatio', 'hnr', 'hnrCV', 'fluxCV', 'jitter', 'zcrCV', 'hfPeriodicity']) {
+    for (const k of ['hfFlatness', 'hfEnergyRatio', 'hnr', 'hnrCV', 'fluxCV', 'jitter', 'zcrCV', 'hfPeriodicity', 'f0Std', 'shimmer', 'envMod45']) {
       const nat = out.filter((r) => r.cls === 'natural' && r.channel === channel).map((r) => r.feats[k]);
       const syn = out.filter((r) => r.cls === 'tts' && r.channel === channel).map((r) => r.feats[k]);
       if (!nat.length || !syn.length) continue;
