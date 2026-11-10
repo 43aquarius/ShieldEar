@@ -16,7 +16,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src"),
+      // v1.3.15 工程治理：__dirname 为 CJS 全局，vitest 5 起在 .mts 弃用并告警；
+      // import.meta.dirname 是 ESM 原生等价物（Node 20.11+，CI 与本机 Node 24 均满足）
+      "@": path.resolve(import.meta.dirname, "src"),
     },
   },
 });
