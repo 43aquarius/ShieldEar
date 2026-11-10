@@ -10,6 +10,7 @@
   html, body { margin:0; padding:0; width:1280px; height:720px; overflow:hidden; }
   .feat-name { font-family: var(--font-heading); font-weight: 700; font-size: var(--fs-body); color: var(--paper); }
   .feat-band { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--faint); letter-spacing: .04em; }
+  .feat-new { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--gold-bright); letter-spacing: .08em; }
   .hero-stat { font-family: var(--font-num); font-weight: 700; font-size: 38px; line-height: 1.05; color: var(--gold); font-variant-numeric: tabular-nums; }
 </style>
 </head>
@@ -30,15 +31,15 @@
     <div class="cd-h">
       <div class="cn">检测引擎</div>
       <div class="en">DETECTION ENGINE</div>
-      <div class="serif" style="margin-left:auto; font-weight:600; font-size:var(--fs-h3); color:var(--gold-bright);">八个特征，每一个都能回答为什么</div>
+      <div class="serif" style="margin-left:auto; font-weight:600; font-size:var(--fs-h3); color:var(--gold-bright);">十一个特征，每一个都能回答为什么</div>
     </div>
 
-    <p style="margin-top:12px; font-size:var(--fs-body); color:var(--paper-dim); line-height:1.6;">每一维都锚定人怎么发声、声码器怎么生成的物理差异——判决依据逐特征可追溯，第三方可复算，不依赖黑盒打分；八维特征经统一管线汇成整段判决，每一步都有显式公式。</p>
+    <p style="margin-top:12px; font-size:var(--fs-body); color:var(--paper-dim); line-height:1.6;">每一维都锚定人怎么发声、声码器怎么生成的物理差异——判决依据逐特征可追溯，第三方可复算，不依赖黑盒打分；十一维特征经统一管线汇成整段判决，每一步都有显式公式。</p>
 
-    <main style="flex:1; min-height:0; display:flex; gap:36px; margin-top:18px;">
+    <main style="flex:1; min-height:0; display:flex; gap:36px; margin-top:16px;">
 
       <!-- 左：主角特征卡 -->
-      <div class="card card-g" style="width:40%; flex:none; display:flex; flex-direction:column; padding:24px 28px;">
+      <div class="card card-g" style="width:40%; flex:none; display:flex; flex-direction:column; padding:22px 28px;">
         <div class="mono" style="font-size:var(--fs-micro); letter-spacing:.14em; color:var(--gold-bright);">自研 · 分离度最高的一维</div>
         <div class="serif" style="margin-top:10px; font-weight:700; font-size:var(--fs-h2); color:var(--paper); line-height:1.3;">高频周期性</div>
         <p style="margin-top:10px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.7;">掩蔽谱 IFFT 取高频段信号，在基音周期处做自相关——声码器把谐波结构延展到 4–8kHz，而自然人声的高频几乎只有气息噪声，这道生理天花板合成器很难伪装。</p>
@@ -56,60 +57,77 @@
         </div>
       </div>
 
-      <!-- 右：七维 hairline 双列密排 -->
-      <div style="flex:1; min-width:0; display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:1fr; column-gap:36px;">
+      <!-- 右：十维 hairline 双列密排（声码器指纹×7 + 韵律×3） -->
+      <div style="flex:1; min-width:0; display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:1fr; column-gap:30px;">
 
         <div style="display:flex; flex-direction:column; justify-content:center;">
-          <div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
             <span class="feat-name">高频能量占比</span><span class="feat-band">&gt;3.25kHz</span>
           </div>
-          <p style="margin-top:5px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">梅尔谱声码器的高频能量分布系统性偏移</p>
+          <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.5;">梅尔谱声码器的高频能量分布系统性偏移</p>
         </div>
 
         <div style="display:flex; flex-direction:column; justify-content:center;">
-          <div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+            <span class="feat-name">基频韵律动态</span><span class="feat-band">F0 轨迹</span><span class="feat-new">v2.0 新增</span>
+          </div>
+          <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.5;">自然语调的音高起伏带情绪，合成轨迹过于平稳</p>
+        </div>
+
+        <div class="hairline" style="display:flex; flex-direction:column; justify-content:center;">
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
             <span class="feat-name">谐波规整度</span><span class="feat-band">全带</span>
           </div>
-          <p style="margin-top:5px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">自然嗓音的谐波纯度随生理动态起伏，合成语音异常规整</p>
+          <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.5;">自然嗓音的谐波纯度随生理动态起伏，合成语音异常规整</p>
         </div>
 
         <div class="hairline" style="display:flex; flex-direction:column; justify-content:center;">
-          <div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+            <span class="feat-name">振幅微扰</span><span class="feat-band">幅度</span><span class="feat-new">v2.0 新增</span>
+          </div>
+          <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.5;">自然声门开合的幅度微观起伏，声码器幅度轨迹更平稳</p>
+        </div>
+
+        <div class="hairline" style="display:flex; flex-direction:column; justify-content:center;">
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
             <span class="feat-name">基音微扰</span><span class="feat-band">基音</span>
           </div>
-          <p style="margin-top:5px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">自然声带的生理性抖动对声码器的周期稳定度</p>
+          <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.5;">自然声带的生理性抖动对声码器的周期稳定度</p>
         </div>
 
         <div class="hairline" style="display:flex; flex-direction:column; justify-content:center;">
-          <div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+            <span class="feat-name">包络调制占比</span><span class="feat-band">4–8Hz</span><span class="feat-new">v2.0 新增</span>
+          </div>
+          <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.5;">音节律调制的能量占比，合成偏离自然语速节律</p>
+        </div>
+
+        <div class="hairline" style="display:flex; flex-direction:column; justify-content:center;">
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
             <span class="feat-name">过零率波动度</span><span class="feat-band">全带</span>
           </div>
-          <p style="margin-top:5px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">辅音元音交替的自然波动 vs 合成稳定性</p>
+          <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.5;">辅音元音交替的自然波动 vs 合成稳定性</p>
         </div>
 
         <div class="hairline" style="display:flex; flex-direction:column; justify-content:center;">
-          <div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;">
-            <span class="feat-name">嗓音动力波动</span><span class="feat-band">全带</span>
-          </div>
-          <p style="margin-top:5px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">重音与气息的动力变化对合成的均匀性</p>
-        </div>
-
-        <div class="hairline" style="display:flex; flex-direction:column; justify-content:center;">
-          <div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;">
-            <span class="feat-name">谱通量波动度</span><span class="feat-band">全带</span>
-          </div>
-          <p style="margin-top:5px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">神经声码器帧边界的微观不连续指纹</p>
-        </div>
-
-        <div class="hairline" style="display:flex; flex-direction:column; justify-content:center;">
-          <div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
             <span class="feat-name">高频谱平坦度</span><span class="feat-band">4–8kHz</span><span class="mono no-t" style="font-size:var(--fs-micro); letter-spacing:.08em;">已证伪·诚实保留</span>
           </div>
-          <p style="margin-top:5px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">直觉上有效，实测被数据证伪（见下一页）</p>
+          <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.5;">直觉上有效，实测被数据证伪（见下一页）</p>
         </div>
 
         <div class="hairline" style="display:flex; flex-direction:column; justify-content:center;">
-          <p style="font-size:var(--fs-micro); color:var(--muted); line-height:1.75;">全部先验按信道分别拟合：宽带与 300–3400Hz 窄带各自一套参数。</p>
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+            <span class="feat-name">嗓音动力波动</span><span class="feat-band">全带</span>
+          </div>
+          <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.5;">重音与气息的动力变化对合成的均匀性</p>
+        </div>
+
+        <div class="hairline" style="display:flex; flex-direction:column; justify-content:center;">
+          <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+            <span class="feat-name">谱通量波动度</span><span class="feat-band">全带</span>
+          </div>
+          <p style="margin-top:3px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.5;">神经声码器帧边界的微观不连续指纹</p>
         </div>
 
       </div>
@@ -120,16 +138,16 @@
     <div class="equation" style="margin-top:14px; display:flex; align-items:baseline; gap:22px;">
       <span class="mono" style="font-size:var(--fs-micro); letter-spacing:.16em; color:var(--gold-bright); flex:none;">判决融合</span>
       <p style="font-family:var(--font-num); font-size:var(--fs-body); color:var(--paper); white-space:nowrap;">z<sub>i</sub> = (x<sub>i</sub> − μ<sub>i</sub>) / σ<sub>i</sub>&ensp;→&ensp;P = σ(Σ w<sub>i</sub>·z<sub>i</sub>)&ensp;→&ensp;中值滤波 + EMA + 能量加权&ensp;→&ensp;整段判决</p>
-      <p style="font-size:var(--fs-micro); color:var(--muted); line-height:1.5; flex:1; min-width:0;">μ、σ 取自然类先验（分宽带/窄带两套）；w 为下一页逻辑回归拟合权重；静音窗在加权前排除</p>
+      <p style="font-size:var(--fs-micro); color:var(--muted); line-height:1.5; flex:1; min-width:0;">μ、σ 取自然类先验（宽带/窄带两套）；w 为逻辑回归拟合权重，韵律三维仅宽带计分；v2.1 帧级直流免疫 + 质量护栏先于特征执行；静音窗加权前排除</p>
     </div>
 
     <!-- 底部收束行 -->
     <div class="hairline" style="margin-top:14px; padding-top:12px; text-align:center;">
-      <span class="serif" style="font-weight:600; font-size:var(--fs-small); color:var(--paper); letter-spacing:.03em;">同一特征集宽带 8 维 / 窄带 5 维随信道自适应——可解释不是口号：每个判决都能拆到物理层。</span>
+      <span class="serif" style="font-weight:600; font-size:var(--fs-small); color:var(--paper); letter-spacing:.03em;">同一特征集宽带 11 维 / 窄带 5 维随信道自适应——可解释不是口号：每个判决都能拆到物理层。</span>
     </div>
 
   </div>
 </div>
-<aside data-notes class="hidden" style="display:none;">这一页先亮立场：不追黑盒精度，追可审计——这是反诈取证的刚性要求。主角是自研的高频周期性：掩蔽谱IFFT取高频段信号，在基音周期处做自相关；声码器把谐波延展到4到8kHz，自然人声那里几乎只有气息噪声，这道生理天花板很难伪装，类间分离度1.28、拟合权重0.289。其余七维都在刻画同一件事：自然发声的生理抖动，对上声码器的机器稳定——谐波规整度、基音微扰、谱通量波动都是这个逻辑。判决融合是一条显式公式链：z标准化、加权逻辑回归、中值滤波加EMA加能量加权，静音窗提前排除；宽带八维、窄带五维随信道自适应。被数据证伪的高频谱平坦度，也诚实保留在列表里。可解释的含义是：每个判决都能拆到物理层。</aside>
+<aside data-notes class="hidden" style="display:none;">这一页先亮立场：不追黑盒精度，追可审计——这是反诈取证的刚性要求。主角是自研的高频周期性：掩蔽谱IFFT取高频段信号，在基音周期处做自相关；声码器把谐波延展到4到8kHz，自然人声那里几乎只有气息噪声，这道生理天花板很难伪装，类间分离度1.28、拟合权重0.289。其余十维都在刻画同一件事：自然发声的生理抖动，对上声码器的机器稳定——声码器指纹七维，加 v2.0 新增的韵律三维：基频韵律动态、振幅微扰、包络调制占比，后三者只在宽带计分。判决融合是一条显式公式链：z标准化、加权逻辑回归、中值滤波加EMA加能量加权，静音窗提前排除；v2.1 起帧级直流免疫和质量护栏先于特征执行，录音链路的直流偏置不再能翻判决。被数据证伪的高频谱平坦度，也诚实保留在列表里。宽带十一维、窄带五维随信道自适应，每个判决都能拆到物理层。</aside>
 </body>
 </html>

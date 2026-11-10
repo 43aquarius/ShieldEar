@@ -65,28 +65,28 @@
 
   <section class="metrics pad">
     <div class="mcell">
-      <div class="mnum">20/20</div>
-      <div class="mlab">宽带合成检出 · 校准集 TTS n=20</div>
+      <div class="mnum">92.5%</div>
+      <div class="mlab">合成检出 · 校准集 T1（37/40）</div>
     </div>
     <div class="mcell">
-      <div class="mnum">4/5</div>
-      <div class="mlab">自然语音放行 · 自然源 n=5</div>
+      <div class="mnum">0.80</div>
+      <div class="mlab">自然放行 · N1+N2（40/50 判决）</div>
     </div>
     <div class="mcell">
-      <div class="mnum">0.917</div>
-      <div class="mlab">宽带 F1 · 扩展集 105 文件</div>
+      <div class="mnum">0.962</div>
+      <div class="mlab">宽带 F1 · 基线 129 文件</div>
     </div>
     <div class="mcell">
-      <div class="mnum">0.003–0.015</div>
-      <div class="mlab">RTF 实时因子 · 纯 CPU</div>
+      <div class="mnum">0.015</div>
+      <div class="mlab">RTF 峰值 · p50 0.0069 纯 CPU</div>
     </div>
     <div class="mcell">
-      <div class="mnum">9.15ms</div>
+      <div class="mnum">9.65ms</div>
       <div class="mlab">单窗耗时 P99 · 160 窗微基准</div>
     </div>
     <div class="mcell">
-      <div class="mnum">≤1s</div>
-      <div class="mlab">判决时延 · 窗口步进主导</div>
+      <div class="mnum">EER 0.18</div>
+      <div class="mlab">综合学术口径 · AUC 0.925</div>
     </div>
   </section>
 
@@ -95,36 +95,37 @@
       <div class="shot plate">
         <img src="../assets/chart_file_scores.png" alt="逐文件整段合成置信度图表：自然 n=5 与 TTS 合成 n=20 对比">
       </div>
-      <figcaption class="figcap" style="margin-top:9px;"><span class="figno">图 1</span> · 逐文件整段合成置信度：自然 n=5（左）vs TTS 合成 n=20（右），宽带信道</figcaption>
+      <figcaption class="figcap" style="margin-top:9px;"><span class="figno">图 1</span> · 逐文件整段合成置信度：自然 n=5（左）vs TTS 合成 n=20（右），宽带信道 · v2 引擎</figcaption>
     </figure>
 
     <div class="rcol">
       <div class="card card-r bcard">
         <div class="btag no-t">窄带电话信道</div>
-        <p><span class="num">16/20</span> 检出——300–3400Hz 带宽直接抹掉高频信息，退化如实标注、不藏着</p>
+        <p><span class="num">F1 0.876 / Acc 0.814</span>——300–3400Hz 带宽直接抹掉高频信息，退化如实标注、不藏着</p>
       </div>
       <div class="card card-r bcard">
         <div class="btag no-t">有声书边界</div>
-        <p><span class="num">10/50</span> 误判——录音棚级自然音的生产洁净度与轻量特征耦合，这正是启动深度引擎的直接动机，而非调参掩盖</p>
+        <p><span class="num">10/50</span> 误判（引擎升级后逐位不变）——录音棚级自然音的生产洁净度与轻量特征耦合，这正是启动深度引擎的直接动机，而非调参掩盖</p>
       </div>
       <div class="groups">
         <p class="gtitle">分组准确率 · GROUP DETAIL</p>
         <div class="grow"><span class="gname">N1 自然·原始</span><span class="gn">n=10</span><span class="gacc">0.80</span></div>
         <div class="grow"><span class="gname">N2 自然·鲁棒变体</span><span class="gn">n=40</span><span class="gacc">0.80</span></div>
-        <div class="grow"><span class="gname">T1 合成·校准集</span><span class="gn">n=40</span><span class="gacc">0.90</span></div>
-        <div class="grow"><span class="gname">T3 合成·退化变体</span><span class="gn">n=120</span><span class="gacc">0.783</span></div>
+        <div class="grow"><span class="gname">T1 合成·校准集</span><span class="gn">n=40</span><span class="gacc">0.925</span></div>
+        <div class="grow"><span class="gname">T2 合成·独立集</span><span class="gn">n=48</span><span class="gacc">0.917</span></div>
+        <div class="grow"><span class="gname">T3 合成·退化变体</span><span class="gn">n=120</span><span class="gacc">0.875</span></div>
       </div>
       <div class="caliber">
-        <div class="crow"><span class="clab">权威基准</span><span>——EER / t-DCF（ASVspoof 2019/2021 LA，深度引擎阶段既定指标）</span></div>
-        <div class="crow"><span class="clab">本阶段实测</span><span>——校准集检出率 + RTF + 时延 + 分组准确率</span></div>
+        <div class="crow"><span class="clab">权威基准</span><span>——EER / AUC 已实测（综合 0.18 / 0.925）；ASVspoof 横评与 t-DCF 列入深度引擎阶段</span></div>
+        <div class="crow"><span class="clab">本阶段实测</span><span>——258 判决全量基线 + 分组准确率 + RTF + 时延（v2.1 引擎逐位复验）</span></div>
         <div class="crow"><span class="clab">业务端到端</span><span>——无头浏览器全流程通过</span></div>
       </div>
     </div>
   </section>
 
-  <footer class="foot">扩展测试集 105 文件 × 双信道 = 210 条判决 · 宽带 Acc 0.876 / P 0.935 / R 0.900 · RTF 分布 p50 0.0064 · p95 0.0082 · max 0.0118 · 详见《系统测试报告》</footer>
+  <footer class="foot">基线 129 文件 × 双信道 = 258 条判决 · 宽带 Acc 0.938 / F1 0.962 · 窄带 F1 0.876 · 单窗 P99 9.65ms（160 窗微基准）· 详见《系统测试报告》</footer>
 </div>
 
-<aside data-notes class="hidden" style="display:none;">六个指标先念：宽带合成检出 20/20，自然放行 4/5，扩展集 F1 0.917，纯 CPU 实时因子 0.003 到 0.015，单窗 P99 九点一亳秒，时延不超过 1 秒。分组明细也摆出来：自然原始 0.80、自然鲁棒变体 0.80、合成校准集 0.90、合成退化变体 0.783——最难的是退化变体。两条边界主动摆出来：窄带 16/20，是电话带宽直接抹掉高频信息，退化如实标注不藏着；有声书 10/50 误判，棚级自然音太干净与轻量特征耦合，这正是启动深度引擎的动机，不靠调参掩盖。指标分三层口径，不把计划中的 EER 包装成已有结果。RTF 分布 p50 0.0064、p95 0.0082，210 条判决测试报告可查。</aside>
+<aside data-notes class="hidden" style="display:none;">六个指标先念：校准集合成检出百分之九十二点五，自然放行零点八，宽带F1零点九六二，纯CPU实时因子峰值零点零一五、中位数零点零零六九，综合EER零点一八、AUC零点九二五，时延不超过一秒。分组明细也摆出来：自然原始零点八、自然鲁棒变体零点八、合成校准集零点九二五、独立集零点九一七、退化变体零点八七五——最难的是退化变体。两条边界主动摆出来：窄带F1零点八七六，是电话带宽直接抹掉高频信息，退化如实标注不藏着；有声书十个误判，棚级自然音太干净与轻量特征耦合，这正是启动深度引擎的动机，不靠调参掩盖——引擎两轮升级，这组数字逐位不变，说明不是碰运气。EER和AUC是学术口径，我们已经实测入册；ASVspoof横评列入深度引擎阶段。258条判决测试报告可查。</aside>
 </body>
 </html>

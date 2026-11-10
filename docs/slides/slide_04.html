@@ -50,8 +50,8 @@
             <span class="mono" style="font-size:var(--fs-micro); color:var(--faint); letter-spacing:.06em;">L2</span>
             <span class="layer-name">检测引擎</span>
           </div>
-          <p style="margin-top:5px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">纯 TypeScript 零依赖，八维特征 + 2s 窗 / 1s 步进 / 50% 重叠滑窗</p>
-          <p style="margin-top:5px; font-size:var(--fs-micro); color:var(--muted); line-height:1.55;">DSP 基座：FFT 512 点 · Hann 窗 · 自相关基音（抛物线精化）· 抗混叠重采样</p>
+          <p style="margin-top:5px; font-size:var(--fs-small); color:var(--paper-dim); line-height:1.6;">纯 TypeScript 零依赖，十一维声学特征（声码器指纹×8 + 韵律动态×3）+ 帧级直流免疫 / 输入质量护栏 + 2s 窗 / 1s 步进滑窗</p>
+          <p style="margin-top:5px; font-size:var(--fs-micro); color:var(--muted); line-height:1.55;">DSP 基座：FFT 512 点 · Hann 窗 · 自相关基音（抛物线精化）· 抗混叠重采样；v2.1 抗干扰：直流偏置去均值 + 削波/直流/底噪/电平四项诊断</p>
           <p class="kai" style="margin-top:7px; font-size:var(--fs-body); color:var(--paper); line-height:1.55;">「全片最厚的一层——左右两端跑同一份代码」</p>
         </div>
 
@@ -108,6 +108,6 @@
 
   </div>
 </div>
-<aside data-notes class="hidden" style="display:none;">架构五层，从下往上过一遍：L1采集，把麦克风实时流、文件导入和现场合成统一成16kHz单声道标准输入；L2是全片最厚的检测引擎，纯TypeScript零依赖，八维特征加2秒窗、1秒步进的滑窗，DSP基座是FFT加Hann窗加自相关基音；L3用中值滤波、指数平滑、能量加权融合出整段判决，检出阈值0.72，四级风险分级的线在0.35、0.55、0.75；L4做SHA-256证据固定、SS-日期-序号案件编号、WAV证据下载和八章核验报告；L5单页展示零跳转。重点是同构引擎：浏览器和服务端跑同一份代码，检测结束还会自动POST服务端复核、两遍一致才入库——这是证据链成立的前提。为什么敢说能落地？纯CPU、一套语言栈、SQLite本地落盘可审计，四个接口都在。</aside>
+<aside data-notes class="hidden" style="display:none;">架构五层，从下往上过一遍：L1采集，把麦克风实时流、文件导入和现场合成统一成16kHz单声道标准输入；L2是全片最厚的检测引擎，纯TypeScript零依赖，十一维特征（声码器指纹八个加韵律动态三个）加2秒窗、1秒步进的滑窗，v2.1起带帧级直流免疫和输入质量护栏，DSP基座是FFT加Hann窗加自相关基音；L3用中值滤波、指数平滑、能量加权融合出整段判决，检出阈值0.72，四级风险分级的线在0.35、0.55、0.75；L4做SHA-256证据固定、SS-日期-序号案件编号、WAV证据下载和八章核验报告；L5单页展示零跳转。重点是同构引擎：浏览器和服务端跑同一份代码，检测结束还会自动POST服务端复核、两遍一致才入库——这是证据链成立的前提。为什么敢说能落地？纯CPU、一套语言栈、SQLite本地落盘可审计，四个接口都在。</aside>
 </body>
 </html>

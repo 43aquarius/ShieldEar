@@ -99,7 +99,7 @@
           <td class="dim">指标口径</td>
           <td><span class="num">EER 0.063%</span>（<span class="num">ASVspoof 2019 LA</span>）</td>
           <td>论文级指标</td>
-          <td class="hl-gold shield"><span class="num">RTF</span> 实测 + 校准集检出率 + <span class="num">EER</span> 路线</td>
+          <td class="hl-gold shield"><span class="num">RTF</span> 实测 + <span class="num">258</span> 判决基线 + <span class="num">EER 0.18 / AUC 0.925</span> 已实测</td>
         </tr>
         <tr>
           <td class="dim">部署要求</td>
@@ -112,11 +112,11 @@
   </div>
 
   <footer class="foot">
-    <p class="closing">深度引擎 <span class="num">AASIST / RawGAT-ST</span> 已列入 <span class="num">12</span> 周计划——站在这些作品的肩膀上，而非替代它们。</p>
+    <p class="closing">深度引擎 <span class="num">AASIST / RawGAT-ST</span> 仍在路线图——站在这些作品的肩膀上，而非替代它们。</p>
   </footer>
 
 </div>
 
-<aside data-notes class="hidden" style="display:none;">先致敬：谛听、白泽都是值得尊敬的作品，差异不在高下、在切入点——它们做事后的文件，声盾做进行中的通话。对照表七个维度逐行念关键差异：对象上它们是离线文件和深伪视频，我们是实时通话语音流；核心上谛听是三个深度网络集成、白泽是联邦学习，我们是可解释轻量引擎加流式滑窗加双端复核；实时性上我们边通话边判决、RTF小于0.015；可解释上八维特征逐窗可溯、判决可拆到物理层；形态上我们把检测、告警、存证、报告做成闭环；口径上报 RTF 实测与校准集检出率，EER 留给深度引擎阶段；部署上普通 CPU、浏览器即可。我们不在更低 EER 上正面竞争，而在实时性、闭环、可解释上补位；十二周计划会把谛听验证过的 AASIST、RawGAT-ST 集成进来——站在肩膀上，而非替代。</aside>
+<aside data-notes class="hidden" style="display:none;">先致敬：谛听、白泽都是值得尊敬的作品，差异不在高下、在切入点——它们做事后的文件，声盾做进行中的通话。对照表五个维度逐行念关键差异：对象上它们是离线文件和深伪视频，我们是实时通话语音流；核心上谛听是三个深度网络集成、白泽是联邦学习，我们是可解释轻量引擎加流式滑窗加双端复核；实时性上我们边通话边判决、RTF峰值0.015；可解释上十一维特征逐窗可溯、判决可拆到物理层，v2.1还带直流免疫和质量护栏；形态上我们把检测、告警、存证、报告做成闭环；口径上258判决基线，EER0.18、AUC0.925已实测入册；部署上普通CPU、浏览器即可。我们不在更低EER上正面竞争，而在实时性、闭环、可解释上补位；深度引擎仍在路线图，会把谛听验证过的AASIST、RawGAT-ST集成进来——站在肩膀上，而非替代。</aside>
 </body>
 </html>
