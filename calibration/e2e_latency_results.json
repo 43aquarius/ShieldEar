@@ -1,0 +1,691 @@
+{
+  "engine": "ShieldEar",
+  "measuredAt": "2026-11-10T03:57:01.612Z",
+  "env": {
+    "base": "http://localhost:3000",
+    "roundsPerFile": 5,
+    "filesPicked": 12,
+    "source": "calibration/audio 49 条按时长等间隔抽样 12"
+  },
+  "method": "POST /api/analyze 客户端 RTT − 响应内 analysis.stats.analyzeMs 无损分解；对照 GET /api 与 GET /api/cases",
+  "overall": {
+    "n": 60,
+    "totalP50": 238.5,
+    "totalP95": 339,
+    "totalP99": 352,
+    "analyzeP50": 206.92725999999675,
+    "analyzeP95": 303.1083130000043,
+    "overheadP50": 35.3,
+    "overheadP95": 51.8,
+    "overheadSharePct": 14.8
+  },
+  "byDuration": [
+    {
+      "durationSec": 8,
+      "n": 5,
+      "payloadKB": 990.5,
+      "totalP50": 198.4,
+      "totalP95": 290.4,
+      "analyzeP50": 154.10799500000576,
+      "analyzeP95": 253.38348699999915,
+      "overheadP50": 37,
+      "overheadP95": 65.3,
+      "overheadSharePct": 18.6
+    },
+    {
+      "durationSec": 9,
+      "n": 5,
+      "payloadKB": 1145.5,
+      "totalP50": 179.9,
+      "totalP95": 265.6,
+      "analyzeP50": 148.9981190000035,
+      "analyzeP95": 235.53431300000375,
+      "overheadP50": 30.1,
+      "overheadP95": 32.4,
+      "overheadSharePct": 16.7
+    },
+    {
+      "durationSec": 10,
+      "n": 5,
+      "payloadKB": 1305.5,
+      "totalP50": 206.5,
+      "totalP95": 220.3,
+      "analyzeP50": 156.2600500000044,
+      "analyzeP95": 189.95815299999958,
+      "overheadP50": 27.8,
+      "overheadP95": 50.7,
+      "overheadSharePct": 13.5
+    },
+    {
+      "durationSec": 13,
+      "n": 5,
+      "payloadKB": 1675.5,
+      "totalP50": 244.3,
+      "totalP95": 277.6,
+      "analyzeP50": 212.90562599999248,
+      "analyzeP95": 235.88966100000107,
+      "overheadP50": 35.1,
+      "overheadP95": 41.7,
+      "overheadSharePct": 14.4
+    },
+    {
+      "durationSec": 15,
+      "n": 5,
+      "payloadKB": 1885.5,
+      "totalP50": 269.3,
+      "totalP95": 322.4,
+      "analyzeP50": 230.0076310000004,
+      "analyzeP95": 246.8708820000029,
+      "overheadP50": 37.3,
+      "overheadP95": 75.5,
+      "overheadSharePct": 13.9
+    },
+    {
+      "durationSec": 18,
+      "n": 5,
+      "payloadKB": 1480.2,
+      "totalP50": 190.4,
+      "totalP95": 286.8,
+      "analyzeP50": 161.57197999999335,
+      "analyzeP95": 255.3424640000012,
+      "overheadP50": 31.4,
+      "overheadP95": 35.3,
+      "overheadSharePct": 16.5
+    },
+    {
+      "durationSec": 19,
+      "n": 15,
+      "payloadKB": 1550.2,
+      "totalP50": 221.9,
+      "totalP95": 261.8,
+      "analyzeP50": 189.74362399999518,
+      "analyzeP95": 223.99376399999892,
+      "overheadP50": 30.8,
+      "overheadP95": 48.7,
+      "overheadSharePct": 13.9
+    },
+    {
+      "durationSec": 20,
+      "n": 5,
+      "payloadKB": 1658.2,
+      "totalP50": 286.8,
+      "totalP95": 318.2,
+      "analyzeP50": 240.21689400001196,
+      "analyzeP95": 269.75719299999764,
+      "overheadP50": 48.4,
+      "overheadP95": 60.9,
+      "overheadSharePct": 16.9
+    },
+    {
+      "durationSec": 21,
+      "n": 5,
+      "payloadKB": 1730.2,
+      "totalP50": 282.4,
+      "totalP95": 294.7,
+      "analyzeP50": 235.39922799999476,
+      "analyzeP95": 262.7948039999901,
+      "overheadP50": 43.5,
+      "overheadP95": 50,
+      "overheadSharePct": 15.4
+    },
+    {
+      "durationSec": 22,
+      "n": 5,
+      "payloadKB": 1842.7,
+      "totalP50": 342.5,
+      "totalP95": 352,
+      "analyzeP50": 303.3309569999983,
+      "analyzeP95": 319.54573999998684,
+      "overheadP50": 38.5,
+      "overheadP95": 39.1,
+      "overheadSharePct": 11.2
+    }
+  ],
+  "controls": {
+    "getApiP50": 4.8,
+    "getCasesP50": 7.6,
+    "getCasesP95": 138.3
+  },
+  "raw": [
+    {
+      "file": "tts_tongtong_1.wav",
+      "durationSec": 7.92,
+      "payloadKB": 990.5,
+      "totalMs": 290.4,
+      "analyzeMs": 253.38348699999915,
+      "overheadMs": 37,
+      "caseNo": "SS-20261110-0002"
+    },
+    {
+      "file": "tts_tongtong_1.wav",
+      "durationSec": 7.92,
+      "payloadKB": 990.5,
+      "totalMs": 140.7,
+      "analyzeMs": 114.48305100000289,
+      "overheadMs": 26.2,
+      "caseNo": "SS-20261110-0003"
+    },
+    {
+      "file": "tts_tongtong_1.wav",
+      "durationSec": 7.92,
+      "payloadKB": 990.5,
+      "totalMs": 144.1,
+      "analyzeMs": 115.876565999999,
+      "overheadMs": 28.2,
+      "caseNo": "SS-20261110-0004"
+    },
+    {
+      "file": "tts_tongtong_1.wav",
+      "durationSec": 7.92,
+      "payloadKB": 990.5,
+      "totalMs": 198.4,
+      "analyzeMs": 154.10799500000576,
+      "overheadMs": 44.3,
+      "caseNo": "SS-20261110-0005"
+    },
+    {
+      "file": "tts_tongtong_1.wav",
+      "durationSec": 7.92,
+      "payloadKB": 990.5,
+      "totalMs": 256.3,
+      "analyzeMs": 190.98879199999647,
+      "overheadMs": 65.3,
+      "caseNo": "SS-20261110-0006"
+    },
+    {
+      "file": "tts_chuichui_1.wav",
+      "durationSec": 9.16,
+      "payloadKB": 1145.5,
+      "totalMs": 265.6,
+      "analyzeMs": 235.53431300000375,
+      "overheadMs": 30.1,
+      "caseNo": "SS-20261110-0007"
+    },
+    {
+      "file": "tts_chuichui_1.wav",
+      "durationSec": 9.16,
+      "payloadKB": 1145.5,
+      "totalMs": 166.7,
+      "analyzeMs": 134.27230099999724,
+      "overheadMs": 32.4,
+      "caseNo": "SS-20261110-0008"
+    },
+    {
+      "file": "tts_chuichui_1.wav",
+      "durationSec": 9.16,
+      "payloadKB": 1145.5,
+      "totalMs": 190.5,
+      "analyzeMs": 161.06824700000288,
+      "overheadMs": 29.5,
+      "caseNo": "SS-20261110-0009"
+    },
+    {
+      "file": "tts_chuichui_1.wav",
+      "durationSec": 9.16,
+      "payloadKB": 1145.5,
+      "totalMs": 160.3,
+      "analyzeMs": 130.29573500000697,
+      "overheadMs": 30,
+      "caseNo": "SS-20261110-0010"
+    },
+    {
+      "file": "tts_chuichui_1.wav",
+      "durationSec": 9.16,
+      "payloadKB": 1145.5,
+      "totalMs": 179.9,
+      "analyzeMs": 148.9981190000035,
+      "overheadMs": 30.9,
+      "caseNo": "SS-20261110-0011"
+    },
+    {
+      "file": "tts_douji_2.wav",
+      "durationSec": 10.44,
+      "payloadKB": 1305.5,
+      "totalMs": 184,
+      "analyzeMs": 156.2600500000044,
+      "overheadMs": 27.8,
+      "caseNo": "SS-20261110-0012"
+    },
+    {
+      "file": "tts_douji_2.wav",
+      "durationSec": 10.44,
+      "payloadKB": 1305.5,
+      "totalMs": 206.5,
+      "analyzeMs": 178.975108000006,
+      "overheadMs": 27.5,
+      "caseNo": "SS-20261110-0013"
+    },
+    {
+      "file": "tts_douji_2.wav",
+      "durationSec": 10.44,
+      "payloadKB": 1305.5,
+      "totalMs": 206.6,
+      "analyzeMs": 155.9060230000032,
+      "overheadMs": 50.7,
+      "caseNo": "SS-20261110-0014"
+    },
+    {
+      "file": "tts_douji_2.wav",
+      "durationSec": 10.44,
+      "payloadKB": 1305.5,
+      "totalMs": 220.3,
+      "analyzeMs": 189.95815299999958,
+      "overheadMs": 30.3,
+      "caseNo": "SS-20261110-0015"
+    },
+    {
+      "file": "tts_douji_2.wav",
+      "durationSec": 10.44,
+      "payloadKB": 1305.5,
+      "totalMs": 174,
+      "analyzeMs": 146.6686189999964,
+      "overheadMs": 27.4,
+      "caseNo": "SS-20261110-0016"
+    },
+    {
+      "file": "tts_luodo_2.wav",
+      "durationSec": 13.4,
+      "payloadKB": 1675.5,
+      "totalMs": 277.6,
+      "analyzeMs": 235.88966100000107,
+      "overheadMs": 41.7,
+      "caseNo": "SS-20261110-0017"
+    },
+    {
+      "file": "tts_luodo_2.wav",
+      "durationSec": 13.4,
+      "payloadKB": 1675.5,
+      "totalMs": 254.1,
+      "analyzeMs": 215.37031900000147,
+      "overheadMs": 38.7,
+      "caseNo": "SS-20261110-0018"
+    },
+    {
+      "file": "tts_luodo_2.wav",
+      "durationSec": 13.4,
+      "payloadKB": 1675.5,
+      "totalMs": 228.6,
+      "analyzeMs": 193.49785600000178,
+      "overheadMs": 35.1,
+      "caseNo": "SS-20261110-0019"
+    },
+    {
+      "file": "tts_luodo_2.wav",
+      "durationSec": 13.4,
+      "payloadKB": 1675.5,
+      "totalMs": 238.5,
+      "analyzeMs": 210.08714200000395,
+      "overheadMs": 28.4,
+      "caseNo": "SS-20261110-0020"
+    },
+    {
+      "file": "tts_luodo_2.wav",
+      "durationSec": 13.4,
+      "payloadKB": 1675.5,
+      "totalMs": 244.3,
+      "analyzeMs": 212.90562599999248,
+      "overheadMs": 31.4,
+      "caseNo": "SS-20261110-0021"
+    },
+    {
+      "file": "tts_kazi_0.wav",
+      "durationSec": 15.08,
+      "payloadKB": 1885.5,
+      "totalMs": 322.4,
+      "analyzeMs": 246.8708820000029,
+      "overheadMs": 75.5,
+      "caseNo": "SS-20261110-0022"
+    },
+    {
+      "file": "tts_kazi_0.wav",
+      "durationSec": 15.08,
+      "payloadKB": 1885.5,
+      "totalMs": 244,
+      "analyzeMs": 208.3849169999885,
+      "overheadMs": 35.6,
+      "caseNo": "SS-20261110-0023"
+    },
+    {
+      "file": "tts_kazi_0.wav",
+      "durationSec": 15.08,
+      "payloadKB": 1885.5,
+      "totalMs": 269.3,
+      "analyzeMs": 227.21077399999194,
+      "overheadMs": 42,
+      "caseNo": "SS-20261110-0024"
+    },
+    {
+      "file": "tts_kazi_0.wav",
+      "durationSec": 15.08,
+      "payloadKB": 1885.5,
+      "totalMs": 267.3,
+      "analyzeMs": 230.0076310000004,
+      "overheadMs": 37.3,
+      "caseNo": "SS-20261110-0025"
+    },
+    {
+      "file": "tts_kazi_0.wav",
+      "durationSec": 15.08,
+      "payloadKB": 1885.5,
+      "totalMs": 275.1,
+      "analyzeMs": 238.69925499999954,
+      "overheadMs": 36.4,
+      "caseNo": "SS-20261110-0026"
+    },
+    {
+      "file": "tts2_yunyang_3.wav",
+      "durationSec": 17.76,
+      "payloadKB": 1480.2,
+      "totalMs": 190.4,
+      "analyzeMs": 161.57197999999335,
+      "overheadMs": 28.8,
+      "caseNo": "SS-20261110-0027"
+    },
+    {
+      "file": "tts2_yunyang_3.wav",
+      "durationSec": 17.76,
+      "payloadKB": 1480.2,
+      "totalMs": 181.6,
+      "analyzeMs": 146.35825800000748,
+      "overheadMs": 35.3,
+      "caseNo": "SS-20261110-0028"
+    },
+    {
+      "file": "tts2_yunyang_3.wav",
+      "durationSec": 17.76,
+      "payloadKB": 1480.2,
+      "totalMs": 200.3,
+      "analyzeMs": 170.71643600000243,
+      "overheadMs": 29.5,
+      "caseNo": "SS-20261110-0029"
+    },
+    {
+      "file": "tts2_yunyang_3.wav",
+      "durationSec": 17.76,
+      "payloadKB": 1480.2,
+      "totalMs": 178.2,
+      "analyzeMs": 145.75864499999443,
+      "overheadMs": 32.5,
+      "caseNo": "SS-20261110-0030"
+    },
+    {
+      "file": "tts2_yunyang_3.wav",
+      "durationSec": 17.76,
+      "payloadKB": 1480.2,
+      "totalMs": 286.8,
+      "analyzeMs": 255.3424640000012,
+      "overheadMs": 31.4,
+      "caseNo": "SS-20261110-0031"
+    },
+    {
+      "file": "tts2_yunxi_1.wav",
+      "durationSec": 18.6,
+      "payloadKB": 1550.2,
+      "totalMs": 187.5,
+      "analyzeMs": 158.32186099998944,
+      "overheadMs": 29.2,
+      "caseNo": "SS-20261110-0032"
+    },
+    {
+      "file": "tts2_yunxi_1.wav",
+      "durationSec": 18.6,
+      "payloadKB": 1550.2,
+      "totalMs": 232.3,
+      "analyzeMs": 206.92725999999675,
+      "overheadMs": 25.4,
+      "caseNo": "SS-20261110-0033"
+    },
+    {
+      "file": "tts2_yunxi_1.wav",
+      "durationSec": 18.6,
+      "payloadKB": 1550.2,
+      "totalMs": 202.5,
+      "analyzeMs": 160.323344000004,
+      "overheadMs": 42.1,
+      "caseNo": "SS-20261110-0034"
+    },
+    {
+      "file": "tts2_yunxi_1.wav",
+      "durationSec": 18.6,
+      "payloadKB": 1550.2,
+      "totalMs": 219.9,
+      "analyzeMs": 189.74362399999518,
+      "overheadMs": 30.1,
+      "caseNo": "SS-20261110-0035"
+    },
+    {
+      "file": "tts2_yunxi_1.wav",
+      "durationSec": 18.6,
+      "payloadKB": 1550.2,
+      "totalMs": 210,
+      "analyzeMs": 161.2508480000106,
+      "overheadMs": 48.7,
+      "caseNo": "SS-20261110-0036"
+    },
+    {
+      "file": "tts2_yunjian_3.wav",
+      "durationSec": 18.89,
+      "payloadKB": 1574.2,
+      "totalMs": 213.8,
+      "analyzeMs": 182.97682100000384,
+      "overheadMs": 30.8,
+      "caseNo": "SS-20261110-0037"
+    },
+    {
+      "file": "tts2_yunjian_3.wav",
+      "durationSec": 18.89,
+      "payloadKB": 1574.2,
+      "totalMs": 229.2,
+      "analyzeMs": 203.50950400000147,
+      "overheadMs": 25.7,
+      "caseNo": "SS-20261110-0038"
+    },
+    {
+      "file": "tts2_yunjian_3.wav",
+      "durationSec": 18.89,
+      "payloadKB": 1574.2,
+      "totalMs": 203.4,
+      "analyzeMs": 165.237003000002,
+      "overheadMs": 38.2,
+      "caseNo": "SS-20261110-0039"
+    },
+    {
+      "file": "tts2_yunjian_3.wav",
+      "durationSec": 18.89,
+      "payloadKB": 1574.2,
+      "totalMs": 221.9,
+      "analyzeMs": 192.90840199998638,
+      "overheadMs": 29,
+      "caseNo": "SS-20261110-0040"
+    },
+    {
+      "file": "tts2_yunjian_3.wav",
+      "durationSec": 18.89,
+      "payloadKB": 1574.2,
+      "totalMs": 204.5,
+      "analyzeMs": 164.14477800000168,
+      "overheadMs": 40.3,
+      "caseNo": "SS-20261110-0041"
+    },
+    {
+      "file": "tts2_xiaoyi_2.wav",
+      "durationSec": 19.2,
+      "payloadKB": 1600.2,
+      "totalMs": 241.3,
+      "analyzeMs": 217.24716299999272,
+      "overheadMs": 24.1,
+      "caseNo": "SS-20261110-0042"
+    },
+    {
+      "file": "tts2_xiaoyi_2.wav",
+      "durationSec": 19.2,
+      "payloadKB": 1600.2,
+      "totalMs": 223.3,
+      "analyzeMs": 196.4236530000053,
+      "overheadMs": 26.9,
+      "caseNo": "SS-20261110-0043"
+    },
+    {
+      "file": "tts2_xiaoyi_2.wav",
+      "durationSec": 19.2,
+      "payloadKB": 1600.2,
+      "totalMs": 260.5,
+      "analyzeMs": 223.99376399999892,
+      "overheadMs": 36.5,
+      "caseNo": "SS-20261110-0044"
+    },
+    {
+      "file": "tts2_xiaoyi_2.wav",
+      "durationSec": 19.2,
+      "payloadKB": 1600.2,
+      "totalMs": 225.2,
+      "analyzeMs": 186.22473600000376,
+      "overheadMs": 39,
+      "caseNo": "SS-20261110-0045"
+    },
+    {
+      "file": "tts2_xiaoyi_2.wav",
+      "durationSec": 19.2,
+      "payloadKB": 1600.2,
+      "totalMs": 261.8,
+      "analyzeMs": 220.35810500000662,
+      "overheadMs": 41.5,
+      "caseNo": "SS-20261110-0046"
+    },
+    {
+      "file": "tts2_xiaoxiao_2.wav",
+      "durationSec": 19.9,
+      "payloadKB": 1658.2,
+      "totalMs": 277.4,
+      "analyzeMs": 225.58492799999658,
+      "overheadMs": 51.8,
+      "caseNo": "SS-20261110-0047"
+    },
+    {
+      "file": "tts2_xiaoxiao_2.wav",
+      "durationSec": 19.9,
+      "payloadKB": 1658.2,
+      "totalMs": 318.2,
+      "analyzeMs": 257.29223900000216,
+      "overheadMs": 60.9,
+      "caseNo": "SS-20261110-0048"
+    },
+    {
+      "file": "tts2_xiaoxiao_2.wav",
+      "durationSec": 19.9,
+      "payloadKB": 1658.2,
+      "totalMs": 318.2,
+      "analyzeMs": 269.75719299999764,
+      "overheadMs": 48.4,
+      "caseNo": "SS-20261110-0049"
+    },
+    {
+      "file": "tts2_xiaoxiao_2.wav",
+      "durationSec": 19.9,
+      "payloadKB": 1658.2,
+      "totalMs": 286.8,
+      "analyzeMs": 240.21689400001196,
+      "overheadMs": 46.6,
+      "caseNo": "SS-20261110-0050"
+    },
+    {
+      "file": "tts2_xiaoxiao_2.wav",
+      "durationSec": 19.9,
+      "payloadKB": 1658.2,
+      "totalMs": 261.5,
+      "analyzeMs": 221.61265500000445,
+      "overheadMs": 39.9,
+      "caseNo": "SS-20261110-0051"
+    },
+    {
+      "file": "tts2_xiaoni_2.wav",
+      "durationSec": 20.76,
+      "payloadKB": 1730.2,
+      "totalMs": 294.7,
+      "analyzeMs": 262.7948039999901,
+      "overheadMs": 31.9,
+      "caseNo": "SS-20261110-0052"
+    },
+    {
+      "file": "tts2_xiaoni_2.wav",
+      "durationSec": 20.76,
+      "payloadKB": 1730.2,
+      "totalMs": 278.9,
+      "analyzeMs": 235.39922799999476,
+      "overheadMs": 43.5,
+      "caseNo": "SS-20261110-0053"
+    },
+    {
+      "file": "tts2_xiaoni_2.wav",
+      "durationSec": 20.76,
+      "payloadKB": 1730.2,
+      "totalMs": 282.6,
+      "analyzeMs": 232.564360999997,
+      "overheadMs": 50,
+      "caseNo": "SS-20261110-0054"
+    },
+    {
+      "file": "tts2_xiaoni_2.wav",
+      "durationSec": 20.76,
+      "payloadKB": 1730.2,
+      "totalMs": 265.1,
+      "analyzeMs": 227.16119700000854,
+      "overheadMs": 37.9,
+      "caseNo": "SS-20261110-0055"
+    },
+    {
+      "file": "tts2_xiaoni_2.wav",
+      "durationSec": 20.76,
+      "payloadKB": 1730.2,
+      "totalMs": 282.4,
+      "analyzeMs": 237.42314100000658,
+      "overheadMs": 45,
+      "caseNo": "SS-20261110-0056"
+    },
+    {
+      "file": "ws_mono_16k.wav",
+      "durationSec": 22.11,
+      "payloadKB": 1842.7,
+      "totalMs": 342.5,
+      "analyzeMs": 303.3309569999983,
+      "overheadMs": 39.1,
+      "caseNo": "SS-20261110-0057"
+    },
+    {
+      "file": "ws_mono_16k.wav",
+      "durationSec": 22.11,
+      "payloadKB": 1842.7,
+      "totalMs": 339,
+      "analyzeMs": 300.510552000007,
+      "overheadMs": 38.5,
+      "caseNo": "SS-20261110-0058"
+    },
+    {
+      "file": "ws_mono_16k.wav",
+      "durationSec": 22.11,
+      "payloadKB": 1842.7,
+      "totalMs": 351.4,
+      "analyzeMs": 312.90458200000285,
+      "overheadMs": 38.5,
+      "caseNo": "SS-20261110-0059"
+    },
+    {
+      "file": "ws_mono_16k.wav",
+      "durationSec": 22.11,
+      "payloadKB": 1842.7,
+      "totalMs": 352,
+      "analyzeMs": 319.54573999998684,
+      "overheadMs": 32.5,
+      "caseNo": "SS-20261110-0060"
+    },
+    {
+      "file": "ws_mono_16k.wav",
+      "durationSec": 22.11,
+      "payloadKB": 1842.7,
+      "totalMs": 334.5,
+      "analyzeMs": 303.1083130000043,
+      "overheadMs": 31.4,
+      "caseNo": "SS-20261110-0061"
+    }
+  ]
+}
