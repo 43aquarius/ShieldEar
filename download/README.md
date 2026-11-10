@@ -2,6 +2,10 @@
 
 ## 最新发行版（GitHub Releases）
 
+- **v1.3.15（引擎 v2.1.0-robust 抗干扰鲁棒性版，2026-11-10）**：https://github.com/43aquarius/ShieldEar/releases/tag/v1.3.15
+  - 引擎直流免疫（+0.05 直流判决不变，ratio 漂移 0.00001）+ 输入质量护栏四项诊断（削波/直流/底噪/电平）+ 依赖安全清零（next 16.4.6 等，bun audit 106→1）+ COOP/CORP
+  - 便携包 `ShieldEar-v1.3.15-portable.zip`（58.1MB，1,361 文件）· SHA-256 `c4ce7ac35ca42f1f8235d6a690bd1734a63227bc5d25f93ab0baffbe2244e317`
+  - 断网实测：基线 8/8 + v1.3.15 专项 11/11 全绿（直流免疫/质量护栏/触发矩阵对交付包实测）；CDN 回读三方一致
 - **v1.3.14（安全加固版，2026-11-09）**：https://github.com/43aquarius/ShieldEar/releases/tag/v1.3.14
   - 证据链路径遍历修复（格式闸 + 容器闸双防线）+ 全站 HTTP 安全响应头（CSP connect-src 'self' = 零外连声明的传输层强制）
   - 便携包 `ShieldEar-v1.3.14-portable.zip`（57.9MB，1,459 文件）· SHA-256 `ed9a6d71189e9f44a78be352e6849782444e1ff9660bf6589f8b8d3f91cb8333`
