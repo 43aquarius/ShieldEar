@@ -1086,3 +1086,48 @@ calibration/robustness_results.json 全量留档）：
 推送闸门取证脚本 diag-push-gate.py 一并入库（76424eb，含 push-main-only
 多提交参数 diff 误当 pathspec 的缺陷实证——该缺陷本轮已由 api-push-v1315
 的逐提交 diff 口径替代规避）。
+
+## v1.3.15 答辩资产重制（2026-11-10 · 13:28 定时轮）
+
+**任务**：backlog 项 1 —— 答辩 PPT（v1.3.0 口径）与演示手册（v1.3.8 口径）重制至
+v1.3.15 主线口径。历史实录原则：v1.3.8 附录原文保留、续写 v1.3.15。
+
+**PPT（docs/slides/ 13 页 HTML 源升级 → 截图 → pptx 重建）**：
+- 七页口径升级：slide_01 封面数据位（20/20→92.5% 校准集检出、210→258 判决基线、
+  RTF 补 p50 0.0069）；slide_04 L2 引擎层（十一维+帧级直流免疫/质量护栏）；
+  slide_05 右栏重构（7→10 维格：补基频韵律动态/振幅微扰/包络调制占比三格金色
+  v2.0 新增签，谱通量回归独立格，先验注并入公式链；宽带 11 维/窄带 5 维）；
+  slide_06 STEP 4 补 EER/AUC 与 258 基线复验；slide_07 全指标换 258 基线
+  （92.5%·0.80·F1 0.962·RTF 0.015/p50 0.0069·P99 9.65ms·EER 0.18/AUC 0.925，
+  分组表补 T2 行 n=48 0.917，窄带卡 F1 0.876/Acc 0.814，有声书 10/50 逐位不变
+  加「引擎升级后逐位不变」注）；slide_08（p50 0.0069、十一维、副创新一并入
+  直流免疫/质量护栏）；slide_10（指标口径行 258 基线+EER 已实测、12 周计划→
+  仍在路线图）；全部逐字稿 notes 同步。
+- **坑与修复**：slide_10 首轮替换因 `<span class="num">` 打断纯文本而静默未命中
+  （python replace 无 assert 静默跳过，且渲染低分辨率视检误判通过）——复核哈希
+  发现后以带 span 精确文本重写三处并 assert 断言；教训：批量替换必须 assert 命中。
+- **pptx 重建管线**（原文本层生成管线确已遗失，worklog 前轮遗留记录）：新增
+  scripts/shot-slides-2x.js（Playwright deviceScaleFactor=2 → 2560×1440）+
+  scripts/build-pptx-v1315.py（满幅图 + aside[data-notes] 逐字稿为讲者备注 +
+  自校验页数/16:9/备注 13/13/每页 1 满幅图）。文字已栅格化，字体塌缩防御自动满足。
+- docs/assets/ 重建（slide_07/09 图相对路径依赖 chart_file_scores/shield_home，
+  自 download/assets 拷入）。
+- 验证：qa_slides.js 13/13 全过（几何零滚动/正文 CJK/讲稿/图片）· 2x 截图 13 张 ·
+  pptx 自校验通过 · soffice 预览 PDF 重制并逐页视检（封面/引擎/实测/对比/结尾）。
+
+**手册（scripts/gen-demo-handbook.js 升级重跑）**：25 处口径替换全命中（含速查卡
+8 行数字、评委八问 4 问、封面/页脚/导语）；服务端种子案例数字换 v1.3.15 包内
+实值（LOW 16.9%/16.0% · CRITICAL 78.7%/HIGH 71.6%）；合成挑战 56.7% 标注
+2026-11-06 实拍口径、现场以当场输出为准；附录续写 v1.3.9–v1.3.15 版本链路与
+v1.3.15 交付段（58.1MB/SHA-256/断网 8/8+11/11/audit 106→1）。python-docx 断言
+12 项新口径在场、旧口径仅存历史实录语境（70.2MB×1 于 v1.3.8 交付段）；LibreOffice
+渲染 13 页视检通过（封面 v1.3.15 + 正文截图齐全）。
+
+**基线复核**：vitest 实跑 145/145 全绿（11 文件）；testsuite_results.json（引擎
+v2.1.0-robust · 2026-11-09）258 判决：宽带 Acc 0.938/F1 0.962/EER 0.16/AUC 0.939，
+窄带 Acc 0.814/F1 0.876，pooled EER 0.18/AUC 0.9243；RTF p50 0.0069/max 0.015；
+微基准 160 窗 P99 9.65ms——PPT/手册全部数字与之一致。
+
+**同步**：download/ 全量副本（pptx/pdf/slides/qa/2x/assets/手册）+ 交付清单三处
+⚠ 清除（口径行升 v1.3.15）。download/slides 与 docs/slides 历史分叉已统一为
+docs 版（docs 版为答辩准备重排版，内容更新的实现）。
