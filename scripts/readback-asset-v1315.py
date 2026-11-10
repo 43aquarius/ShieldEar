@@ -31,7 +31,18 @@ asset = next(a for a in rel["assets"] if a["name"] == ASSET_NAME)
 print(f"Release id={rel['id']} · 资产登记 {asset['size']:,}B · state={asset['state']}")
 print(f"本地 SHA-256:  {local_sha}")
 
-rb, n = cdn_readback(asset["browser_download_url"], asset["size"], READBACK)
+# v1.3.15 实测修正：github.com 域 302 跟随超时（沙箱该域不稳），改走
+# api.github.com 资产端点（Accept: octet-stream）解析签名直链后再分段下载
+import urllib.request
+req = urllib.request.Request(asset["url"], headers={
+    "Authorization": f"Bearer {mod.TOKEN}",
+    "Accept": "application/octet-stream",
+    "User-Agent": "ShieldEar-release-script"})
+with urllib.request.urlopen(req, timeout=60) as r:
+    signed = r.url
+print(f"签名直链已解析（api.github.com 路由）: …{signed[-60:]}")
+
+rb, n = cdn_readback(signed, asset["size"], READBACK)
 print(f"回读 {n:,}B · SHA-256 {rb}")
 ok = rb == local_sha and n == asset["size"] == os.path.getsize(ZIP)
 print("三方一致（本地 = CDN 回读 = 登记尺寸）:", "✓" if ok else "✗")

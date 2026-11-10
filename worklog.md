@@ -1045,3 +1045,44 @@ calibration/robustness_results.json 全量留档）：
 **修正快速开始仍指 v1.3.12 zip 的陈旧问题** → v1.3.14（最新发版）。
 
 **待推送**：PAT 缺失，本轮提交 SHA 见 STRENGTHEN-LOOP.md 待推送队列。
+
+## v1.3.15 发版实录（2026-11-10 · 持续强化循环）
+
+**推送（12:28 轮）**：用户提供 PAT。远端 main 停留 v1.3.14 推前态 c946325
+（树 b6e77a92），与本地 da1fd45 仅 24 文件 mode 644→755 分叉（blob 零差异，
+10:28 轮外部 amend 实况）→ 远端复刻权限对齐提交 9a88898（树硬校验 ==
+50a659dc）→ api-push-v1315.py 逐位复刻 8 提交（每步树 SHA 硬校验，每 3 提交
+中间快进抗收割）→ 工具链入库 45c3641 即席推送。对象级回读：raw.githubusercontent.com
+沙箱整体不可达（SSL 断，两次超时实录），改走 git/blobs API 读路径，10 个代表
+文件（含 709KB docx / 376KB bun.lock）SHA-256 逐字节一致 10/10。
+
+**发版（13:00 起，用户 PAT 直达会话）**：
+
+- **构建**：`build:offline` 生产构建（Next.js 16.4.6，安全升级版）→
+  build-portable.sh 组装全闸通过：平台折叠硬闸（23 服务端 chunk 零
+  process.platform 比较残留）· 外部依赖解析（14 包）· PE 导入表（8 文件
+  app-local 双通道）· 软链解引用（1 个哈希外部依赖实体化）；
+- **种子**：/db/ 沙箱回收后 selfheal 重建空库 → seed-demo-cases.py 经正式
+  /api/analyze 管线重灌 4 案例（真人 LOW 0.169/0.160 · AI CRITICAL 0.787 /
+  HIGH 0.716，全部 engine=v2.1.0-robust + serverVerified）；
+- **打包**：`ShieldEar-v1.3.15-portable.zip` 58.1MB（1,361 文件）·
+  SHA-256 `c4ce7ac35ca42f1f8235d6a690bd1734a63227bc5d25f93ab0baffbe2244e317`；
+- **断网实测**（unshare -rn 网络命名空间，解压交付 zip 原物）：
+  **基线 8/8 全绿**（检测输入 · 实时鉴听 · 文件检测 · 案例库 · 存证包 WAV ·
+  合成通道下线 404 · 自检 4/4 engine=v2.1.0-robust+releaseOffline · 证据核验
+  SHA-256 重算一致）+ **v1.3.15 专项 11/11 全绿**（引擎 v2.1 口径 · 质量护栏
+  在场[清洁基线四项全清] · 直流免疫[+0.05 判决不变 ratio 漂移 0.00001 ·
+  静音闸不击穿] · 触发矩阵[削波/低电平/噪底精确警示] · 安全响应头五项 ·
+  caseNo 格式闸 · 11 维特征剖面 · 并发存证 6/6 · 存证包 ZIP 自洽 · 413）；
+- **发版**：附注标签 v1.3.15 锚定 ae01e06bfd（发版基座同树复核通过）·
+  Release id 439966596 · 资产 60,916,685B 上传成功；
+- **CDN 回读三方一致**：本地 zip = CDN 回读 = Release 登记，SHA-256 与尺寸
+  逐位一致（16 段并行 + 逐段续传；**实测修正**：github.com 域 302 跟随超时，
+  改走 api.github.com 资产端点解析签名直链，readback-asset-v1315.py 留档）；
+- **文档同步**：README 快速开始下载段 → v1.3.15 · 交付清单置顶 v1.3.15 条目。
+
+**发版管线入库**：make-portable-zip / test-offline-portable（换 regress-v1315
+专项口径）/ release-v1315 / readback-asset-v1315（aeee9ad + 本实录提交）；
+推送闸门取证脚本 diag-push-gate.py 一并入库（76424eb，含 push-main-only
+多提交参数 diff 误当 pathspec 的缺陷实证——该缺陷本轮已由 api-push-v1315
+的逐提交 diff 口径替代规避）。

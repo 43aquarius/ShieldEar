@@ -51,7 +51,7 @@
 
 ### 方式一：可执行程序包（免安装，推荐评审使用）
 
-从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.14-portable.zip`（约 58MB）并解压：
+从本仓库 **[Releases](https://github.com/43aquarius/ShieldEar/releases/latest)** 页面下载 `ShieldEar-v1.3.15-portable.zip`（约 58MB）并解压：
 
 - **Windows**：双击 `START-ShieldEar.bat`——包内含便携 Node.js 运行时与 VC++ 2015-2022 运行库三 DLL（app-local），无需任何预装环境；启动时自动完成启动自检（数据引擎/数据库/校准数据），异常会在启动窗口给出中文提示并写入 `STARTUP-ERROR.txt`，不再出现含义不明的页面报错；
 - 等待数秒浏览器自动打开 `http://127.0.0.1:3000`，包内已含 4 件演示案件（真人×2 / 神经合成×2）与对应证据存档（含原始来源文件），全部功能开箱即用；
